@@ -1,0 +1,72 @@
+const express = require('express');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const User = require('../models/User');
+
+// 회원 목록 조회
+router.get('/', auth, async (req, res) => {
+    try {
+        const users = await User.find().select('-password');
+        res.json(users);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('서버 오류');
+    }
+});
+
+// 회원 정보 수정
+router.put('/:id', auth, async (req, res) => {
+    try {
+        const { name, phone, notes } = req.body;
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ msg: '회원을 찾을 수 없습니다.' });
+        }
+
+        if (name) user.name = name;
+        if (phone) user.phone = phone;
+        if (notes) user.notes = notes;
+
+        await user.save();
+        res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('서버 오류');
+    }
+});
+
+// 회원 삭제
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ msg: '회원을 찾을 수 없습니다.' });
+        }
+
+        await user.remove();
+        res.json({ msg: '회원이 삭제되었습니다.' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('서버 오류');
+    }
+});
+
+// 회원 상세 정보 조회
+router.get('/:id', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password');
+        
+        if (!user) {
+            return res.status(404).json({ msg: '회원을 찾을 수 없습니다.' });
+        }
+
+        res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('서버 오류');
+    }
+});
+
+module.exports = router; 
