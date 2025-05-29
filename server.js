@@ -7,6 +7,17 @@ const path = require('path');
 // 환경 변수 설정
 dotenv.config();
 
+// 환경 변수 검증
+if (!process.env.MONGODB_URI) {
+    console.error('[Config] MONGODB_URI가 설정되지 않았습니다.');
+    process.exit(1);
+}
+
+if (!process.env.MONGODB_URI.startsWith('mongodb://') && !process.env.MONGODB_URI.startsWith('mongodb+srv://')) {
+    console.error('[Config] MONGODB_URI가 올바른 형식이 아닙니다.');
+    process.exit(1);
+}
+
 const app = express();
 
 // 로깅 미들웨어
