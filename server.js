@@ -41,6 +41,10 @@ const connectWithRetry = async () => {
             w: 'majority',
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
+            authSource: 'admin',
+            directConnection: false,
+            maxPoolSize: 10,
+            minPoolSize: 5
         });
         console.log('[MongoDB] 연결 성공');
     } catch (err) {
