@@ -19,8 +19,8 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: true,
-        unique: true
+        trim: true,
+        default: ''
     },
     phoneVerified: {
         type: Boolean,
@@ -32,7 +32,8 @@ const userSchema = new mongoose.Schema({
     },
     notes: {
         type: String,
-        trim: true
+        trim: true,
+        default: ''
     },
     createdAt: {
         type: Date,

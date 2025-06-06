@@ -24,13 +24,19 @@ app.use((req, res, next) => {
 // 미들웨어 설정
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+
+// API 라우트 설정
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/members', require('./routes/members'));
+
+// 정적 파일 제공
+app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Atlas 연결
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 30000, // Render 환경에 맞게 타임아웃 증가
     socketTimeoutMS: 45000,
     maxPoolSize: 10,
     minPoolSize: 5
@@ -57,14 +63,17 @@ mongoose.connection.on('disconnected', () => {
     console.log('MongoDB 연결이 끊어졌습니다.');
 });
 
-// 라우트 설정
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/members', require('./routes/members'));
+// 404 에러 처리
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        res.status(404).json({ success: false, msg: 'API 엔드포인트를 찾을 수 없습니다.' });
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+});
 
-// 정적 파일 제공
-app.use(express.static(path.join(__dirname, 'public')));
-
-// 모든 요청을 index.html로 리다이렉트
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// 에러 핸들러
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
 }); 

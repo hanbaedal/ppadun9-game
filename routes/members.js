@@ -7,10 +7,10 @@ const User = require('../models/User');
 router.get('/', auth, async (req, res) => {
     try {
         const users = await User.find().select('-password');
-        res.json(users);
+        res.json({ success: true, data: users });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('서버 오류');
+        console.error('회원 목록 조회 오류:', err);
+        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
     }
 });
 
@@ -21,7 +21,7 @@ router.put('/:id', auth, async (req, res) => {
         const user = await User.findById(req.params.id);
 
         if (!user) {
-            return res.status(404).json({ msg: '회원을 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, msg: '회원을 찾을 수 없습니다.' });
         }
 
         if (name) user.name = name;
@@ -29,10 +29,10 @@ router.put('/:id', auth, async (req, res) => {
         if (notes) user.notes = notes;
 
         await user.save();
-        res.json(user);
+        res.json({ success: true, data: user });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('서버 오류');
+        console.error('회원 정보 수정 오류:', err);
+        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
     }
 });
 
@@ -42,14 +42,14 @@ router.delete('/:id', auth, async (req, res) => {
         const user = await User.findById(req.params.id);
 
         if (!user) {
-            return res.status(404).json({ msg: '회원을 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, msg: '회원을 찾을 수 없습니다.' });
         }
 
         await User.deleteOne({ _id: req.params.id });
-        res.json({ msg: '회원이 삭제되었습니다.' });
+        res.json({ success: true, msg: '회원이 삭제되었습니다.' });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('서버 오류');
+        console.error('회원 삭제 오류:', err);
+        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
     }
 });
 
@@ -59,13 +59,13 @@ router.get('/:id', auth, async (req, res) => {
         const user = await User.findById(req.params.id).select('-password');
         
         if (!user) {
-            return res.status(404).json({ msg: '회원을 찾을 수 없습니다.' });
+            return res.status(404).json({ success: false, msg: '회원을 찾을 수 없습니다.' });
         }
 
-        res.json(user);
+        res.json({ success: true, data: user });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('서버 오류');
+        console.error('회원 상세 정보 조회 오류:', err);
+        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
     }
 });
 

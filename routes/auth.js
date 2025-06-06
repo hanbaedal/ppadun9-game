@@ -3,6 +3,26 @@ const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
+const auth = require('../middleware/auth');
+const axios = require('axios');
+
+// 아이디 중복 확인
+router.post('/check-id', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const user = await User.findOne({ userId });
+        
+        if (user) {
+            return res.json({ success: false, msg: '이미 사용 중인 아이디입니다.' });
+        }
+        
+        res.json({ success: true, msg: '사용 가능한 아이디입니다.' });
+    } catch (err) {
+        console.error('아이디 중복 확인 오류:', err);
+        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
+    }
+});
 
 // 회원가입
 router.post('/register', [
@@ -19,16 +39,18 @@ router.post('/register', [
     try {
         const { name, userId, password, phone, notes } = req.body;
 
-        // 아이디 중복 체크
+        // 아이디 중복 확인
         let user = await User.findOne({ userId });
         if (user) {
-            return res.status(400).json({ msg: '이미 존재하는 아이디입니다.' });
+            return res.status(400).json({ success: false, msg: '이미 사용 중인 아이디입니다.' });
         }
 
-        // 전화번호 중복 체크
-        user = await User.findOne({ phone });
-        if (user) {
-            return res.status(400).json({ msg: '이미 등록된 전화번호입니다.' });
+        // 전화번호 중복 확인
+        if (phone) {
+            user = await User.findOne({ phone });
+            if (user) {
+                return res.status(400).json({ success: false, msg: '이미 등록된 전화번호입니다.' });
+            }
         }
 
         user = new User({
@@ -49,16 +71,16 @@ router.post('/register', [
 
         jwt.sign(
             payload,
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET,
             { expiresIn: '24h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+                res.json({ success: true, token });
             }
         );
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('서버 오류');
+        console.error('회원가입 오류:', err);
+        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
     }
 });
 
@@ -77,12 +99,12 @@ router.post('/login', [
 
         const user = await User.findOne({ userId });
         if (!user) {
-            return res.status(400).json({ msg: '존재하지 않는 아이디입니다.' });
+            return res.status(400).json({ success: false, msg: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
 
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(400).json({ msg: '비밀번호가 일치하지 않습니다.' });
+            return res.status(400).json({ success: false, msg: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
 
         const payload = {
@@ -93,16 +115,16 @@ router.post('/login', [
 
         jwt.sign(
             payload,
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET,
             { expiresIn: '24h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+                res.json({ success: true, token });
             }
         );
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('서버 오류');
+        console.error('로그인 오류:', err);
+        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
     }
 });
 
@@ -138,6 +160,78 @@ router.post('/find-password', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('서버 오류');
+    }
+});
+
+// 현재 로그인한 사용자 정보 가져오기
+router.get('/me', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                msg: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        res.json({
+            success: true,
+            user: user
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            msg: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 전화번호 인증번호 발송
+router.post('/send-verification', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        
+        // 6자리 랜덤 인증번호 생성
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // CoolSMS API 설정
+        const apiKey = process.env.COOLSMS_API_KEY;
+        const apiSecret = process.env.COOLSMS_API_SECRET;
+        const sender = process.env.COOLSMS_SENDER_NUMBER;
+
+        // SMS 발송
+        const response = await axios({
+            method: 'POST',
+            url: 'https://api.coolsms.co.kr/messages/v4/send',
+            headers: {
+                'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${new Date().toISOString()}, salt=${Math.random().toString(36).substring(2)}, signature=${apiSecret}`,
+                'Content-Type': 'application/json'
+            },
+            data: {
+                message: {
+                    to: phone,
+                    from: sender,
+                    text: `[회원가입] 인증번호는 [${code}] 입니다.`
+                }
+            }
+        });
+
+        if (response.data.status === 'success') {
+            res.json({
+                success: true,
+                msg: '인증번호가 발송되었습니다.',
+                code: code // 실제 운영환경에서는 제거
+            });
+        } else {
+            throw new Error('SMS 발송 실패');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            msg: '인증번호 발송에 실패했습니다.'
+        });
     }
 });
 

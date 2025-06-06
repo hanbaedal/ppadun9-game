@@ -10,9 +10,19 @@ yarn-error.log
 .env.*.local
 
 # IDE
-.vscode/
 .idea/
+.vscode/
+*.swp
+*.swo
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/ 

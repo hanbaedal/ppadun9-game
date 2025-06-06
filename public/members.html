@@ -95,11 +95,13 @@
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error('회원 정보를 가져오는데 실패했습니다.');
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.msg || '회원 정보를 가져오는데 실패했습니다.');
                 }
 
-                const member = await response.json();
+                const member = result.data;
                 
                 // 회원 정보 표시
                 document.getElementById('memberId').value = member._id;
@@ -115,7 +117,7 @@
                 document.getElementById('editNotes').value = member.notes || '';
             } catch (error) {
                 console.error('Error:', error);
-                alert('회원 정보를 가져오는데 실패했습니다.');
+                alert(error.message || '회원 정보를 가져오는데 실패했습니다.');
             }
         }
 
@@ -151,8 +153,10 @@
                     body: JSON.stringify(formData)
                 });
 
-                if (!response.ok) {
-                    throw new Error('회원 정보 수정에 실패했습니다.');
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.msg || '회원 정보 수정에 실패했습니다.');
                 }
 
                 alert('회원 정보가 수정되었습니다.');
@@ -160,7 +164,7 @@
                 cancelEdit();
             } catch (error) {
                 console.error('Error:', error);
-                alert('회원 정보 수정에 실패했습니다.');
+                alert(error.message || '회원 정보 수정에 실패했습니다.');
             }
         });
 
@@ -178,15 +182,17 @@
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error('회원 삭제에 실패했습니다.');
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.msg || '회원 삭제에 실패했습니다.');
                 }
 
                 alert('회원이 삭제되었습니다.');
                 window.location.href = 'member-displays.html';
             } catch (error) {
                 console.error('Error:', error);
-                alert('회원 삭제에 실패했습니다.');
+                alert(error.message || '회원 삭제에 실패했습니다.');
             }
         }
 
