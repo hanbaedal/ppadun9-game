@@ -36,15 +36,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 30000, // Render 환경에 맞게 타임아웃 증가
+    serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
-    maxPoolSize: 10,
-    minPoolSize: 5
+    family: 4
 })
 .then(() => {
     console.log('MongoDB Atlas 연결 성공');
     // 연결 성공 후 서버 시작
-    const PORT = process.env.PORT || 3001;
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
         console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
     });
