@@ -36,6 +36,8 @@
                         <th>이름</th>
                         <th>아이디</th>
                         <th>전화번호</th>
+                        <th>포인트</th>
+                        <th>가입일</th>
                         <th>참고사항</th>
                     </tr>
                 </thead>
@@ -73,6 +75,8 @@
                             <td><a href="/members.html" class="text-decoration-none">${member.name || '-'}</a></td>
                             <td><a href="/members.html" class="text-decoration-none">${member.userId || '-'}</a></td>
                             <td>${member.phone || '-'}</td>
+                            <td>${member.points || '0'}</td>
+                            <td>${new Date(member.createdAt).toLocaleDateString()}</td>
                             <td>${member.notes || '-'}</td>
                         </tr>
                     `).join('');
