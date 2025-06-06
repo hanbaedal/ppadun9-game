@@ -60,7 +60,8 @@
             try {
                 const response = await fetch('/api/members', {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'x-auth-token': token,
+                        'Content-Type': 'application/json'
                     }
                 });
                 const data = await response.json();
@@ -69,14 +70,15 @@
                     const memberList = document.getElementById('memberList');
                     memberList.innerHTML = data.map(member => `
                         <tr>
-                            <td><a href="/members.html" class="text-decoration-none">${member.name}</a></td>
-                            <td><a href="/members.html" class="text-decoration-none">${member.userId}</a></td>
+                            <td><a href="/members.html" class="text-decoration-none">${member.name || '-'}</a></td>
+                            <td><a href="/members.html" class="text-decoration-none">${member.userId || '-'}</a></td>
                             <td>${member.phone || '-'}</td>
                             <td>${member.notes || '-'}</td>
                         </tr>
                     `).join('');
                 } else {
-                    alert('회원 목록을 가져오는데 실패했습니다.');
+                    console.error('API 응답:', data);
+                    alert(data.msg || '회원 목록을 가져오는데 실패했습니다.');
                 }
             } catch (error) {
                 console.error('Error:', error);
