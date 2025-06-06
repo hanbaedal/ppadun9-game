@@ -33,29 +33,45 @@ app.use('/api/members', require('./routes/members'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Atlas 연결
+console.log('MongoDB 연결 시도...');
+console.log('연결 문자열:', process.env.MONGODB_URI.replace(/:[^:@]+@/, ':****@')); // 비밀번호 마스킹
+
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 30000, // Render 환경에 맞게 타임아웃 증가
     socketTimeoutMS: 45000,
-    family: 4
+    maxPoolSize: 10,
+    minPoolSize: 5
 })
 .then(() => {
     console.log('MongoDB Atlas 연결 성공');
     // 연결 성공 후 서버 시작
     const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
     });
 })
 .catch(err => {
     console.error('MongoDB Atlas 연결 실패:', err);
+    console.error('에러 상세:', {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        stack: err.stack
+    });
     process.exit(1);
 });
 
 // MongoDB 연결 상태 모니터링
 mongoose.connection.on('error', err => {
     console.error('MongoDB 연결 오류:', err);
+    console.error('에러 상세:', {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        stack: err.stack
+    });
 });
 
 mongoose.connection.on('disconnected', () => {
@@ -65,7 +81,11 @@ mongoose.connection.on('disconnected', () => {
 // 404 에러 처리
 app.use((req, res, next) => {
     if (req.path.startsWith('/api/')) {
-        res.status(404).json({ success: false, msg: 'API 엔드포인트를 찾을 수 없습니다.' });
+        res.status(404).json({ 
+            success: false, 
+            msg: 'API 엔드포인트를 찾을 수 없습니다.',
+            path: req.path
+        });
     } else {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
@@ -73,6 +93,16 @@ app.use((req, res, next) => {
 
 // 에러 핸들러
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
+    console.error('서버 에러 발생:', err);
+    console.error('에러 상세:', {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        stack: err.stack
+    });
+    res.status(500).json({ 
+        success: false, 
+        msg: '서버 오류가 발생했습니다.',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 }); 
