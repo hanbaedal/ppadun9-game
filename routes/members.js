@@ -45,7 +45,7 @@ router.delete('/:id', auth, async (req, res) => {
             return res.status(404).json({ msg: '회원을 찾을 수 없습니다.' });
         }
 
-        await user.remove();
+        await User.deleteOne({ _id: req.params.id });
         res.json({ msg: '회원이 삭제되었습니다.' });
     } catch (err) {
         console.error(err.message);
