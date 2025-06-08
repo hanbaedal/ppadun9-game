@@ -14,7 +14,8 @@ app.use(express.static('public'));
 // MongoDB 연결
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    dbName: 'test'
 })
 .then(() => {
     console.log('MongoDB 연결 성공');
