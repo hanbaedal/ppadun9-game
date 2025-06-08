@@ -11,16 +11,36 @@ const axios = require('axios');
 router.post('/check-id', async (req, res) => {
     try {
         const { userId } = req.body;
-        const user = await User.findOne({ userId });
+        console.log('중복 확인 요청된 아이디:', userId);
+
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                msg: '아이디를 입력해주세요.' 
+            });
+        }
+
+        const user = await User.findOne({ userId: userId.trim() });
+        console.log('검색 결과:', user ? '사용 중인 아이디' : '사용 가능한 아이디');
         
         if (user) {
-            return res.json({ success: false, msg: '이미 사용 중인 아이디입니다.' });
+            return res.json({ 
+                success: false, 
+                msg: '이미 사용 중인 아이디입니다.' 
+            });
         }
         
-        res.json({ success: true, msg: '사용 가능한 아이디입니다.' });
+        res.json({ 
+            success: true, 
+            msg: '사용 가능한 아이디입니다.' 
+        });
     } catch (err) {
         console.error('아이디 중복 확인 오류:', err);
-        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
+        res.status(500).json({ 
+            success: false, 
+            msg: '서버 오류가 발생했습니다.',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });
 
@@ -96,17 +116,31 @@ router.post('/login', [
 
     try {
         const { userId, password } = req.body;
+        console.log('로그인 시도:', { userId });
 
-        const user = await User.findOne({ userId });
+        // 사용자 찾기
+        const user = await User.findOne({ userId: userId.trim() });
+        console.log('사용자 검색 결과:', user ? '사용자 찾음' : '사용자 없음');
+
         if (!user) {
-            return res.status(400).json({ success: false, msg: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+            return res.status(400).json({ 
+                success: false, 
+                msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
+            });
         }
 
+        // 비밀번호 확인
         const isMatch = await user.comparePassword(password);
+        console.log('비밀번호 일치 여부:', isMatch ? '일치' : '불일치');
+
         if (!isMatch) {
-            return res.status(400).json({ success: false, msg: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+            return res.status(400).json({ 
+                success: false, 
+                msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
+            });
         }
 
+        // JWT 토큰 생성
         const payload = {
             user: {
                 id: user.id
@@ -118,13 +152,29 @@ router.post('/login', [
             process.env.JWT_SECRET,
             { expiresIn: '24h' },
             (err, token) => {
-                if (err) throw err;
-                res.json({ success: true, token });
+                if (err) {
+                    console.error('JWT 토큰 생성 오류:', err);
+                    throw err;
+                }
+                console.log('로그인 성공:', { userId: user.userId });
+                res.json({ 
+                    success: true, 
+                    token,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        userId: user.userId
+                    }
+                });
             }
         );
     } catch (err) {
         console.error('로그인 오류:', err);
-        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
+        res.status(500).json({ 
+            success: false, 
+            msg: '서버 오류가 발생했습니다.',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });
 
