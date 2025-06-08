@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -19,12 +19,18 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        trim: true,
-        default: ''
+        required: true,
+        unique: true,
+        trim: true
     },
     phoneVerified: {
         type: Boolean,
         default: false
+    },
+    team: {
+        type: String,
+        required: true,
+        enum: ['KIA', 'LG', 'NC', 'SSG', 'KT', '두산', '롯데', '삼성', '한화']
     },
     points: {
         type: Number,
@@ -35,6 +41,10 @@ const userSchema = new mongoose.Schema({
         trim: true,
         default: ''
     },
+    joinDate: {
+        type: Date,
+        default: Date.now
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -42,7 +52,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // 비밀번호 해싱
-userSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
     
     try {
@@ -55,8 +65,8 @@ userSchema.pre('save', async function(next) {
 });
 
 // 비밀번호 검증 메서드
-userSchema.methods.comparePassword = async function(candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
+UserSchema.methods.comparePassword = async function(candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema); 
+module.exports = mongoose.model('User', UserSchema); 

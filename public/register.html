@@ -14,9 +14,26 @@
         }
         .password-toggle {
             cursor: pointer;
-        }햣
+        }
         .verification-code {
             display: none;
+        }
+        .team-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .team-button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .team-button.selected {
+            background-color: #007bff;
+            color: white;
         }
     </style>
 </head>
@@ -33,24 +50,32 @@
                             <form id="registerForm">
                                 <div class="mb-3">
                                     <label for="name" class="form-label">이름</label>
-                                    <input type="text" class="form-control" id="name" required autofocus>
+                                    <input type="text" class="form-control" id="name" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="userId" class="form-label">아이디</label>
-                                    <input type="text" class="form-control" id="userId" required>
+                                    <input type="text" class="form-control" id="userId" required 
+                                           pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$">
+                                    <div class="form-text">영문자, 특수문자, 숫자를 포함하여 8자 이상으로 입력해주세요.</div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="password" class="form-label">비밀번호</label>
                                     <div class="input-group">
                                         <input type="password" class="form-control" id="password" required>
-                                        <span class="input-group-text password-toggle" onclick="togglePassword()">
+                                        <span class="input-group-text password-toggle" onclick="togglePassword('password')">
                                             <i class="bi bi-eye"></i>
                                         </span>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="passwordConfirm" class="form-label">비밀번호 확인</label>
-                                    <input type="password" class="form-control" id="passwordConfirm" required>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="passwordConfirm" required>
+                                        <span class="input-group-text password-toggle" onclick="togglePassword('passwordConfirm')">
+                                            <i class="bi bi-eye"></i>
+                                        </span>
+                                    </div>
+                                    <div class="form-text" id="passwordMatchMessage"></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="phone" class="form-label">전화번호</label>
@@ -67,8 +92,26 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="notes" class="form-label">참고사항</label>
-                                    <textarea class="form-control" id="notes" rows="3"></textarea>
+                                    <label class="form-label">팀 선택</label>
+                                    <div class="team-buttons">
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="KIA">KIA</div>
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="LG">LG</div>
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="NC">NC</div>
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="SSG">SSG</div>
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="KT">KT</div>
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="두산">두산</div>
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="롯데">롯데</div>
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="삼성">삼성</div>
+                                        <div class="team-button" onclick="selectTeam(this)" data-team="한화">한화</div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="points" class="form-label">내 포인트</label>
+                                    <input type="number" class="form-control" id="points" value="3000" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="joinDate" class="form-label">가입일자</label>
+                                    <input type="date" class="form-control" id="joinDate" required>
                                 </div>
                                 <div class="d-grid gap-2">
                                     <button type="submit" class="btn btn-primary">회원가입</button>
@@ -85,24 +128,49 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/register.js"></script>
     <script>
-        let isUserIdChecked = false;
         let isPhoneVerified = false;
         let verificationCode = '';
+        let selectedTeam = '';
 
         // 비밀번호 표시/숨김 토글
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const icon = document.querySelector('.password-toggle i');
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
             
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
+            if (input.type === 'password') {
+                input.type = 'text';
                 icon.className = 'bi bi-eye-slash';
             } else {
-                passwordInput.type = 'password';
+                input.type = 'password';
                 icon.className = 'bi bi-eye';
             }
+        }
+
+        // 비밀번호 확인
+        document.getElementById('passwordConfirm').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirm = this.value;
+            const messageDiv = document.getElementById('passwordMatchMessage');
+            
+            if (password === confirm) {
+                messageDiv.className = 'form-text text-success';
+                messageDiv.textContent = '비밀번호가 일치합니다.';
+            } else {
+                messageDiv.className = 'form-text text-danger';
+                messageDiv.textContent = '비밀번호가 일치하지 않습니다.';
+            }
+        });
+
+        // 팀 선택
+        function selectTeam(element) {
+            // 이전 선택 제거
+            document.querySelectorAll('.team-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            // 새로운 선택
+            element.classList.add('selected');
+            selectedTeam = element.dataset.team;
         }
 
         // 인증번호 발송
@@ -161,12 +229,19 @@
                 return;
             }
 
+            if (!selectedTeam) {
+                alert('팀을 선택해주세요.');
+                return;
+            }
+
             const formData = {
                 name: document.getElementById('name').value,
                 userId: document.getElementById('userId').value,
                 password: document.getElementById('password').value,
                 phone: document.getElementById('phone').value,
-                notes: document.getElementById('notes').value
+                team: selectedTeam,
+                points: 3000,
+                joinDate: document.getElementById('joinDate').value
             };
 
             try {
@@ -190,6 +265,9 @@
                 alert('회원가입에 실패했습니다.');
             }
         });
+
+        // 가입일자 기본값 설정
+        document.getElementById('joinDate').valueAsDate = new Date();
     </script>
 </body>
 </html> 

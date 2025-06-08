@@ -10,10 +10,10 @@ const mongoose = require('mongoose');
 
 // 회원가입
 router.post('/register', [
-    check('name', '이름을 입력해주세요').not().isEmpty(),
-    check('userId', '아이디를 입력해주세요').not().isEmpty(),
-    check('password', '비밀번호를 입력해주세요').isLength({ min: 6 }),
-    check('phone', '전화번호를 입력해주세요').not().isEmpty()
+    check('name', '이름을 입력해주세요').exists(),
+    check('userId', '아이디를 입력해주세요').exists(),
+    check('password', '비밀번호를 입력해주세요').exists(),
+    check('phone', '전화번호를 입력해주세요').exists()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -22,22 +22,10 @@ router.post('/register', [
 
     try {
         const { name, userId, password, phone, notes } = req.body;
+        console.log('회원가입 시도:', { name, userId, phone });
 
-        // 아이디 중복 확인
-        let user = await User.findOne({ userId });
-        if (user) {
-            return res.status(400).json({ success: false, msg: '이미 사용 중인 아이디입니다.' });
-        }
-
-        // 전화번호 중복 확인
-        if (phone) {
-            user = await User.findOne({ phone });
-            if (user) {
-                return res.status(400).json({ success: false, msg: '이미 등록된 전화번호입니다.' });
-            }
-        }
-
-        user = new User({
+        // 사용자 생성
+        const user = new User({
             name,
             userId,
             password,
@@ -45,26 +33,24 @@ router.post('/register', [
             notes
         });
 
+        // 비밀번호 암호화
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+
+        // 사용자 저장
         await user.save();
+        console.log('회원가입 성공:', userId);
 
-        const payload = {
-            user: {
-                id: user.id
-            }
-        };
-
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ success: true, token });
-            }
-        );
+        res.json({ 
+            success: true, 
+            msg: '회원가입이 완료되었습니다.' 
+        });
     } catch (err) {
         console.error('회원가입 오류:', err);
-        res.status(500).json({ success: false, msg: '서버 오류가 발생했습니다.' });
+        res.status(500).json({ 
+            success: false, 
+            msg: '서버 오류가 발생했습니다.' 
+        });
     }
 });
 
