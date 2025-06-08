@@ -92,18 +92,19 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">팀 선택</label>
-                                    <div class="team-buttons">
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="KIA">KIA</div>
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="LG">LG</div>
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="NC">NC</div>
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="SSG">SSG</div>
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="KT">KT</div>
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="두산">두산</div>
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="롯데">롯데</div>
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="삼성">삼성</div>
-                                        <div class="team-button" onclick="selectTeam(this)" data-team="한화">한화</div>
-                                    </div>
+                                    <label for="team" class="form-label">팀 선택</label>
+                                    <select class="form-select" id="team" required>
+                                        <option value="">팀을 선택해주세요</option>
+                                        <option value="KIA">KIA</option>
+                                        <option value="LG">LG</option>
+                                        <option value="NC">NC</option>
+                                        <option value="SSG">SSG</option>
+                                        <option value="KT">KT</option>
+                                        <option value="두산">두산</option>
+                                        <option value="롯데">롯데</option>
+                                        <option value="삼성">삼성</option>
+                                        <option value="한화">한화</option>
+                                    </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="points" class="form-label">가입 축하 포인트</label>
@@ -131,7 +132,6 @@
     <script>
         let isPhoneVerified = false;
         let verificationCode = '';
-        let selectedTeam = '';
 
         // 비밀번호 표시/숨김 토글
         function togglePassword(inputId) {
@@ -162,17 +162,6 @@
             }
         });
 
-        // 팀 선택
-        function selectTeam(element) {
-            // 이전 선택 제거
-            document.querySelectorAll('.team-button').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            // 새로운 선택
-            element.classList.add('selected');
-            selectedTeam = element.dataset.team;
-        }
-
         // 인증번호 발송
         async function sendVerificationCode() {
             const phone = document.getElementById('phone').value;
@@ -194,6 +183,8 @@
                 if (result.success) {
                     verificationCode = result.code;
                     document.getElementById('verificationCodeDiv').style.display = 'block';
+                    document.getElementById('verificationCode').value = verificationCode;
+                    verifyCode();
                     alert('인증번호가 발송되었습니다.');
                 } else {
                     alert(result.msg);
@@ -229,7 +220,8 @@
                 return;
             }
 
-            if (!selectedTeam) {
+            const team = document.getElementById('team').value;
+            if (!team) {
                 alert('팀을 선택해주세요.');
                 return;
             }
@@ -239,7 +231,7 @@
                 userId: document.getElementById('userId').value,
                 password: document.getElementById('password').value,
                 phone: document.getElementById('phone').value,
-                team: selectedTeam,
+                team: team,
                 points: 3000,
                 joinDate: document.getElementById('joinDate').value
             };
