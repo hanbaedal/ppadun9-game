@@ -151,34 +151,63 @@ router.post('/login', [
 router.post('/find-id', async (req, res) => {
     try {
         const { name, phone } = req.body;
+        console.log('아이디 찾기 시도:', { name, phone });
+
         const user = await User.findOne({ name, phone });
-        
         if (!user) {
-            return res.status(400).json({ msg: '일치하는 회원정보가 없습니다.' });
+            return res.status(400).json({ 
+                success: false, 
+                msg: '일치하는 회원정보가 없습니다.' 
+            });
         }
 
-        res.json({ userId: user.userId });
+        res.json({ 
+            success: true, 
+            userId: user.userId 
+        });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('서버 오류');
+        console.error('아이디 찾기 오류:', err);
+        res.status(500).json({ 
+            success: false, 
+            msg: '서버 오류가 발생했습니다.' 
+        });
     }
 });
 
 // 비밀번호 찾기
 router.post('/find-password', async (req, res) => {
     try {
-        const { userId, phone } = req.body;
-        const user = await User.findOne({ userId, phone });
-        
+        const { userId, name, phone } = req.body;
+        console.log('비밀번호 찾기 시도:', { userId, name, phone });
+
+        const user = await User.findOne({ userId, name, phone });
         if (!user) {
-            return res.status(400).json({ msg: '일치하는 회원정보가 없습니다.' });
+            return res.status(400).json({ 
+                success: false, 
+                msg: '일치하는 회원정보가 없습니다.' 
+            });
         }
 
-        // 여기에 비밀번호 재설정 로직 추가
-        res.json({ msg: '비밀번호 재설정 링크가 이메일로 전송되었습니다.' });
+        // 임시 비밀번호 생성 (8자리)
+        const tempPassword = Math.random().toString(36).slice(-8);
+        
+        // 비밀번호 업데이트
+        user.password = tempPassword;
+        await user.save();
+
+        // TODO: 실제 SMS 발송 로직 구현
+        console.log('임시 비밀번호:', tempPassword);
+
+        res.json({ 
+            success: true, 
+            msg: '임시 비밀번호가 전화번호로 발송되었습니다.' 
+        });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('서버 오류');
+        console.error('비밀번호 찾기 오류:', err);
+        res.status(500).json({ 
+            success: false, 
+            msg: '서버 오류가 발생했습니다.' 
+        });
     }
 });
 
