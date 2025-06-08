@@ -89,16 +89,22 @@ router.post('/login', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        console.log('로그인 유효성 검사 실패:', errors.array());
         return res.status(400).json({ errors: errors.array() });
     }
 
     try {
         const { userId, password } = req.body;
-        console.log('로그인 시도:', { userId, password });
+        console.log('로그인 시도:', { userId });
 
         // 사용자 찾기
         const user = await User.findOne({ userId });
-        console.log('사용자 검색 결과:', user ? '사용자 찾음' : '사용자 없음');
+        console.log('사용자 검색 결과:', user ? {
+            id: user._id,
+            userId: user.userId,
+            name: user.name,
+            hasPassword: !!user.password
+        } : '사용자 없음');
         
         if (!user) {
             console.log('사용자를 찾을 수 없음:', userId);
@@ -110,8 +116,9 @@ router.post('/login', [
 
         // 비밀번호 확인
         try {
+            console.log('비밀번호 확인 시작');
             const isMatch = await user.comparePassword(password);
-            console.log('비밀번호 일치 여부:', isMatch);
+            console.log('비밀번호 확인 결과:', isMatch);
             
             if (!isMatch) {
                 console.log('비밀번호 불일치:', userId);
@@ -139,6 +146,7 @@ router.post('/login', [
             }
         };
 
+        console.log('JWT 토큰 생성 시작');
         jwt.sign(
             payload,
             process.env.JWT_SECRET || 'your-secret-key',

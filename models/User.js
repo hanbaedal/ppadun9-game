@@ -53,8 +53,16 @@ UserSchema.pre('save', async function(next) {
 // 비밀번호 검증 메서드
 UserSchema.methods.comparePassword = async function(candidatePassword) {
     try {
-        return await bcrypt.compare(candidatePassword, this.password);
+        console.log('비밀번호 비교 시작');
+        console.log('입력된 비밀번호:', candidatePassword);
+        console.log('저장된 해시:', this.password);
+        
+        const isMatch = await bcrypt.compare(candidatePassword, this.password);
+        console.log('비밀번호 일치 여부:', isMatch);
+        
+        return isMatch;
     } catch (error) {
+        console.error('비밀번호 비교 중 오류:', error);
         throw error;
     }
 };
