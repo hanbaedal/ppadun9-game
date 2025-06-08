@@ -44,7 +44,7 @@ router.post('/register', [
         const user = new User({
             name,
             userId,
-            password,
+            password,  // 비밀번호를 그대로 저장
             phone,
             team,
             points: points || 3000,
@@ -52,10 +52,6 @@ router.post('/register', [
         });
 
         console.log('생성된 사용자 객체:', user);
-
-        // 비밀번호 암호화
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(password, salt);
 
         // 사용자 저장
         await user.save();
