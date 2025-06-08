@@ -81,11 +81,19 @@ router.post('/register', [
 router.post('/login', async (req, res) => {
     try {
         const { userId, password } = req.body;
-        console.log('로그인 시도:', { userId, password });
+        console.log('로그인 시도 - 입력값:', { 
+            userId, 
+            password,
+            passwordLength: password ? password.length : 0
+        });
 
         // 사용자 찾기
         const user = await User.findOne({ userId });
-        console.log('사용자 검색 결과:', user);
+        console.log('사용자 검색 결과:', user ? {
+            userId: user.userId,
+            password: user.password,
+            passwordLength: user.password ? user.password.length : 0
+        } : '사용자 없음');
         
         if (!user) {
             return res.status(400).json({ 
@@ -95,6 +103,12 @@ router.post('/login', async (req, res) => {
         }
 
         // 비밀번호 확인 (단순 비교)
+        console.log('비밀번호 비교:', {
+            inputPassword: password,
+            storedPassword: user.password,
+            isMatch: user.password === password
+        });
+
         if (user.password !== password) {
             return res.status(400).json({ 
                 success: false, 
@@ -103,6 +117,7 @@ router.post('/login', async (req, res) => {
         }
 
         // 로그인 성공
+        console.log('로그인 성공:', userId);
         res.json({ 
             success: true, 
             user: {
