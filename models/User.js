@@ -37,9 +37,11 @@ const UserSchema = new mongoose.Schema({
 
 // 비밀번호 해싱
 UserSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    
     try {
+        if (!this.isModified('password')) {
+            return next();
+        }
+        
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
         next();
@@ -50,7 +52,11 @@ UserSchema.pre('save', async function(next) {
 
 // 비밀번호 검증 메서드
 UserSchema.methods.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+    try {
+        return await bcrypt.compare(candidatePassword, this.password);
+    } catch (error) {
+        throw error;
+    }
 };
 
 module.exports = mongoose.model('User', UserSchema); 

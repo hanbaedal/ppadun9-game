@@ -78,13 +78,12 @@ router.post('/login', [
 
     try {
         const { userId, password } = req.body;
-        console.log('로그인 시도:', { userId });
+        console.log('로그인 시도:', userId);
 
         // 사용자 찾기
-        const user = await User.findOne({ userId: userId.trim() });
-        console.log('사용자 검색 결과:', user ? '사용자 찾음' : '사용자 없음');
-
+        const user = await User.findOne({ userId });
         if (!user) {
+            console.log('사용자를 찾을 수 없음:', userId);
             return res.status(400).json({ 
                 success: false, 
                 msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
@@ -92,20 +91,31 @@ router.post('/login', [
         }
 
         // 비밀번호 확인
-        const isMatch = await user.comparePassword(password);
-        console.log('비밀번호 일치 여부:', isMatch ? '일치' : '불일치');
-
-        if (!isMatch) {
-            return res.status(400).json({ 
+        try {
+            const isMatch = await user.comparePassword(password);
+            if (!isMatch) {
+                console.log('비밀번호 불일치:', userId);
+                return res.status(400).json({ 
+                    success: false, 
+                    msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
+                });
+            }
+        } catch (error) {
+            console.error('비밀번호 확인 오류:', error);
+            return res.status(500).json({ 
                 success: false, 
-                msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
+                msg: '비밀번호 확인 중 오류가 발생했습니다.' 
             });
         }
 
         // JWT 토큰 생성
         const payload = {
             user: {
-                id: user.id
+                id: user.id,
+                name: user.name,
+                userId: user.userId,
+                team: user.team,
+                points: user.points
             }
         };
 
@@ -114,18 +124,16 @@ router.post('/login', [
             process.env.JWT_SECRET,
             { expiresIn: '24h' },
             (err, token) => {
-                if (err) {
-                    console.error('JWT 토큰 생성 오류:', err);
-                    throw err;
-                }
-                console.log('로그인 성공:', { userId: user.userId });
+                if (err) throw err;
+                console.log('로그인 성공:', userId);
                 res.json({ 
                     success: true, 
                     token,
                     user: {
-                        id: user.id,
                         name: user.name,
-                        userId: user.userId
+                        userId: user.userId,
+                        team: user.team,
+                        points: user.points
                     }
                 });
             }
@@ -134,8 +142,7 @@ router.post('/login', [
         console.error('로그인 오류:', err);
         res.status(500).json({ 
             success: false, 
-            msg: '서버 오류가 발생했습니다.',
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+            msg: '서버 오류가 발생했습니다.' 
         });
     }
 });
