@@ -97,9 +97,22 @@
 
         // 아이디 중복 확인
         async function checkUserId() {
-            const userId = document.getElementById('userId').value;
+            const userId = document.getElementById('userId').value.trim();
+            const messageDiv = document.getElementById('userIdMessage');
+            
             if (!userId) {
-                alert('아이디를 입력해주세요.');
+                messageDiv.className = 'form-text text-danger';
+                messageDiv.textContent = '아이디를 입력해주세요.';
+                isUserIdChecked = false;
+                return;
+            }
+
+            // 아이디 형식 검사 (영문, 숫자 조합 4-20자)
+            const userIdRegex = /^[a-zA-Z0-9]{4,20}$/;
+            if (!userIdRegex.test(userId)) {
+                messageDiv.className = 'form-text text-danger';
+                messageDiv.textContent = '아이디는 영문, 숫자 조합 4-20자로 입력해주세요.';
+                isUserIdChecked = false;
                 return;
             }
 
@@ -113,21 +126,31 @@
                 });
 
                 const result = await response.json();
-                const messageDiv = document.getElementById('userIdMessage');
                 
                 if (result.success) {
                     messageDiv.className = 'form-text text-success';
+                    messageDiv.textContent = '사용 가능한 아이디입니다.';
                     isUserIdChecked = true;
                 } else {
                     messageDiv.className = 'form-text text-danger';
+                    messageDiv.textContent = '이미 사용 중인 아이디입니다.';
                     isUserIdChecked = false;
                 }
-                messageDiv.textContent = result.msg;
             } catch (error) {
                 console.error('Error:', error);
-                alert('아이디 중복 확인에 실패했습니다.');
+                messageDiv.className = 'form-text text-danger';
+                messageDiv.textContent = '아이디 중복 확인에 실패했습니다.';
+                isUserIdChecked = false;
             }
         }
+
+        // 아이디 입력 필드 변경 시 중복 확인 상태 초기화
+        document.getElementById('userId').addEventListener('input', function() {
+            isUserIdChecked = false;
+            const messageDiv = document.getElementById('userIdMessage');
+            messageDiv.textContent = '';
+            messageDiv.className = 'form-text';
+        });
 
         // 비밀번호 표시/숨김 토글
         function togglePassword() {

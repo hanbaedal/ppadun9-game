@@ -6,30 +6,54 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const auth = require('../middleware/auth');
 const axios = require('axios');
+const mongoose = require('mongoose');
 
 // 아이디 중복 확인
 router.post('/check-id', async (req, res) => {
     try {
         const { userId } = req.body;
-        console.log('중복 확인 요청된 아이디:', userId);
+        console.log('=== 아이디 중복 확인 시작 ===');
+        console.log('1. 요청된 아이디:', userId);
 
         if (!userId) {
+            console.log('2. 아이디 미입력');
             return res.status(400).json({ 
                 success: false, 
                 msg: '아이디를 입력해주세요.' 
             });
         }
 
+        // 데이터베이스 연결 확인
+        if (mongoose.connection.readyState !== 1) {
+            console.log('3. 데이터베이스 연결 안됨');
+            return res.status(500).json({ 
+                success: false, 
+                msg: '데이터베이스 연결 오류' 
+            });
+        }
+
+        // 모든 사용자 조회 (디버깅용)
+        const allUsers = await User.find({});
+        console.log('4. 전체 사용자 수:', allUsers.length);
+        console.log('5. 전체 사용자 목록:', allUsers.map(u => u.userId));
+
+        // 중복 확인
         const user = await User.findOne({ userId: userId.trim() });
-        console.log('검색 결과:', user ? '사용 중인 아이디' : '사용 가능한 아이디');
+        console.log('6. 검색 결과:', user ? '사용 중인 아이디' : '사용 가능한 아이디');
         
         if (user) {
+            console.log('7. 찾은 사용자:', {
+                id: user._id,
+                userId: user.userId,
+                name: user.name
+            });
             return res.json({ 
                 success: false, 
                 msg: '이미 사용 중인 아이디입니다.' 
             });
         }
         
+        console.log('8. === 아이디 중복 확인 완료 ===');
         res.json({ 
             success: true, 
             msg: '사용 가능한 아이디입니다.' 
