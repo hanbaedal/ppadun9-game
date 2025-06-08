@@ -13,10 +13,9 @@ router.post('/check-id', async (req, res) => {
     try {
         const { userId } = req.body;
         console.log('=== 아이디 중복 확인 시작 ===');
-        console.log('1. 요청된 아이디:', userId);
+        console.log('요청된 아이디:', userId);
 
         if (!userId) {
-            console.log('2. 아이디 미입력');
             return res.status(400).json({ 
                 success: false, 
                 msg: '아이디를 입력해주세요.' 
@@ -25,45 +24,42 @@ router.post('/check-id', async (req, res) => {
 
         // 데이터베이스 연결 확인
         if (mongoose.connection.readyState !== 1) {
-            console.log('3. 데이터베이스 연결 안됨');
+            console.error('데이터베이스 연결 안됨');
             return res.status(500).json({ 
                 success: false, 
                 msg: '데이터베이스 연결 오류' 
             });
         }
 
-        // 모든 사용자 조회 (디버깅용)
-        const allUsers = await User.find({});
-        console.log('4. 전체 사용자 수:', allUsers.length);
-        console.log('5. 전체 사용자 목록:', allUsers.map(u => u.userId));
+        try {
+            // 정확한 일치 검색
+            const existingUser = await User.findOne({ userId: userId });
+            
+            if (existingUser) {
+                console.log('이미 사용 중인 아이디:', existingUser.userId);
+                return res.json({ 
+                    success: false, 
+                    msg: '이미 사용 중인 아이디입니다.' 
+                });
+            }
 
-        // 중복 확인
-        const user = await User.findOne({ userId: userId.trim() });
-        console.log('6. 검색 결과:', user ? '사용 중인 아이디' : '사용 가능한 아이디');
-        
-        if (user) {
-            console.log('7. 찾은 사용자:', {
-                id: user._id,
-                userId: user.userId,
-                name: user.name
-            });
+            console.log('사용 가능한 아이디:', userId);
             return res.json({ 
+                success: true, 
+                msg: '사용 가능한 아이디입니다.' 
+            });
+        } catch (dbError) {
+            console.error('데이터베이스 쿼리 오류:', dbError);
+            return res.status(500).json({ 
                 success: false, 
-                msg: '이미 사용 중인 아이디입니다.' 
+                msg: '데이터베이스 조회 중 오류가 발생했습니다.' 
             });
         }
-        
-        console.log('8. === 아이디 중복 확인 완료 ===');
-        res.json({ 
-            success: true, 
-            msg: '사용 가능한 아이디입니다.' 
-        });
     } catch (err) {
         console.error('아이디 중복 확인 오류:', err);
-        res.status(500).json({ 
+        return res.status(500).json({ 
             success: false, 
-            msg: '서버 오류가 발생했습니다.',
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+            msg: '서버 오류가 발생했습니다.' 
         });
     }
 });
