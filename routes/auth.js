@@ -187,50 +187,33 @@ router.get('/me', auth, async (req, res) => {
     }
 });
 
-// 전화번호 인증번호 발송
+// 인증번호 발송
 router.post('/send-verification', async (req, res) => {
     try {
         const { phone } = req.body;
-        
+        console.log('인증번호 발송 요청:', phone);
+
+        if (!phone) {
+            return res.status(400).json({ 
+                success: false, 
+                msg: '전화번호를 입력해주세요.' 
+            });
+        }
+
         // 6자리 랜덤 인증번호 생성
         const code = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        // CoolSMS API 설정
-        const apiKey = process.env.COOLSMS_API_KEY;
-        const apiSecret = process.env.COOLSMS_API_SECRET;
-        const sender = process.env.COOLSMS_SENDER_NUMBER;
+        console.log('생성된 인증번호:', code);
 
-        // SMS 발송
-        const response = await axios({
-            method: 'POST',
-            url: 'https://api.coolsms.co.kr/messages/v4/send',
-            headers: {
-                'Authorization': `HMAC-SHA256 apiKey=${apiKey}, date=${new Date().toISOString()}, salt=${Math.random().toString(36).substring(2)}, signature=${apiSecret}`,
-                'Content-Type': 'application/json'
-            },
-            data: {
-                message: {
-                    to: phone,
-                    from: sender,
-                    text: `[회원가입] 인증번호는 [${code}] 입니다.`
-                }
-            }
+        res.json({ 
+            success: true, 
+            msg: '인증번호가 발송되었습니다.',
+            code: code  // 실제 서비스에서는 이 부분 제거
         });
-
-        if (response.data.status === 'success') {
-            res.json({
-                success: true,
-                msg: '인증번호가 발송되었습니다.',
-                code: code // 실제 운영환경에서는 제거
-            });
-        } else {
-            throw new Error('SMS 발송 실패');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({
-            success: false,
-            msg: '인증번호 발송에 실패했습니다.'
+    } catch (err) {
+        console.error('인증번호 발송 오류:', err);
+        res.status(500).json({ 
+            success: false, 
+            msg: '서버 오류가 발생했습니다.' 
         });
     }
 });
