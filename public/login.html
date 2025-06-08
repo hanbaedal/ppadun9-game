@@ -291,14 +291,15 @@
                 });
 
                 const result = await response.json();
+                console.log('로그인 응답:', result);
                 
                 if (result.success) {
-                    // 토큰 저장
-                    localStorage.setItem('token', result.token);
+                    // 사용자 정보 저장
                     localStorage.setItem('user', JSON.stringify(result.user));
+                    console.log('저장된 사용자 정보:', result.user);
                     
                     // 메인 페이지로 이동
-                    window.location.href = '/main.html';
+                    window.location.href = '/game-admin.html';
                 } else {
                     alert(result.msg || '로그인에 실패했습니다.');
                 }

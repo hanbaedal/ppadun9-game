@@ -91,6 +91,7 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({ userId });
         console.log('사용자 검색 결과:', user ? {
             userId: user.userId,
+            name: user.name,
             password: user.password,
             passwordLength: user.password ? user.password.length : 0
         } : '사용자 없음');
@@ -117,7 +118,13 @@ router.post('/login', async (req, res) => {
         }
 
         // 로그인 성공
-        console.log('로그인 성공:', userId);
+        console.log('로그인 성공:', {
+            userId: user.userId,
+            name: user.name,
+            team: user.team
+        });
+
+        // 사용자 정보를 localStorage에 저장할 수 있도록 응답
         res.json({ 
             success: true, 
             user: {
