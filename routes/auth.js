@@ -339,4 +339,97 @@ router.get('/members', async (req, res) => {
     }
 });
 
+// 회원 정보 조회
+router.get('/member/:userId', async (req, res) => {
+    try {
+        const user = await User.findOne({ userId: req.params.userId });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                msg: '회원을 찾을 수 없습니다.'
+            });
+        }
+
+        res.json({
+            success: true,
+            member: {
+                name: user.name,
+                userId: user.userId,
+                password: user.password,
+                phone: user.phone,
+                team: user.team,
+                points: user.points,
+                createdAt: user.createdAt
+            }
+        });
+    } catch (err) {
+        console.error('회원 정보 조회 오류:', err);
+        res.status(500).json({
+            success: false,
+            msg: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 회원 정보 수정
+router.put('/member/:userId', async (req, res) => {
+    try {
+        const { name, userId, password, phone, team } = req.body;
+        const user = await User.findOne({ userId: req.params.userId });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                msg: '회원을 찾을 수 없습니다.'
+            });
+        }
+
+        // 정보 업데이트
+        user.name = name;
+        user.userId = userId;
+        user.password = password;
+        user.phone = phone;
+        user.team = team;
+
+        await user.save();
+
+        res.json({
+            success: true,
+            msg: '회원 정보가 수정되었습니다.'
+        });
+    } catch (err) {
+        console.error('회원 정보 수정 오류:', err);
+        res.status(500).json({
+            success: false,
+            msg: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 회원 삭제
+router.delete('/member/:userId', async (req, res) => {
+    try {
+        const user = await User.findOne({ userId: req.params.userId });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                msg: '회원을 찾을 수 없습니다.'
+            });
+        }
+
+        await user.remove();
+
+        res.json({
+            success: true,
+            msg: '회원이 삭제되었습니다.'
+        });
+    } catch (err) {
+        console.error('회원 삭제 오류:', err);
+        res.status(500).json({
+            success: false,
+            msg: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
 module.exports = router; 
