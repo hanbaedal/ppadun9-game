@@ -263,4 +263,55 @@ router.post('/send-verification', async (req, res) => {
     }
 });
 
+// 사용자 정보 수정
+router.post('/update', async (req, res) => {
+    try {
+        const { name, team, currentPassword, newPassword } = req.body;
+        const userId = req.body.userId;
+
+        // 사용자 찾기
+        const user = await User.findOne({ userId });
+        if (!user) {
+            return res.status(400).json({ 
+                success: false, 
+                msg: '사용자를 찾을 수 없습니다.' 
+            });
+        }
+
+        // 현재 비밀번호 확인
+        if (user.password !== currentPassword) {
+            return res.status(400).json({ 
+                success: false, 
+                msg: '현재 비밀번호가 일치하지 않습니다.' 
+            });
+        }
+
+        // 정보 업데이트
+        user.name = name;
+        user.team = team;
+        if (newPassword) {
+            user.password = newPassword;
+        }
+
+        await user.save();
+
+        // 업데이트된 사용자 정보 반환
+        res.json({ 
+            success: true, 
+            user: {
+                name: user.name,
+                userId: user.userId,
+                team: user.team,
+                points: user.points
+            }
+        });
+    } catch (err) {
+        console.error('정보 수정 오류:', err);
+        res.status(500).json({ 
+            success: false, 
+            msg: '서버 오류가 발생했습니다.' 
+        });
+    }
+});
+
 module.exports = router; 
