@@ -121,10 +121,16 @@ router.post('/login', [
 
         jwt.sign(
             payload,
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '24h' },
             (err, token) => {
-                if (err) throw err;
+                if (err) {
+                    console.error('JWT 토큰 생성 오류:', err);
+                    return res.status(500).json({ 
+                        success: false, 
+                        msg: '토큰 생성 중 오류가 발생했습니다.' 
+                    });
+                }
                 console.log('로그인 성공:', userId);
                 res.json({ 
                     success: true, 
@@ -191,8 +197,9 @@ router.post('/find-password', async (req, res) => {
         // 임시 비밀번호 생성 (8자리)
         const tempPassword = Math.random().toString(36).slice(-8);
         
-        // 비밀번호 업데이트
-        user.password = tempPassword;
+        // 비밀번호 암호화
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(tempPassword, salt);
         await user.save();
 
         // TODO: 실제 SMS 발송 로직 구현
