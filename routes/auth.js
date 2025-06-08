@@ -320,6 +320,7 @@ router.get('/members', async (req, res) => {
         const members = await User.find({}, {
             name: 1,
             userId: 1,
+            phone: 1,
             team: 1,
             points: 1,
             createdAt: 1,
@@ -328,7 +329,7 @@ router.get('/members', async (req, res) => {
 
         res.json({
             success: true,
-            members
+            members: members
         });
     } catch (err) {
         console.error('회원 목록 조회 오류:', err);

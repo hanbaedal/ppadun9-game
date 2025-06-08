@@ -91,7 +91,7 @@
                             <td>${member.phone || '-'}</td>
                             <td>${member.team}</td>
                             <td>${member.points}</td>
-                            <td>${formatDate(member.createdAt)}</td>
+                            <td>${formatDate(member.joinDate)}</td>
                             <td>
                                 <a href="members.html?userId=${member.userId}" class="btn btn-sm btn-primary">수정</a>
                                 <button onclick="deleteMember('${member.userId}')" class="btn btn-sm btn-danger">삭제</button>
