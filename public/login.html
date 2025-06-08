@@ -298,8 +298,8 @@
                     localStorage.setItem('user', JSON.stringify(result.user));
                     console.log('저장된 사용자 정보:', result.user);
                     
-                    // 메인 페이지로 이동
-                    window.location.href = '/game-admin.html';
+                    // index.html로 이동
+                    window.location.href = '/index.html';
                 } else {
                     alert(result.msg || '로그인에 실패했습니다.');
                 }
