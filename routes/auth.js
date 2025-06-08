@@ -13,7 +13,8 @@ router.post('/register', [
     check('name', '이름을 입력해주세요').exists(),
     check('userId', '아이디를 입력해주세요').exists(),
     check('password', '비밀번호를 입력해주세요').exists(),
-    check('phone', '전화번호를 입력해주세요').exists()
+    check('phone', '전화번호를 입력해주세요').exists(),
+    check('team', '팀을 선택해주세요').exists()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -21,8 +22,8 @@ router.post('/register', [
     }
 
     try {
-        const { name, userId, password, phone, notes } = req.body;
-        console.log('회원가입 시도:', { name, userId, phone });
+        const { name, userId, password, phone, team, points, joinDate } = req.body;
+        console.log('회원가입 시도:', { name, userId, phone, team });
 
         // 사용자 생성
         const user = new User({
@@ -30,7 +31,9 @@ router.post('/register', [
             userId,
             password,
             phone,
-            notes
+            team,
+            points: points || 3000,
+            joinDate: joinDate || new Date()
         });
 
         // 비밀번호 암호화
@@ -47,6 +50,15 @@ router.post('/register', [
         });
     } catch (err) {
         console.error('회원가입 오류:', err);
+        if (err.code === 11000) {
+            // 중복 키 오류 (아이디 또는 전화번호 중복)
+            const field = Object.keys(err.keyPattern)[0];
+            const msg = field === 'userId' ? '이미 사용 중인 아이디입니다.' : '이미 등록된 전화번호입니다.';
+            return res.status(400).json({ 
+                success: false, 
+                msg: msg 
+            });
+        }
         res.status(500).json({ 
             success: false, 
             msg: '서버 오류가 발생했습니다.' 
