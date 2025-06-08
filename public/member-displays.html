@@ -64,11 +64,34 @@
     <script>
         // 날짜 포맷 함수
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            try {
+                // 날짜 문자열이 ISO 형식인 경우
+                if (dateString.includes('T')) {
+                    const date = new Date(dateString);
+                    if (!isNaN(date.getTime())) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    }
+                }
+                
+                // 날짜 문자열이 다른 형식인 경우 (예: YYYY-MM-DD)
+                const parts = dateString.split('-');
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    const day = parseInt(parts[2]);
+                    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    }
+                }
+                
+                return '-';
+            } catch (error) {
+                console.error('날짜 파싱 오류:', error);
+                return '-';
+            }
         }
 
         // 회원 목록 불러오기
