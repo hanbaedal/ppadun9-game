@@ -78,10 +78,12 @@ router.post('/login', [
 
     try {
         const { userId, password } = req.body;
-        console.log('로그인 시도:', userId);
+        console.log('로그인 시도:', { userId, password });
 
         // 사용자 찾기
         const user = await User.findOne({ userId });
+        console.log('사용자 검색 결과:', user ? '사용자 찾음' : '사용자 없음');
+        
         if (!user) {
             console.log('사용자를 찾을 수 없음:', userId);
             return res.status(400).json({ 
@@ -93,6 +95,8 @@ router.post('/login', [
         // 비밀번호 확인
         try {
             const isMatch = await user.comparePassword(password);
+            console.log('비밀번호 일치 여부:', isMatch);
+            
             if (!isMatch) {
                 console.log('비밀번호 불일치:', userId);
                 return res.status(400).json({ 
