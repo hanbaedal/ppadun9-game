@@ -117,7 +117,10 @@ router.post('/login', [
         // 비밀번호 확인
         try {
             console.log('비밀번호 확인 시작');
-            const isMatch = await user.comparePassword(password);
+            console.log('입력된 비밀번호:', password);
+            console.log('저장된 해시:', user.password);
+            
+            const isMatch = await bcrypt.compare(password, user.password);
             console.log('비밀번호 확인 결과:', isMatch);
             
             if (!isMatch) {

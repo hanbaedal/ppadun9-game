@@ -38,14 +38,23 @@ const UserSchema = new mongoose.Schema({
 // 비밀번호 해싱
 UserSchema.pre('save', async function(next) {
     try {
+        console.log('비밀번호 해시화 시작');
+        console.log('원본 비밀번호:', this.password);
+        
         if (!this.isModified('password')) {
+            console.log('비밀번호가 변경되지 않음');
             return next();
         }
         
         const salt = await bcrypt.genSalt(10);
+        console.log('생성된 salt:', salt);
+        
         this.password = await bcrypt.hash(this.password, salt);
+        console.log('해시화된 비밀번호:', this.password);
+        
         next();
     } catch (error) {
+        console.error('비밀번호 해시화 중 오류:', error);
         next(error);
     }
 });
