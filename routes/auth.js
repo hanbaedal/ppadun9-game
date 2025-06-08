@@ -18,12 +18,27 @@ router.post('/register', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        console.log('유효성 검사 실패:', errors.array());
         return res.status(400).json({ errors: errors.array() });
     }
 
     try {
         const { name, userId, password, phone, team, points, joinDate } = req.body;
         console.log('회원가입 시도:', { name, userId, phone, team });
+
+        // 중복 체크
+        const existingUser = await User.findOne({ 
+            $or: [{ userId }, { phone }] 
+        });
+        
+        if (existingUser) {
+            console.log('중복 사용자 발견:', existingUser);
+            const field = existingUser.userId === userId ? '아이디' : '전화번호';
+            return res.status(400).json({ 
+                success: false, 
+                msg: `이미 사용 중인 ${field}입니다.` 
+            });
+        }
 
         // 사용자 생성
         const user = new User({
@@ -35,6 +50,8 @@ router.post('/register', [
             points: points || 3000,
             joinDate: joinDate || new Date()
         });
+
+        console.log('생성된 사용자 객체:', user);
 
         // 비밀번호 암호화
         const salt = await bcrypt.genSalt(10);
@@ -51,7 +68,6 @@ router.post('/register', [
     } catch (err) {
         console.error('회원가입 오류:', err);
         if (err.code === 11000) {
-            // 중복 키 오류 (아이디 또는 전화번호 중복)
             const field = Object.keys(err.keyPattern)[0];
             const msg = field === 'userId' ? '이미 사용 중인 아이디입니다.' : '이미 등록된 전화번호입니다.';
             return res.status(400).json({ 
