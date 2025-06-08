@@ -314,4 +314,29 @@ router.post('/update', async (req, res) => {
     }
 });
 
+// 회원 목록 조회
+router.get('/members', async (req, res) => {
+    try {
+        const members = await User.find({}, {
+            name: 1,
+            userId: 1,
+            team: 1,
+            points: 1,
+            createdAt: 1,
+            _id: 0
+        }).sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            members
+        });
+    } catch (err) {
+        console.error('회원 목록 조회 오류:', err);
+        res.status(500).json({
+            success: false,
+            msg: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
 module.exports = router; 
