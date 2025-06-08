@@ -173,6 +173,11 @@
             }
         }
 
+        // 수정 버튼 클릭 이벤트
+        function handleEdit(userId) {
+            window.location.href = `/members.html?userId=${userId}`;
+        }
+
         // 페이지 로드 시 회원 목록 불러오기
         document.addEventListener('DOMContentLoaded', fetchMembers);
     </script>
