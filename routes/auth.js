@@ -79,98 +79,40 @@ router.post('/register', [
 });
 
 // 로그인
-router.post('/login', [
-    check('userId', '아이디를 입력해주세요').exists(),
-    check('password', '비밀번호를 입력해주세요').exists()
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        console.log('로그인 유효성 검사 실패:', errors.array());
-        return res.status(400).json({ errors: errors.array() });
-    }
-
+router.post('/login', async (req, res) => {
     try {
         const { userId, password } = req.body;
-        console.log('로그인 시도:', { userId });
+        console.log('로그인 시도:', { userId, password });
 
         // 사용자 찾기
         const user = await User.findOne({ userId });
-        console.log('사용자 검색 결과:', user ? {
-            id: user._id,
-            userId: user.userId,
-            name: user.name,
-            hasPassword: !!user.password
-        } : '사용자 없음');
+        console.log('사용자 검색 결과:', user);
         
         if (!user) {
-            console.log('사용자를 찾을 수 없음:', userId);
             return res.status(400).json({ 
                 success: false, 
                 msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
             });
         }
 
-        // 비밀번호 확인
-        try {
-            console.log('비밀번호 확인 시작');
-            console.log('입력된 비밀번호:', password);
-            console.log('저장된 비밀번호:', user.password);
-            
-            const isMatch = user.password === password;
-            console.log('비밀번호 확인 결과:', isMatch);
-            
-            if (!isMatch) {
-                console.log('비밀번호 불일치:', userId);
-                return res.status(400).json({ 
-                    success: false, 
-                    msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
-                });
-            }
-        } catch (error) {
-            console.error('비밀번호 확인 오류:', error);
-            return res.status(500).json({ 
+        // 비밀번호 확인 (단순 비교)
+        if (user.password !== password) {
+            return res.status(400).json({ 
                 success: false, 
-                msg: '비밀번호 확인 중 오류가 발생했습니다.' 
+                msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
             });
         }
 
-        // JWT 토큰 생성
-        const payload = {
+        // 로그인 성공
+        res.json({ 
+            success: true, 
             user: {
-                id: user.id,
                 name: user.name,
                 userId: user.userId,
                 team: user.team,
                 points: user.points
             }
-        };
-
-        console.log('JWT 토큰 생성 시작');
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET || 'your-secret-key',
-            { expiresIn: '24h' },
-            (err, token) => {
-                if (err) {
-                    console.error('JWT 토큰 생성 오류:', err);
-                    return res.status(500).json({ 
-                        success: false, 
-                        msg: '토큰 생성 중 오류가 발생했습니다.' 
-                    });
-                }
-                console.log('로그인 성공:', userId);
-                res.json({ 
-                    success: true, 
-                    token,
-                    user: {
-                        name: user.name,
-                        userId: user.userId,
-                        team: user.team,
-                        points: user.points
-                    }
-                });
-            }
-        );
+        });
     } catch (err) {
         console.error('로그인 오류:', err);
         res.status(500).json({ 
