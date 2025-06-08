@@ -14,7 +14,7 @@
         }
         .password-toggle {
             cursor: pointer;
-        }
+        }햣
         .verification-code {
             display: none;
         }
@@ -100,6 +100,7 @@
             const userId = document.getElementById('userId').value.trim();
             const messageDiv = document.getElementById('userIdMessage');
             
+            // 아이디 입력 여부 확인
             if (!userId) {
                 messageDiv.className = 'form-text text-danger';
                 messageDiv.textContent = '아이디를 입력해주세요.';

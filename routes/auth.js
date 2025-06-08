@@ -31,30 +31,26 @@ router.post('/check-id', async (req, res) => {
             });
         }
 
-        try {
-            // 정확한 일치 검색
-            const existingUser = await User.findOne({ userId: userId });
-            
-            if (existingUser) {
-                console.log('이미 사용 중인 아이디:', existingUser.userId);
-                return res.json({ 
-                    success: false, 
-                    msg: '이미 사용 중인 아이디입니다.' 
-                });
-            }
+        // 데이터베이스에서 사용자 검색
+        const existingUser = await User.findOne({ userId: userId });
+        console.log('데이터베이스 검색 결과:', existingUser ? '사용자 있음' : '사용자 없음');
 
+        // 사용자가 없으면 사용 가능
+        if (!existingUser) {
             console.log('사용 가능한 아이디:', userId);
             return res.json({ 
                 success: true, 
                 msg: '사용 가능한 아이디입니다.' 
             });
-        } catch (dbError) {
-            console.error('데이터베이스 쿼리 오류:', dbError);
-            return res.status(500).json({ 
-                success: false, 
-                msg: '데이터베이스 조회 중 오류가 발생했습니다.' 
-            });
         }
+
+        // 사용자가 있으면 중복
+        console.log('이미 사용 중인 아이디:', existingUser.userId);
+        return res.json({ 
+            success: false, 
+            msg: '이미 사용 중인 아이디입니다.' 
+        });
+
     } catch (err) {
         console.error('아이디 중복 확인 오류:', err);
         return res.status(500).json({ 
