@@ -323,9 +323,20 @@ router.get('/members', async (req, res) => {
             phone: 1,
             team: 1,
             points: 1,
-            createdAt: 1,
+            joinDate: 1,
             _id: 0
-        }).sort({ createdAt: -1 });
+        }).sort({ joinDate: -1 });
+
+        // 날짜 데이터 상세 로깅
+        console.log('=== 회원 목록 날짜 데이터 상세 ===');
+        members.forEach(member => {
+            console.log(`회원 ID: ${member.userId}`);
+            console.log('joinDate 값:', member.joinDate);
+            console.log('joinDate 타입:', typeof member.joinDate);
+            console.log('joinDate instanceof Date:', member.joinDate instanceof Date);
+            console.log('joinDate toString():', member.joinDate ? member.joinDate.toString() : 'null');
+            console.log('------------------------');
+        });
 
         res.json({
             success: true,
