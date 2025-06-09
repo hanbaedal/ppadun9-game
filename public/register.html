@@ -47,40 +47,40 @@
                     </div>
                     <div class="card-body">
                         <div class="form-container">
-                            <form id="registerForm">
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">이름</label>
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">이름</label>
                                     <input type="text" class="form-control" id="name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="userId" class="form-label">아이디</label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="userId" class="form-label">아이디</label>
                                     <input type="text" class="form-control" id="userId" required 
                                            minlength="8" maxlength="16">
                                     <div class="form-text">아이디는 8자 이상 16자 이하로 입력해주세요.</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">비밀번호</label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">비밀번호</label>
                                     <div class="input-group">
-                                        <input type="password" class="form-control" id="password" required>
+                                <input type="password" class="form-control" id="password" required>
                                         <span class="input-group-text password-toggle" onclick="togglePassword('password')">
                                             <i class="bi bi-eye"></i>
                                         </span>
                                     </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="passwordConfirm" class="form-label">비밀번호 확인</label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="passwordConfirm" class="form-label">비밀번호 확인</label>
                                     <div class="input-group">
-                                        <input type="password" class="form-control" id="passwordConfirm" required>
+                                <input type="password" class="form-control" id="passwordConfirm" required>
                                         <span class="input-group-text password-toggle" onclick="togglePassword('passwordConfirm')">
                                             <i class="bi bi-eye"></i>
                                         </span>
                                     </div>
                                     <div class="form-text" id="passwordMatchMessage"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="phone" class="form-label">전화번호</label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">전화번호</label>
                                     <div class="input-group mb-2">
-                                        <input type="tel" class="form-control" id="phone" required>
+                                <input type="tel" class="form-control" id="phone" required>
                                         <button type="button" class="btn btn-outline-primary" onclick="sendVerificationCode()">인증번호 발송</button>
                                     </div>
                                     <div class="verification-code" id="verificationCodeDiv">
@@ -109,17 +109,17 @@
                                 <div class="mb-3">
                                     <label for="points" class="form-label">가입 축하 포인트</label>
                                     <input type="number" class="form-control" id="points" value="3000" readonly>
-                                </div>
-                                <div class="mb-3">
+                            </div>
+                            <div class="mb-3">
                                     <label for="joinDate" class="form-label">가입일자</label>
                                     <input type="date" class="form-control" id="joinDate" required>
-                                </div>
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary">회원가입</button>
-                                </div>
-                            </form>
-                            <div class="mt-3 text-center">
-                                <a href="/login.html">로그인으로 돌아가기</a>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">회원가입</button>
+                            </div>
+                        </form>
+                        <div class="mt-3 text-center">
+                            <a href="/login.html">로그인으로 돌아가기</a>
                             </div>
                         </div>
                     </div>
