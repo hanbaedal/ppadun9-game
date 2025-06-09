@@ -1,129 +1,216 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>빠던나인 게임 - 빠던나인</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .game-container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .game-frame {
-            width: 100%;
-            height: 600px;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>빠던나인 게임 - game-paly.html</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #181e23;
+      color: #fff;
+      font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    }
+    .main-container {
+      max-width: 420px;
+      margin: 32px auto;
+      background: #232d36;
+      border-radius: 18px;
+      padding: 32px 24px 24px 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    }
+    .header {
+      background: #111;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 0 0 18px 18px;
+    }
+    .header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header .welcome {
+      font-weight: bold;
+      color: #4ec3ff;
+      font-size: 1.1em;
+    }
+    .header .icons {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .header .icon-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.3em;
+      cursor: pointer;
+    }
+    .section-title {
+      font-size: 1.2em;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .select-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .select-row img {
+      width: 38px; height: 38px; border-radius: 8px;
+      object-fit: cover;
+    }
+    .select-btns {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .select-btns .btn {
+      min-width: 60px;
+      font-weight: 500;
+      border-radius: 8px;
+      border: none;
+      color: #222;
+      background: #eee;
+      opacity: 0.7;
+    }
+    .select-btns .btn.active, .select-btns .btn:active {
+      opacity: 1;
+      background: #ffd6db;
+      color: #d12b3a;
+      font-weight: bold;
+    }
+    .select-btns .btn.base1 { background: #b2e0ff; }
+    .select-btns .btn.base2 { background: #aaffc3; }
+    .select-btns .btn.base3 { background: #fff7a3; }
+    .select-btns .btn.base4 { background: #ffd6db; }
+    .select-btns .btn.base5 { background: #e0e0e0; }
+    .select-btns .btn.base6 { background: #d1c4e9; }
+    .select-btns .btn.base7 { background: #f8bbd0; }
+    .select-btns .btn.base8 { background: #b2ebf2; }
+    .select-btns .btn.base9 { background: #fff9c4; }
+    .select-btns .btn.base10 { background: #c8e6c9; }
+    .select-label {
+      font-weight: bold;
+      color: #ffd600;
+      margin-bottom: 8px;
+    }
+    .point-label {
+      color: #ffd600;
+      font-weight: bold;
+    }
+    .point-arrow {
+      color: #ffd600;
+      font-weight: bold;
+      margin: 0 6px;
+    }
+    .bet-btn {
+      width: 100%;
+      margin-top: 18px;
+      font-size: 1.2em;
+      font-weight: bold;
+      border-radius: 10px;
+      padding: 14px 0;
+      background: #339cff;
+      color: #fff;
+      border: none;
+      transition: background 0.2s;
+    }
+    .bet-btn:hover {
+      background: #1976d2;
+    }
+    .bottom-img {
+      width: 100%;
+      margin-top: 18px;
+      border-radius: 12px;
+      object-fit: cover;
+      height: 90px;
+    }
+    .date-title {
+      text-align: right;
+      font-size: 1.1em;
+      color: #fff;
+      margin-bottom: 18px;
+      margin-top: 0;
+    }
+    select.form-select {
+      background: #2c3742;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">프로젝트</a>
-            <span class="navbar-text text-light" id="userName"></span>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login.html">로그인</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="logoutLink">로그아웃</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="game-container">
-                    <h2 class="mb-4">빠던나인 게임</h2>
-                    <div class="alert alert-info mb-4">
-                        현재 보유 포인트: <span id="currentPoints" class="fw-bold">0</span>점
-                    </div>
-                    
-                    <div class="mb-4">
-                        <iframe src="https://ppadun9-game.netlify.app/" class="game-frame" id="gameFrame"></iframe>
-                    </div>
-
-                    <div class="alert alert-warning">
-                        <h5 class="alert-heading">게임 이용 안내</h5>
-                        <p class="mb-0">
-                            - 게임 플레이 시 포인트가 차감될 수 있습니다.<br>
-                            - 게임 결과에 따라 포인트가 지급될 수 있습니다.<br>
-                            - 포인트가 부족할 경우 게임을 플레이할 수 없습니다.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="header">
+    <div class="logo">
+      <img src="https://i.ibb.co/3Wn8QwK/ppadun9-logo.png" alt="logo" width="38" height="38">
+      <span class="welcome">해수님 환영합니다!</span>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 로그인 체크
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            window.location.href = '/login.html';
-        } else {
-            // 사용자 이름 표시
-            document.getElementById('userName').textContent = `${user.name}님`;
-        }
-
-        // 로그아웃
-        document.getElementById('logoutLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
-        });
-
-        // 현재 포인트 가져오기
-        async function fetchCurrentPoints() {
-            try {
-                const response = await fetch(`/api/members/${user.id}/points`);
-                const data = await response.json();
-                document.getElementById('currentPoints').textContent = data.points;
-            } catch (error) {
-                console.error('포인트 정보를 가져오는데 실패했습니다:', error);
-            }
-        }
-
-        // 게임 프레임 로드 완료 시 이벤트
-        document.getElementById('gameFrame').addEventListener('load', () => {
-            // 게임 프레임에 사용자 정보 전달
-            const gameFrame = document.getElementById('gameFrame');
-            gameFrame.contentWindow.postMessage({
-                type: 'USER_INFO',
-                userId: user.id,
-                userName: user.name
-            }, '*');
-        });
-
-        // 메시지 이벤트 리스너
-        window.addEventListener('message', async (event) => {
-            if (event.origin !== 'https://ppadun9-game.netlify.app') return;
-
-            const message = event.data;
-            if (message.type === 'POINTS_UPDATE') {
-                // 포인트 업데이트
-                await fetchCurrentPoints();
-            }
-        });
-
-        // 페이지 로드 시 현재 포인트 가져오기
-        fetchCurrentPoints();
-    </script>
+    <div class="icons">
+      <button class="icon-btn" title="로그아웃">⎋<br><span style="font-size:0.7em;">로그아웃</span></button>
+      <button class="icon-btn" title="설정">⚙️<br><span style="font-size:0.7em;">설정</span></button>
+    </div>
+  </div>
+  <div class="main-container">
+    <div class="date-title">2025년 6월 10일 화요일</div>
+    <div class="section-title">경기선택</div>
+    <div class="select-row">
+      <img src="https://i.ibb.co/3Wn8QwK/ppadun9-logo.png" alt="경기" />
+      <select class="form-select">
+        <option>두산 vs LG</option>
+        <option>기아 vs 삼성</option>
+      </select>
+    </div>
+    <div class="section-title">게임선택</div>
+    <div class="select-row">
+      <img src="https://i.ibb.co/3Wn8QwK/ppadun9-logo.png" alt="게임" />
+      <div class="select-btns">
+        <button class="btn active">타자</button>
+        <button class="btn">수비</button>
+        <button class="btn">투수</button>
+      </div>
+    </div>
+    <div class="select-label">선택: 타자</div>
+    <div class="section-title">배팅선택</div>
+    <div class="select-row">
+      <img src="https://i.ibb.co/3Wn8QwK/ppadun9-logo.png" alt="배팅" />
+      <div class="select-btns">
+        <button class="btn base1">1루</button>
+        <button class="btn base2">2루</button>
+        <button class="btn base3">3루</button>
+        <button class="btn base4">홈런</button>
+        <button class="btn base5">아웃</button>
+      </div>
+    </div>
+    <div class="select-label">선택: 1루</div>
+    <div class="section-title">배팅포인트</div>
+    <div class="select-row">
+      <img src="https://i.ibb.co/3Wn8QwK/ppadun9-logo.png" alt="포인트" />
+      <div class="select-btns">
+        <button class="btn base6">100</button>
+        <button class="btn base7 active">200</button>
+        <button class="btn base8">300</button>
+        <button class="btn base9">400</button>
+        <button class="btn base10">500</button>
+      </div>
+    </div>
+    <div class="select-label">선택: 200 포인트</div>
+    <div style="margin: 18px 0 6px 0;">
+      <span>보유 포인트 : <span class="point-label">5885</span></span>
+      <span class="point-arrow">→</span>
+      <span class="point-label">5685 포인트</span>
+    </div>
+    <div style="margin-bottom: 12px;">
+      예상 배당 포인트 : <span class="point-label">514 포인트</span>
+    </div>
+    <button class="bet-btn">배팅하기</button>
+    <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=facearea&w=600&q=80" class="bottom-img" alt="광고 또는 안내 이미지">
+  </div>
 </body>
-</html> 
+</html>
