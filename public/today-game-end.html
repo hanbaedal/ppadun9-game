@@ -41,12 +41,8 @@
             border-radius: 8px;
         }
         .team-select {
-            width: 150px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #4ec3ff;
-            background: #1a1f24;
-            color: #fff;
+            width: 100px;
+            font-size: 14px;
         }
         .time-input {
             width: 120px;
@@ -67,8 +63,9 @@
             justify-content: center;
             color: #fff;
             font-weight: bold;
-            font-size: 1.2em;
+            font-size: 14px;
             border: 1px solid #4ec3ff;
+            padding: 6px;
         }
         .save-btn {
             background: #4ec3ff;
@@ -96,12 +93,20 @@
             gap: 5px;
             align-items: center;
         }
-        .time-input-group select,
-        .time-input-group input {
-            width: auto;
+        .time-input-group select {
+            width: 70px;
+            font-size: 14px;
         }
         .time-input-group input {
             width: 60px;
+            text-align: center;
+            font-size: 14px;
+            padding: 6px;
+        }
+        .time-input-group input::-webkit-inner-spin-button,
+        .time-input-group input::-webkit-outer-spin-button {
+            opacity: 1;
+            height: 24px;
         }
     </style>
 </head>
@@ -188,63 +193,60 @@
 
         // 게임 데이터 저장
         async function saveGames() {
-            const today = new Date();
-            const date = today.getFullYear().toString() +
-                        (today.getMonth() + 1).toString().padStart(2, '0') +
-                        today.getDate().toString().padStart(2, '0');
-
-            const games = [];
-            const rows = document.querySelectorAll('tbody tr');
-            
-            rows.forEach(row => {
-                const number = row.querySelector('td:first-child').textContent;
-                const homeTeam = row.querySelector('td:nth-child(2)').textContent;
-                const awayTeam = row.querySelector('td:nth-child(3)').textContent;
-                const startTime = row.querySelector('td:nth-child(4)').textContent;
-                
-                const period = document.getElementById(`endTimePeriod${number}`).value;
-                const hour = document.getElementById(`endTimeHour${number}`).value;
-                const minute = document.getElementById(`endTimeMinute${number}`).value;
-                
-                // 24시간 형식으로 변환
-                let hour24 = parseInt(hour);
-                if (period === 'PM' && hour24 < 12) hour24 += 12;
-                if (period === 'AM' && hour24 === 12) hour24 = 0;
-                
-                const endTime = `${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
-                
-                games.push({
-                    number: parseInt(number),
-                    homeTeam: homeTeam,
-                    awayTeam: awayTeam,
-                    startTime: startTime,
-                    endTime: endTime,
-                    noGame: '',
-                    note: `${homeTeam} vs ${awayTeam}`
-                });
-            });
-
             try {
+                const today = new Date();
+                const date = today.getFullYear().toString() +
+                            (today.getMonth() + 1).toString().padStart(2, '0') +
+                            today.getDate().toString().padStart(2, '0');
+
+                const games = [];
+                const rows = document.querySelectorAll('tbody tr');
+                
+                rows.forEach(row => {
+                    const number = row.querySelector('td:first-child').textContent;
+                    const homeTeam = row.querySelector('td:nth-child(2)').textContent;
+                    const awayTeam = row.querySelector('td:nth-child(3)').textContent;
+                    const startTime = row.querySelector('td:nth-child(4)').textContent;
+                    
+                    const period = document.getElementById(`endTimePeriod${number}`).value;
+                    const hour = document.getElementById(`endTimeHour${number}`).value;
+                    const minute = document.getElementById(`endTimeMinute${number}`).value;
+                    
+                    let hour24 = parseInt(hour);
+                    if (period === 'PM' && hour24 < 12) hour24 += 12;
+                    if (period === 'AM' && hour24 === 12) hour24 = 0;
+                    
+                    const endTime = `${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
+                    
+                    games.push({
+                        number: parseInt(number),
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        startTime: startTime,
+                        endTime: endTime,
+                        noGame: '',
+                        note: `${homeTeam} vs ${awayTeam}`
+                    });
+                });
+
                 const response = await fetch('/api/today-game', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        date: date,
-                        games: games
-                    })
+                    body: JSON.stringify({ date, games })
                 });
 
-                if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
                     alert('게임 정보가 저장되었습니다.');
-                    location.href = 'index.html';
+                    window.location.href = '/today-game.html';  // 메인 페이지로 이동
                 } else {
-                    alert('저장 중 오류가 발생했습니다.');
+                    alert('저장 중 오류가 발생했습니다: ' + result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('서버 연결 중 오류가 발생했습니다.');
+                alert('저장 중 오류가 발생했습니다.');
             }
         }
 
@@ -252,6 +254,38 @@
         window.onload = function() {
             loadGames();
         };
+
+        function updateMatchupImage(row) {
+            const homeTeam = row.querySelector('td:nth-child(2)').textContent;
+            const awayTeam = row.querySelector('td:nth-child(3)').textContent;
+            const matchupImage = document.getElementById(`matchupImage${row.querySelector('td:first-child').textContent}`);
+            
+            if (homeTeam && awayTeam) {
+                // 팀 이름 간단하게 표시
+                const shortHomeTeam = getShortTeamName(homeTeam);
+                const shortAwayTeam = getShortTeamName(awayTeam);
+                matchupImage.textContent = `${shortHomeTeam} vs ${shortAwayTeam}`;
+            } else {
+                matchupImage.textContent = '팀을 선택하세요';
+            }
+        }
+
+        // 팀 이름 간단하게 변환하는 함수
+        function getShortTeamName(teamName) {
+            const shortNames = {
+                '두산': '두산',
+                'LG': 'LG',
+                '기아': '기아',
+                '삼성': '삼성',
+                'SSG': 'SSG',
+                'NC': 'NC',
+                '롯데': '롯데',
+                '한화': '한화',
+                'KT': 'KT',
+                '키움': '키움'
+            };
+            return shortNames[teamName] || teamName;
+        }
     </script>
 </body>
 </html> 

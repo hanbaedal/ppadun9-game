@@ -41,12 +41,8 @@
             border-radius: 8px;
         }
         .team-select {
-            width: 150px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #4ec3ff;
-            background: #1a1f24;
-            color: #fff;
+            width: 100px;
+            font-size: 14px;
         }
         .time-input {
             width: 120px;
@@ -69,6 +65,7 @@
             font-weight: bold;
             font-size: 1.2em;
             border: 1px solid #4ec3ff;
+            padding: 6px;
         }
         .save-btn {
             background: #4ec3ff;
@@ -96,12 +93,20 @@
             gap: 5px;
             align-items: center;
         }
-        .time-input-group select,
-        .time-input-group input {
-            width: auto;
+        .time-input-group select {
+            width: 70px;
+            font-size: 14px;
         }
         .time-input-group input {
             width: 60px;
+            text-align: center;
+            font-size: 14px;
+            padding: 6px;
+        }
+        .time-input-group input::-webkit-inner-spin-button,
+        .time-input-group input::-webkit-outer-spin-button {
+            opacity: 1;
+            height: 24px;
         }
     </style>
 </head>
@@ -196,75 +201,92 @@
         }
 
         // 매치업 이미지 업데이트
-        function updateMatchupImage(index) {
-            const homeTeam = document.getElementById(`homeTeam${index}`).value;
-            const awayTeam = document.getElementById(`awayTeam${index}`).value;
-            const matchupImage = document.getElementById(`matchupImage${index}`);
-
+        function updateMatchupImage(row) {
+            const homeTeam = document.getElementById(`homeTeam${row}`).value;
+            const awayTeam = document.getElementById(`awayTeam${row}`).value;
+            const matchupImage = document.getElementById(`matchupImage${row}`);
+            
             if (homeTeam && awayTeam) {
-                matchupImage.textContent = `${homeTeam} vs ${awayTeam}`;
+                // 팀 이름 간단하게 표시
+                const shortHomeTeam = getShortTeamName(homeTeam);
+                const shortAwayTeam = getShortTeamName(awayTeam);
+                matchupImage.textContent = `${shortHomeTeam} vs ${shortAwayTeam}`;
             } else {
                 matchupImage.textContent = '팀을 선택하세요';
             }
         }
 
+        // 팀 이름 간단하게 변환하는 함수
+        function getShortTeamName(teamName) {
+            const shortNames = {
+                '두산': '두산',
+                'LG': 'LG',
+                '기아': '기아',
+                '삼성': '삼성',
+                'SSG': 'SSG',
+                'NC': 'NC',
+                '롯데': '롯데',
+                '한화': '한화',
+                'KT': 'KT',
+                '키움': '키움'
+            };
+            return shortNames[teamName] || teamName;
+        }
+
         // 게임 데이터 저장
         async function saveGames() {
-            const today = new Date();
-            const date = today.getFullYear().toString() +
-                        (today.getMonth() + 1).toString().padStart(2, '0') +
-                        today.getDate().toString().padStart(2, '0');
-
-            const games = [];
-            for (let i = 1; i <= 5; i++) {
-                const homeTeam = document.getElementById(`homeTeam${i}`).value;
-                const awayTeam = document.getElementById(`awayTeam${i}`).value;
-                
-                if (homeTeam && awayTeam) {
-                    const period = document.getElementById(`startTimePeriod${i}`).value;
-                    const hour = document.getElementById(`startTimeHour${i}`).value;
-                    const minute = document.getElementById(`startTimeMinute${i}`).value;
-                    
-                    // 24시간 형식으로 변환
-                    let hour24 = parseInt(hour);
-                    if (period === 'PM' && hour24 < 12) hour24 += 12;
-                    if (period === 'AM' && hour24 === 12) hour24 = 0;
-                    
-                    const startTime = `${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
-                    
-                    games.push({
-                        number: i,
-                        homeTeam: homeTeam,
-                        awayTeam: awayTeam,
-                        startTime: startTime,
-                        endTime: null,
-                        noGame: '',
-                        note: `${homeTeam} vs ${awayTeam}`
-                    });
-                }
-            }
-
             try {
+                const today = new Date();
+                const date = today.getFullYear().toString() +
+                            (today.getMonth() + 1).toString().padStart(2, '0') +
+                            today.getDate().toString().padStart(2, '0');
+
+                const games = [];
+                for (let i = 1; i <= 5; i++) {
+                    const homeTeam = document.getElementById(`homeTeam${i}`).value;
+                    const awayTeam = document.getElementById(`awayTeam${i}`).value;
+                    
+                    if (homeTeam && awayTeam) {
+                        const period = document.getElementById(`startTimePeriod${i}`).value;
+                        const hour = document.getElementById(`startTimeHour${i}`).value;
+                        const minute = document.getElementById(`startTimeMinute${i}`).value;
+                        
+                        let hour24 = parseInt(hour);
+                        if (period === 'PM' && hour24 < 12) hour24 += 12;
+                        if (period === 'AM' && hour24 === 12) hour24 = 0;
+                        
+                        const startTime = `${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
+                        
+                        games.push({
+                            number: i,
+                            homeTeam: homeTeam,
+                            awayTeam: awayTeam,
+                            startTime: startTime,
+                            endTime: null,
+                            noGame: '',
+                            note: `${homeTeam} vs ${awayTeam}`
+                        });
+                    }
+                }
+
                 const response = await fetch('/api/today-game', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        date: date,
-                        games: games
-                    })
+                    body: JSON.stringify({ date, games })
                 });
 
-                if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
                     alert('게임 정보가 저장되었습니다.');
-                    location.href = 'index.html';
+                    window.location.href = '/today-game.html';  // 메인 페이지로 이동
                 } else {
-                    alert('저장 중 오류가 발생했습니다.');
+                    alert('저장 중 오류가 발생했습니다: ' + result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('서버 연결 중 오류가 발생했습니다.');
+                alert('저장 중 오류가 발생했습니다.');
             }
         }
 
