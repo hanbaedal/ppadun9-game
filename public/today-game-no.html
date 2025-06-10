@@ -128,60 +128,73 @@
 
         // 게임 데이터 로드
         async function loadGames() {
-            const date = updateDate();
             try {
+                const today = new Date();
+                const date = today.getFullYear().toString() +
+                            (today.getMonth() + 1).toString().padStart(2, '0') +
+                            today.getDate().toString().padStart(2, '0');
+
                 const response = await fetch(`/api/today-game/${date}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.games) {
-                        displayGames(data.games);
+                const data = await response.json();
+
+                if (data.success) {
+                    const tbody = document.querySelector('tbody');
+                    tbody.innerHTML = '';
+
+                    if (!data.games || data.games.length === 0) {
+                        console.log('오늘의 게임 정보가 없습니다.');
+                        return;
                     }
+
+                    data.games.forEach(game => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${game.number}</td>
+                            <td>${game.homeTeam}</td>
+                            <td>${game.awayTeam}</td>
+                            <td>${game.startTime}</td>
+                            <td>${game.endTime || ''}</td>
+                            <td>
+                                <select id="noGame${game.number}" class="form-select" onchange="updateMatchupImage(this.closest('tr'))">
+                                    <option value="정상게임" ${!game.noGame ? 'selected' : ''}>정상게임</option>
+                                    <option value="콜드게임" ${game.noGame === '콜드게임' ? 'selected' : ''}>콜드게임</option>
+                                    <option value="서스펜디드 게임" ${game.noGame === '서스펜디드 게임' ? 'selected' : ''}>서스펜디드 게임</option>
+                                    <option value="노 게임" ${game.noGame === '노 게임' ? 'selected' : ''}>노 게임</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="matchup-image" id="matchupImage${game.number}">${game.note}</div>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    console.error('게임 데이터를 불러오는데 실패했습니다:', data.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('게임 데이터를 불러오는 중 오류가 발생했습니다.');
+                alert('게임 정보를 불러오는 중 오류가 발생했습니다.');
             }
         }
 
-        // 게임 데이터 표시
-        function displayGames(games) {
-            const tbody = document.getElementById('gameTableBody');
-            tbody.innerHTML = '';
+        // 노게임 상태 변경 시 매치업 이미지 업데이트
+        function updateMatchupImage(row) {
+            if (!row) return;
+
+            const number = row.querySelector('td:first-child').textContent;
+            const homeTeam = row.querySelector('td:nth-child(2)').textContent;
+            const awayTeam = row.querySelector('td:nth-child(3)').textContent;
+            const noGameSelect = document.getElementById(`noGame${number}`);
+            const noGame = noGameSelect ? noGameSelect.value : '정상게임';
+            const matchupImage = document.getElementById(`matchupImage${number}`);
             
-            games.forEach(game => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${game.number}</td>
-                    <td>${game.homeTeam}</td>
-                    <td>${game.awayTeam}</td>
-                    <td>
-                        <select class="no-game-select" id="noGame${game.number}" onchange="updateNote(${game.number})">
-                            <option value="">선택</option>
-                            <option value="콜드게임">콜드게임</option>
-                            <option value="서스펜디드 게임">서스펜디드 게임</option>
-                            <option value="노 게임">노 게임</option>
-                        </select>
-                    </td>
-                    <td>
-                        <div class="matchup-image" id="matchupImage${game.number}">${game.note}</div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+            if (!matchupImage) return;
 
-        // 참고사항 업데이트
-        function updateNote(index) {
-            const homeTeam = document.querySelector(`#gameTableBody tr:nth-child(${index}) td:nth-child(2)`).textContent;
-            const awayTeam = document.querySelector(`#gameTableBody tr:nth-child(${index}) td:nth-child(3)`).textContent;
-            const noGame = document.getElementById(`noGame${index}`).value;
-            const matchupImage = document.getElementById(`matchupImage${index}`);
-
-            if (noGame) {
-                matchupImage.textContent = `${homeTeam} vs ${awayTeam} (${noGame})`;
-            } else {
-                matchupImage.textContent = `${homeTeam} vs ${awayTeam}`;
+            let note = `${homeTeam} vs ${awayTeam}`;
+            if (noGame && noGame !== '정상게임') {
+                note += ` (${noGame})`;
             }
+            matchupImage.textContent = note;
         }
 
         // 게임 데이터 저장
@@ -201,18 +214,37 @@
                     const awayTeam = row.querySelector('td:nth-child(3)').textContent;
                     const startTime = row.querySelector('td:nth-child(4)').textContent;
                     const endTime = row.querySelector('td:nth-child(5)').textContent;
-                    const noGame = document.getElementById(`noGame${number}`).value;
+                    const noGameSelect = document.getElementById(`noGame${number}`);
+                    const noGame = noGameSelect ? noGameSelect.value : '정상게임';
                     
+                    // 노게임 상태에 따른 참고사항 설정
+                    let note = `${homeTeam} vs ${awayTeam}`;
+                    if (noGame && noGame !== '정상게임') {
+                        note += ` (${noGame})`;
+                    }
+                    
+                    // 게임 데이터 검증
+                    if (!homeTeam || !awayTeam || !startTime) {
+                        console.error(`게임 ${number}의 필수 정보가 누락되었습니다.`);
+                        return;
+                    }
+
                     games.push({
                         number: parseInt(number),
                         homeTeam: homeTeam,
                         awayTeam: awayTeam,
                         startTime: startTime,
-                        endTime: endTime,
-                        noGame: noGame,
-                        note: `${homeTeam} vs ${awayTeam} (${noGame})`
+                        endTime: endTime || null,
+                        noGame: noGame === '정상게임' ? '' : noGame,
+                        note: note
                     });
                 });
+
+                // 게임 데이터가 비어있는지 확인
+                if (games.length === 0) {
+                    alert('저장할 게임 정보가 없습니다.');
+                    return;
+                }
 
                 const response = await fetch('/api/today-game', {
                     method: 'POST',
@@ -225,7 +257,7 @@
                 const result = await response.json();
                 if (result.success) {
                     alert('게임 정보가 저장되었습니다.');
-                    window.location.href = '/today-game.html';  // 메인 페이지로 이동
+                    window.location.href = '/today-game.html';
                 } else {
                     alert('저장 중 오류가 발생했습니다: ' + result.message);
                 }
@@ -235,7 +267,7 @@
             }
         }
 
-        // 페이지 로드 시 실행
+        // 페이지 로드 시 게임 데이터 로드
         window.onload = function() {
             loadGames();
         };

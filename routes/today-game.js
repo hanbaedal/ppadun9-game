@@ -7,46 +7,84 @@ const gameSchema = new mongoose.Schema({
     number: {
         type: Number,
         required: true,
-        enum: [1, 2, 3, 4, 5]
+        enum: [1, 2, 3, 4, 5],
+        index: true
     },
     homeTeam: {
         type: String,
         required: true,
-        enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움']
+        enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움'],
+        index: true
     },
     awayTeam: {
         type: String,
         required: true,
-        enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움']
+        enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움'],
+        index: true
+    },
+    stadium: {
+        type: String,
+        required: true,
+        enum: ['잠실', '문학', '사직', '대구', '광주', '수원', '창원', '대전', '고척', '수원'],
+        index: true
     },
     startTime: {
         type: String,
-        required: true
+        required: true,
+        validate: {
+            validator: function(v) {
+                return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+            },
+            message: '잘못된 시간 형식입니다.'
+        }
     },
     endTime: {
         type: String,
-        default: null
+        default: null,
+        validate: {
+            validator: function(v) {
+                return v === null || /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+            },
+            message: '잘못된 시간 형식입니다.'
+        }
     },
     noGame: {
         type: String,
-        enum: ['', '콜드게임', '서스펜디드 게임', '노 게임'],
-        default: ''
+        enum: ['정상게임', '콜드게임', '서스펜디드 게임', '노 게임'],
+        default: '정상게임'
     },
     note: {
         type: String,
-        default: ''
+        default: '',
+        maxlength: 100
     }
-});
+}, { _id: false });  // _id 필드 제거
 
 // 날짜별 게임 스키마 정의
 const dailyGameSchema = new mongoose.Schema({
     date: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        index: true,
+        validate: {
+            validator: function(v) {
+                return /^\d{8}$/.test(v);
+            },
+            message: '잘못된 날짜 형식입니다.'
+        }
     },
     games: [gameSchema]
+}, { 
+    timestamps: true,
+    versionKey: false  // __v 필드 제거
 });
+
+// 인덱스 생성
+dailyGameSchema.index({ date: 1 });
+dailyGameSchema.index({ 'games.number': 1 });
+dailyGameSchema.index({ 'games.homeTeam': 1, 'games.awayTeam': 1 });
+dailyGameSchema.index({ 'games.stadium': 1 });
 
 // 모델 생성
 const DailyGame = mongoose.model('DailyGame', dailyGameSchema);
@@ -65,7 +103,7 @@ router.post('/', async (req, res) => {
 
         // 데이터 유효성 검사
         for (const game of games) {
-            if (!game.number || !game.homeTeam || !game.awayTeam || !game.startTime) {
+            if (!game.number || !game.homeTeam || !game.awayTeam || !game.stadium || !game.startTime) {
                 return res.status(400).json({
                     success: false,
                     message: '필수 필드가 누락되었습니다.'
@@ -88,9 +126,10 @@ router.post('/', async (req, res) => {
                     number: game.number,
                     homeTeam: game.homeTeam,
                     awayTeam: game.awayTeam,
+                    stadium: game.stadium,
                     startTime: game.startTime,
                     endTime: game.endTime || null,
-                    noGame: game.noGame || '',
+                    noGame: game.noGame || '정상게임',
                     note: game.note
                 }))
             });
@@ -130,7 +169,7 @@ router.get('/:date', async (req, res) => {
             });
         }
 
-        const dailyGame = await DailyGame.findOne({ date });
+        const dailyGame = await DailyGame.findOne({ date }).lean();
         
         if (!dailyGame) {
             return res.json({

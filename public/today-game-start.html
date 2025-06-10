@@ -94,19 +94,43 @@
             align-items: center;
         }
         .time-input-group select {
-            width: 70px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
             font-size: 14px;
+            min-width: 60px;
+        }
+        .time-input-group select:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
         }
         .time-input-group input {
-            width: 60px;
+            width: 50px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             text-align: center;
-            font-size: 14px;
-            padding: 6px;
         }
-        .time-input-group input::-webkit-inner-spin-button,
-        .time-input-group input::-webkit-outer-spin-button {
-            opacity: 1;
-            height: 24px;
+        .time-input-group input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        .selected-time {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-left: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .time-display {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
     </style>
 </head>
@@ -122,11 +146,80 @@
                     <th>번호</th>
                     <th>홈팀</th>
                     <th>원정팀</th>
+                    <th>야구장</th>
                     <th>게임시작</th>
                     <th>참고사항</th>
                 </tr>
             </thead>
-            <tbody id="gameTableBody"></tbody>
+            <tbody>
+                <script>
+                    for (let i = 1; i <= 5; i++) {
+                        document.write(`
+                            <tr>
+                                <td>${i}</td>
+                                <td>
+                                    <select id="homeTeam${i}" class="team-select" onchange="updateMatchupImage(${i})">
+                                        <option value="">선택</option>
+                                        <option value="두산">두산</option>
+                                        <option value="LG">LG</option>
+                                        <option value="기아">기아</option>
+                                        <option value="삼성">삼성</option>
+                                        <option value="SSG">SSG</option>
+                                        <option value="NC">NC</option>
+                                        <option value="롯데">롯데</option>
+                                        <option value="한화">한화</option>
+                                        <option value="KT">KT</option>
+                                        <option value="키움">키움</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="awayTeam${i}" class="team-select" onchange="updateMatchupImage(${i})">
+                                        <option value="">선택</option>
+                                        <option value="두산">두산</option>
+                                        <option value="LG">LG</option>
+                                        <option value="기아">기아</option>
+                                        <option value="삼성">삼성</option>
+                                        <option value="SSG">SSG</option>
+                                        <option value="NC">NC</option>
+                                        <option value="롯데">롯데</option>
+                                        <option value="한화">한화</option>
+                                        <option value="KT">KT</option>
+                                        <option value="키움">키움</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="stadium${i}" class="team-select">
+                                        <option value="">선택</option>
+                                        <option value="잠실">잠실</option>
+                                        <option value="문학">문학</option>
+                                        <option value="사직">사직</option>
+                                        <option value="대구">대구</option>
+                                        <option value="광주">광주</option>
+                                        <option value="수원">수원</option>
+                                        <option value="창원">창원</option>
+                                        <option value="대전">대전</option>
+                                        <option value="고척">고척</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="time-input-group">
+                                        <select id="startTimePeriod${i}" class="form-select" onchange="updateTimeDisplay(${i})">
+                                            <option value="AM">오전</option>
+                                            <option value="PM">오후</option>
+                                        </select>
+                                        <input type="number" id="startTimeHour${i}" class="form-control" min="1" max="12" placeholder="시" required onchange="updateTimeDisplay(${i})">
+                                        <input type="number" id="startTimeMinute${i}" class="form-control" min="0" max="59" placeholder="분" required onchange="updateTimeDisplay(${i})">
+                                        <div id="timeDisplay${i}" class="selected-time"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="matchup-image" id="matchupImage${i}"></div>
+                                </td>
+                            </tr>
+                        `);
+                    }
+                </script>
+            </tbody>
         </table>
         <button class="save-btn" onclick="saveGames()">저장</button>
     </div>
@@ -143,94 +236,18 @@
             return dateStr;
         }
 
-        // 게임 테이블 생성
-        function createGameTable() {
-            const tbody = document.getElementById('gameTableBody');
-            tbody.innerHTML = '';
-            
-            for (let i = 1; i <= 5; i++) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${i}</td>
-                    <td>
-                        <select class="team-select" id="homeTeam${i}" onchange="updateMatchupImage(${i})">
-                            <option value="">선택</option>
-                            <option value="두산">두산 베어스</option>
-                            <option value="LG">LG 트윈스</option>
-                            <option value="기아">KIA 타이거즈</option>
-                            <option value="삼성">삼성 라이온즈</option>
-                            <option value="SSG">SSG 랜더스</option>
-                            <option value="NC">NC 다이노스</option>
-                            <option value="롯데">롯데 자이언츠</option>
-                            <option value="한화">한화 이글스</option>
-                            <option value="KT">KT 위즈</option>
-                            <option value="키움">키움 히어로즈</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select class="team-select" id="awayTeam${i}" onchange="updateMatchupImage(${i})">
-                            <option value="">선택</option>
-                            <option value="두산">두산 베어스</option>
-                            <option value="LG">LG 트윈스</option>
-                            <option value="기아">KIA 타이거즈</option>
-                            <option value="삼성">삼성 라이온즈</option>
-                            <option value="SSG">SSG 랜더스</option>
-                            <option value="NC">NC 다이노스</option>
-                            <option value="롯데">롯데 자이언츠</option>
-                            <option value="한화">한화 이글스</option>
-                            <option value="KT">KT 위즈</option>
-                            <option value="키움">키움 히어로즈</option>
-                        </select>
-                    </td>
-                    <td>
-                        <div class="time-input-group">
-                            <select id="startTimePeriod${i}" class="form-select">
-                                <option value="AM">오전</option>
-                                <option value="PM">오후</option>
-                            </select>
-                            <input type="number" id="startTimeHour${i}" class="form-control" min="1" max="12" placeholder="시" required>
-                            <input type="number" id="startTimeMinute${i}" class="form-control" min="0" max="59" placeholder="분" required>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="matchup-image" id="matchupImage${i}">팀을 선택하세요</div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            }
-        }
-
         // 매치업 이미지 업데이트
         function updateMatchupImage(row) {
             const homeTeam = document.getElementById(`homeTeam${row}`).value;
             const awayTeam = document.getElementById(`awayTeam${row}`).value;
+            const stadium = document.getElementById(`stadium${row}`).value;
             const matchupImage = document.getElementById(`matchupImage${row}`);
             
-            if (homeTeam && awayTeam) {
-                // 팀 이름 간단하게 표시
-                const shortHomeTeam = getShortTeamName(homeTeam);
-                const shortAwayTeam = getShortTeamName(awayTeam);
-                matchupImage.textContent = `${shortHomeTeam} vs ${shortAwayTeam}`;
+            if (homeTeam && awayTeam && stadium) {
+                matchupImage.textContent = `${homeTeam} vs ${awayTeam} (${stadium})`;
             } else {
-                matchupImage.textContent = '팀을 선택하세요';
+                matchupImage.textContent = '';
             }
-        }
-
-        // 팀 이름 간단하게 변환하는 함수
-        function getShortTeamName(teamName) {
-            const shortNames = {
-                '두산': '두산',
-                'LG': 'LG',
-                '기아': '기아',
-                '삼성': '삼성',
-                'SSG': 'SSG',
-                'NC': 'NC',
-                '롯데': '롯데',
-                '한화': '한화',
-                'KT': 'KT',
-                '키움': '키움'
-            };
-            return shortNames[teamName] || teamName;
         }
 
         // 게임 데이터 저장
@@ -245,8 +262,9 @@
                 for (let i = 1; i <= 5; i++) {
                     const homeTeam = document.getElementById(`homeTeam${i}`).value;
                     const awayTeam = document.getElementById(`awayTeam${i}`).value;
+                    const stadium = document.getElementById(`stadium${i}`).value;
                     
-                    if (homeTeam && awayTeam) {
+                    if (homeTeam && awayTeam && stadium) {
                         const period = document.getElementById(`startTimePeriod${i}`).value;
                         const hour = document.getElementById(`startTimeHour${i}`).value;
                         const minute = document.getElementById(`startTimeMinute${i}`).value;
@@ -261,12 +279,18 @@
                             number: i,
                             homeTeam: homeTeam,
                             awayTeam: awayTeam,
+                            stadium: stadium,
                             startTime: startTime,
                             endTime: null,
-                            noGame: '',
-                            note: `${homeTeam} vs ${awayTeam}`
+                            noGame: '정상게임',
+                            note: `${homeTeam} vs ${awayTeam} (${stadium})`
                         });
                     }
+                }
+
+                if (games.length === 0) {
+                    alert('저장할 게임 정보가 없습니다.');
+                    return;
                 }
 
                 const response = await fetch('/api/today-game', {
@@ -280,7 +304,7 @@
                 const result = await response.json();
                 if (result.success) {
                     alert('게임 정보가 저장되었습니다.');
-                    window.location.href = '/today-game.html';  // 메인 페이지로 이동
+                    window.location.href = '/today-game.html';
                 } else {
                     alert('저장 중 오류가 발생했습니다: ' + result.message);
                 }
@@ -290,10 +314,33 @@
             }
         }
 
-        // 페이지 로드 시 실행
+        // 시간 표시 업데이트 함수 추가
+        function updateTimeDisplay(row) {
+            const period = document.getElementById(`startTimePeriod${row}`).value;
+            const hour = document.getElementById(`startTimeHour${row}`).value;
+            const minute = document.getElementById(`startTimeMinute${row}`).value;
+            const timeDisplay = document.getElementById(`timeDisplay${row}`);
+
+            if (hour && minute) {
+                let displayHour = parseInt(hour);
+                if (period === 'PM' && displayHour < 12) displayHour += 12;
+                if (period === 'AM' && displayHour === 12) displayHour = 0;
+                
+                timeDisplay.textContent = `${displayHour.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
+                timeDisplay.style.display = 'inline-block';
+            } else {
+                timeDisplay.textContent = '';
+                timeDisplay.style.display = 'none';
+            }
+        }
+
+        // 페이지 로드 시 초기화
         window.onload = function() {
             updateDate();
-            createGameTable();
+            // 각 행의 시간 표시 초기화
+            for (let i = 1; i <= 5; i++) {
+                updateTimeDisplay(i);
+            }
         };
     </script>
 </body>
