@@ -80,6 +80,21 @@
             border: 1px solid #4ec3ff;
             background: #1a1f24;
             color: #fff;
+            display: none;
+        }
+        .matchup-image {
+            width: 200px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #1a1f24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.2em;
+            border: 1px solid #4ec3ff;
         }
         .save-btn {
             background: #4ec3ff;
@@ -155,28 +170,63 @@
                 tr.innerHTML = `
                     <td>${i}</td>
                     <td>
-                        <select class="team-select" id="homeTeam${i}">
+                        <select class="team-select" id="homeTeam${i}" onchange="updateMatchupImage(${i})">
                             <option value="">선택</option>
-                            <option value="두산">두산</option>
-                            <option value="LG">LG</option>
-                            <option value="기아">기아</option>
-                            <option value="삼성">삼성</option>
+                            <option value="두산">두산 베어스</option>
+                            <option value="LG">LG 트윈스</option>
+                            <option value="기아">KIA 타이거즈</option>
+                            <option value="삼성">삼성 라이온즈</option>
+                            <option value="SSG">SSG 랜더스</option>
+                            <option value="NC">NC 다이노스</option>
+                            <option value="롯데">롯데 자이언츠</option>
+                            <option value="한화">한화 이글스</option>
+                            <option value="KT">KT 위즈</option>
+                            <option value="키움">키움 히어로즈</option>
                         </select>
                     </td>
                     <td>
-                        <select class="team-select" id="awayTeam${i}">
+                        <select class="team-select" id="awayTeam${i}" onchange="updateMatchupImage(${i})">
                             <option value="">선택</option>
-                            <option value="두산">두산</option>
-                            <option value="LG">LG</option>
-                            <option value="기아">기아</option>
-                            <option value="삼성">삼성</option>
+                            <option value="두산">두산 베어스</option>
+                            <option value="LG">LG 트윈스</option>
+                            <option value="기아">KIA 타이거즈</option>
+                            <option value="삼성">삼성 라이온즈</option>
+                            <option value="SSG">SSG 랜더스</option>
+                            <option value="NC">NC 다이노스</option>
+                            <option value="롯데">롯데 자이언츠</option>
+                            <option value="한화">한화 이글스</option>
+                            <option value="KT">KT 위즈</option>
+                            <option value="키움">키움 히어로즈</option>
                         </select>
                     </td>
                     <td><input type="time" class="time-input" id="startTime${i}"></td>
                     <td><input type="time" class="time-input" id="endTime${i}"></td>
-                    <td><input type="text" class="note-input" id="note${i}" placeholder="참고사항"></td>
+                    <td>
+                        <input type="text" class="note-input" id="note${i}" placeholder="참고사항">
+                        <div class="matchup-image" id="matchupImage${i}">팀을 선택하세요</div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
+            }
+        }
+
+        // 매치업 이미지 업데이트
+        function updateMatchupImage(index) {
+            const homeTeam = document.getElementById(`homeTeam${index}`).value;
+            const awayTeam = document.getElementById(`awayTeam${index}`).value;
+            const matchupImage = document.getElementById(`matchupImage${index}`);
+            const noteInput = document.getElementById(`note${index}`);
+
+            if (homeTeam && awayTeam) {
+                // 매치업 이미지 생성
+                const matchupText = `${homeTeam} vs ${awayTeam}`;
+                matchupImage.textContent = matchupText;
+                
+                // 참고사항에 매치업 정보 저장
+                noteInput.value = matchupText;
+            } else {
+                matchupImage.textContent = '팀을 선택하세요';
+                noteInput.value = '';
             }
         }
 
@@ -186,14 +236,19 @@
             const games = [];
 
             for (let i = 1; i <= 5; i++) {
-                games.push({
-                    number: i,
-                    homeTeam: document.getElementById(`homeTeam${i}`).value,
-                    awayTeam: document.getElementById(`awayTeam${i}`).value,
-                    startTime: document.getElementById(`startTime${i}`).value,
-                    endTime: document.getElementById(`endTime${i}`).value,
-                    note: document.getElementById(`note${i}`).value
-                });
+                const homeTeam = document.getElementById(`homeTeam${i}`).value;
+                const awayTeam = document.getElementById(`awayTeam${i}`).value;
+                
+                if (homeTeam && awayTeam) {  // 팀이 선택된 경우만 저장
+                    games.push({
+                        number: i,
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        startTime: document.getElementById(`startTime${i}`).value,
+                        endTime: document.getElementById(`endTime${i}`).value,
+                        note: document.getElementById(`note${i}`).value
+                    });
+                }
             }
 
             try {
