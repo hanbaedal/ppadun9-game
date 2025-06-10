@@ -91,6 +91,18 @@
             margin-bottom: 20px;
             color: #4ec3ff;
         }
+        .time-input-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .time-input-group select,
+        .time-input-group input {
+            width: auto;
+        }
+        .time-input-group input {
+            width: 60px;
+        }
     </style>
 </head>
 <body>
@@ -156,7 +168,16 @@
                     <td>${game.homeTeam}</td>
                     <td>${game.awayTeam}</td>
                     <td>${game.startTime}</td>
-                    <td><input type="time" class="time-input" id="endTime${game.number}" value="${game.endTime || ''}"></td>
+                    <td>
+                        <div class="time-input-group">
+                            <select id="endTimePeriod${game.number}" class="form-select">
+                                <option value="AM">오전</option>
+                                <option value="PM">오후</option>
+                            </select>
+                            <input type="number" id="endTimeHour${game.number}" class="form-control" min="1" max="12" placeholder="시" required>
+                            <input type="number" id="endTimeMinute${game.number}" class="form-control" min="0" max="59" placeholder="분" required>
+                        </div>
+                    </td>
                     <td>
                         <div class="matchup-image" id="matchupImage${game.number}">${game.note}</div>
                     </td>
@@ -167,25 +188,39 @@
 
         // 게임 데이터 저장
         async function saveGames() {
-            const date = updateDate();
+            const today = new Date();
+            const date = today.getFullYear().toString() +
+                        (today.getMonth() + 1).toString().padStart(2, '0') +
+                        today.getDate().toString().padStart(2, '0');
+
             const games = [];
-            const rows = document.querySelectorAll('#gameTableBody tr');
-
+            const rows = document.querySelectorAll('tbody tr');
+            
             rows.forEach(row => {
-                const number = row.cells[0].textContent;
-                const homeTeam = row.cells[1].textContent;
-                const awayTeam = row.cells[2].textContent;
-                const startTime = row.cells[3].textContent;
-                const endTime = document.getElementById(`endTime${number}`).value;
-                const note = document.getElementById(`matchupImage${number}`).textContent;
-
+                const number = row.querySelector('td:first-child').textContent;
+                const homeTeam = row.querySelector('td:nth-child(2)').textContent;
+                const awayTeam = row.querySelector('td:nth-child(3)').textContent;
+                const startTime = row.querySelector('td:nth-child(4)').textContent;
+                
+                const period = document.getElementById(`endTimePeriod${number}`).value;
+                const hour = document.getElementById(`endTimeHour${number}`).value;
+                const minute = document.getElementById(`endTimeMinute${number}`).value;
+                
+                // 24시간 형식으로 변환
+                let hour24 = parseInt(hour);
+                if (period === 'PM' && hour24 < 12) hour24 += 12;
+                if (period === 'AM' && hour24 === 12) hour24 = 0;
+                
+                const endTime = `${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
+                
                 games.push({
                     number: parseInt(number),
-                    homeTeam,
-                    awayTeam,
-                    startTime,
-                    endTime,
-                    note
+                    homeTeam: homeTeam,
+                    awayTeam: awayTeam,
+                    startTime: startTime,
+                    endTime: endTime,
+                    noGame: '',
+                    note: `${homeTeam} vs ${awayTeam}`
                 });
             });
 

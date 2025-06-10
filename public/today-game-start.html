@@ -91,6 +91,18 @@
             margin-bottom: 20px;
             color: #4ec3ff;
         }
+        .time-input-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .time-input-group select,
+        .time-input-group input {
+            width: auto;
+        }
+        .time-input-group input {
+            width: 60px;
+        }
     </style>
 </head>
 <body>
@@ -165,7 +177,16 @@
                             <option value="키움">키움 히어로즈</option>
                         </select>
                     </td>
-                    <td><input type="time" class="time-input" id="startTime${i}"></td>
+                    <td>
+                        <div class="time-input-group">
+                            <select id="startTimePeriod${i}" class="form-select">
+                                <option value="AM">오전</option>
+                                <option value="PM">오후</option>
+                            </select>
+                            <input type="number" id="startTimeHour${i}" class="form-control" min="1" max="12" placeholder="시" required>
+                            <input type="number" id="startTimeMinute${i}" class="form-control" min="0" max="59" placeholder="분" required>
+                        </div>
+                    </td>
                     <td>
                         <div class="matchup-image" id="matchupImage${i}">팀을 선택하세요</div>
                     </td>
@@ -189,20 +210,36 @@
 
         // 게임 데이터 저장
         async function saveGames() {
-            const date = updateDate();
-            const games = [];
+            const today = new Date();
+            const date = today.getFullYear().toString() +
+                        (today.getMonth() + 1).toString().padStart(2, '0') +
+                        today.getDate().toString().padStart(2, '0');
 
+            const games = [];
             for (let i = 1; i <= 5; i++) {
                 const homeTeam = document.getElementById(`homeTeam${i}`).value;
                 const awayTeam = document.getElementById(`awayTeam${i}`).value;
                 
                 if (homeTeam && awayTeam) {
+                    const period = document.getElementById(`startTimePeriod${i}`).value;
+                    const hour = document.getElementById(`startTimeHour${i}`).value;
+                    const minute = document.getElementById(`startTimeMinute${i}`).value;
+                    
+                    // 24시간 형식으로 변환
+                    let hour24 = parseInt(hour);
+                    if (period === 'PM' && hour24 < 12) hour24 += 12;
+                    if (period === 'AM' && hour24 === 12) hour24 = 0;
+                    
+                    const startTime = `${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}`;
+                    
                     games.push({
                         number: i,
                         homeTeam: homeTeam,
                         awayTeam: awayTeam,
-                        startTime: document.getElementById(`startTime${i}`).value,
-                        note: document.getElementById(`matchupImage${i}`).textContent
+                        startTime: startTime,
+                        endTime: null,
+                        noGame: '',
+                        note: `${homeTeam} vs ${awayTeam}`
                     });
                 }
             }

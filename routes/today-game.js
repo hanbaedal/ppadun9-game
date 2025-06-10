@@ -56,28 +56,65 @@ router.post('/', async (req, res) => {
     try {
         const { date, games } = req.body;
 
-        // 기존 데이터 삭제
-        await DailyGame.deleteOne({ date });
+        if (!date || !games || !Array.isArray(games)) {
+            return res.status(400).json({
+                success: false,
+                message: '잘못된 데이터 형식입니다.'
+            });
+        }
 
-        // 새 데이터 저장
-        const dailyGame = new DailyGame({
-            date,
-            games: games.map(game => ({
-                number: game.number,
-                homeTeam: game.homeTeam,
-                awayTeam: game.awayTeam,
-                startTime: game.startTime,
-                endTime: game.endTime || null,
-                noGame: game.noGame || '',
-                note: game.note
-            }))
-        });
+        // 데이터 유효성 검사
+        for (const game of games) {
+            if (!game.number || !game.homeTeam || !game.awayTeam || !game.startTime) {
+                return res.status(400).json({
+                    success: false,
+                    message: '필수 필드가 누락되었습니다.'
+                });
+            }
+        }
 
-        await dailyGame.save();
-        res.json({ success: true, message: '게임 정보가 저장되었습니다.' });
+        // 트랜잭션 시작
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+            // 기존 데이터 삭제
+            await DailyGame.deleteOne({ date }).session(session);
+
+            // 새 데이터 저장
+            const dailyGame = new DailyGame({
+                date,
+                games: games.map(game => ({
+                    number: game.number,
+                    homeTeam: game.homeTeam,
+                    awayTeam: game.awayTeam,
+                    startTime: game.startTime,
+                    endTime: game.endTime || null,
+                    noGame: game.noGame || '',
+                    note: game.note
+                }))
+            });
+
+            await dailyGame.save({ session });
+            await session.commitTransaction();
+            
+            res.json({
+                success: true,
+                message: '게임 정보가 저장되었습니다.'
+            });
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
+        }
     } catch (error) {
         console.error('Error saving games:', error);
-        res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -85,16 +122,34 @@ router.post('/', async (req, res) => {
 router.get('/:date', async (req, res) => {
     try {
         const { date } = req.params;
+
+        if (!date || date.length !== 8) {
+            return res.status(400).json({
+                success: false,
+                message: '잘못된 날짜 형식입니다.'
+            });
+        }
+
         const dailyGame = await DailyGame.findOne({ date });
         
         if (!dailyGame) {
-            return res.json({ success: true, games: [] });
+            return res.json({
+                success: true,
+                games: []
+            });
         }
 
-        res.json({ success: true, games: dailyGame.games });
+        res.json({
+            success: true,
+            games: dailyGame.games
+        });
     } catch (error) {
         console.error('Error fetching games:', error);
-        res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
