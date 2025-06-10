@@ -505,7 +505,7 @@
                         startTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
                     }
 
-                    games.push({
+                    const gameData = {
                         number: i,
                         homeTeam: document.getElementById(`homeTeam${i}`).value || null,
                         awayTeam: document.getElementById(`awayTeam${i}`).value || null,
@@ -513,7 +513,12 @@
                         startTime: startTime,
                         endTime: null,
                         noGame: '정상게임'
-                    });
+                    };
+
+                    // null 값이 아닌 경우에만 추가
+                    if (gameData.homeTeam || gameData.awayTeam || gameData.stadium || gameData.startTime) {
+                        games.push(gameData);
+                    }
                 }
 
                 const response = await fetch('/api/today-game', {
@@ -527,17 +532,21 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
                 if (result.success) {
                     alert('게임 정보가 저장되었습니다.');
                     // 저장 후 데이터 다시 불러오기
-                    fetchGames();
+                    await fetchGames();
                 } else {
-                    alert('저장 중 오류가 발생했습니다: ' + result.message);
+                    throw new Error(result.message || '저장 중 오류가 발생했습니다.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('저장 중 오류가 발생했습니다.');
+                alert('저장 중 오류가 발생했습니다: ' + error.message);
             }
         }
 
@@ -550,13 +559,16 @@
                             today.getDate().toString().padStart(2, '0');
 
                 const response = await fetch(`/api/today-game?date=${date}`);
-                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
+                const result = await response.json();
                 if (result.success) {
-                    displayGames(result.games);
+                    displayGames(result.games || []);
                 } else {
-                    // 데이터가 없는 경우 빈 테이블 표시
-                    displayGames([]);
+                    throw new Error(result.message || '데이터를 불러오는 중 오류가 발생했습니다.');
                 }
             } catch (error) {
                 console.error('Error:', error);
