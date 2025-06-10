@@ -25,7 +25,7 @@ const gameSchema = new mongoose.Schema({
     stadium: {
         type: String,
         required: true,
-        enum: ['잠실', '문학', '사직', '대구', '광주', '수원', '창원', '대전', '고척', '수원'],
+        enum: ['잠실', '문학', '사직', '대구', '광주', '수원', '창원', '대전', '고척'],
         index: true
     },
     startTime: {
@@ -58,7 +58,7 @@ const gameSchema = new mongoose.Schema({
         default: '',
         maxlength: 100
     }
-}, { _id: false });  // _id 필드 제거
+}, { _id: false });
 
 // 날짜별 게임 스키마 정의
 const dailyGameSchema = new mongoose.Schema({
@@ -77,7 +77,7 @@ const dailyGameSchema = new mongoose.Schema({
     games: [gameSchema]
 }, { 
     timestamps: true,
-    versionKey: false  // __v 필드 제거
+    versionKey: false
 });
 
 // 인덱스 생성
@@ -91,10 +91,14 @@ const DailyGame = mongoose.model('DailyGame', dailyGameSchema);
 
 // 오늘의 게임 저장
 router.post('/', async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const { date, games } = req.body;
 
         if (!date || !games || !Array.isArray(games)) {
+            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: '잘못된 데이터 형식입니다.'
@@ -104,56 +108,58 @@ router.post('/', async (req, res) => {
         // 데이터 유효성 검사
         for (const game of games) {
             if (!game.number || !game.homeTeam || !game.awayTeam || !game.stadium || !game.startTime) {
+                await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
                     message: '필수 필드가 누락되었습니다.'
                 });
             }
+
+            // 같은 팀이 홈/원정에 중복되지 않도록 검사
+            if (game.homeTeam === game.awayTeam) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: '같은 팀이 홈/원정에 중복될 수 없습니다.'
+                });
+            }
         }
 
-        // 트랜잭션 시작
-        const session = await mongoose.startSession();
-        session.startTransaction();
+        // 기존 데이터 삭제
+        await DailyGame.deleteOne({ date }).session(session);
 
-        try {
-            // 기존 데이터 삭제
-            await DailyGame.deleteOne({ date }).session(session);
+        // 새 데이터 저장
+        const dailyGame = new DailyGame({
+            date,
+            games: games.map(game => ({
+                number: game.number,
+                homeTeam: game.homeTeam,
+                awayTeam: game.awayTeam,
+                stadium: game.stadium,
+                startTime: game.startTime,
+                endTime: game.endTime || null,
+                noGame: game.noGame || '정상게임',
+                note: game.note
+            }))
+        });
 
-            // 새 데이터 저장
-            const dailyGame = new DailyGame({
-                date,
-                games: games.map(game => ({
-                    number: game.number,
-                    homeTeam: game.homeTeam,
-                    awayTeam: game.awayTeam,
-                    stadium: game.stadium,
-                    startTime: game.startTime,
-                    endTime: game.endTime || null,
-                    noGame: game.noGame || '정상게임',
-                    note: game.note
-                }))
-            });
-
-            await dailyGame.save({ session });
-            await session.commitTransaction();
-            
-            res.json({
-                success: true,
-                message: '게임 정보가 저장되었습니다.'
-            });
-        } catch (error) {
-            await session.abortTransaction();
-            throw error;
-        } finally {
-            session.endSession();
-        }
+        await dailyGame.save({ session });
+        await session.commitTransaction();
+        
+        res.json({
+            success: true,
+            message: '게임 정보가 저장되었습니다.'
+        });
     } catch (error) {
+        await session.abortTransaction();
         console.error('Error saving games:', error);
         res.status(500).json({
             success: false,
             message: '서버 오류가 발생했습니다.',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
+    } finally {
+        session.endSession();
     }
 });
 

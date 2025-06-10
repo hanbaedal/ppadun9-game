@@ -1,0 +1,295 @@
+/* 공통 스타일 */
+:root {
+    --pastel-pink: #FFE5E5;
+    --pastel-pink-light: #FFF5F5;
+    --pastel-pink-border: #FFB6C1;
+    --pastel-pink-focus: #FF69B4;
+    --text-color: #666;
+}
+
+body {
+    background-color: #f8f9fa;
+    color: var(--text-color);
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-title {
+    color: var(--text-color);
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* 테이블 스타일 */
+.game-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 15px;
+    margin: 20px 0;
+    font-size: 1rem;
+}
+
+.game-table th {
+    background-color: var(--pastel-pink);
+    color: var(--text-color);
+    padding: 15px;
+    text-align: center;
+    border-radius: 10px 10px 0 0;
+    font-weight: bold;
+}
+
+.game-table td {
+    background-color: var(--pastel-pink-light);
+    padding: 15px;
+    text-align: center;
+    border-radius: 0 0 10px 10px;
+}
+
+/* 입력 필드 스타일 */
+.team-select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--pastel-pink-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #fff;
+    color: var(--text-color);
+}
+
+.team-select:focus {
+    border-color: var(--pastel-pink-focus);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 182, 193, 0.3);
+}
+
+/* 시간 입력 그룹 스타일 */
+.time-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    padding: 8px;
+    border-radius: 8px;
+    border: 2px solid var(--pastel-pink-border);
+}
+
+.time-input-group select {
+    padding: 8px;
+    border: 1px solid var(--pastel-pink-border);
+    border-radius: 6px;
+    background-color: #fff;
+    font-size: 1rem;
+    min-width: 80px;
+    color: var(--text-color);
+}
+
+.time-input-group input {
+    width: 60px;
+    padding: 8px;
+    border: 1px solid var(--pastel-pink-border);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.selected-time {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: var(--pastel-pink);
+    border-radius: 6px;
+    margin-left: 8px;
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 1rem;
+    border: 1px solid var(--pastel-pink-border);
+}
+
+/* 매치업 이미지 스타일 */
+.matchup-image {
+    width: 200px;
+    height: 100px;
+    background-color: #fff;
+    border: 2px solid var(--pastel-pink-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.matchup-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, var(--pastel-pink), var(--pastel-pink-light));
+    opacity: 0.5;
+}
+
+.matchup-text {
+    position: relative;
+    z-index: 1;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* 버튼 스타일 */
+.save-btn {
+    background-color: var(--pastel-pink);
+    color: var(--text-color);
+    border: 2px solid var(--pastel-pink-border);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 20px auto;
+}
+
+.save-btn:hover {
+    background-color: var(--pastel-pink-focus);
+    color: #fff;
+}
+
+/* 게임 정보 스타일 */
+.game-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.team-name {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.stadium-name {
+    color: var(--pastel-pink-focus);
+    font-weight: 500;
+}
+
+.time-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.time-label {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.time-value {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* 게임 상태 스타일 */
+.game-status {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-normal {
+    background-color: var(--pastel-pink);
+    color: var(--text-color);
+}
+
+.status-cold {
+    background-color: #FFB6C1;
+    color: #fff;
+}
+
+.status-suspended {
+    background-color: #FFD700;
+    color: #666;
+}
+
+.status-no-game {
+    background-color: #FF69B4;
+    color: #fff;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+    .container {
+        padding: 15px;
+    }
+    .game-table {
+        font-size: 0.9rem;
+    }
+    .team-select,
+    .time-input-group select,
+    .time-input-group input,
+    .selected-time {
+        font-size: 0.9rem;
+    }
+    .matchup-image {
+        width: 180px;
+        height: 90px;
+    }
+}
+
+@media (max-width: 992px) {
+    .container {
+        padding: 10px;
+    }
+    .game-table {
+        font-size: 0.85rem;
+    }
+    .team-select,
+    .time-input-group select,
+    .time-input-group input,
+    .selected-time {
+        font-size: 0.85rem;
+    }
+    .matchup-image {
+        width: 160px;
+        height: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 5px;
+    }
+    .game-table {
+        font-size: 0.8rem;
+    }
+    .game-table th,
+    .game-table td {
+        padding: 10px;
+    }
+    .team-select,
+    .time-input-group select,
+    .time-input-group input,
+    .selected-time {
+        font-size: 0.8rem;
+        padding: 6px;
+    }
+    .matchup-image {
+        width: 140px;
+        height: 70px;
+    }
+} 

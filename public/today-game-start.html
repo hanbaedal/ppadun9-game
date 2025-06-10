@@ -7,124 +7,185 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        /* 공통 스타일 */
+        :root {
+            --pastel-pink: #FFE5E5;
+            --pastel-pink-light: #FFF5F5;
+            --pastel-pink-border: #FFB6C1;
+            --pastel-pink-focus: #FF69B4;
+            --text-color: #666;
+        }
+
         body {
-            background-color: #1a1f24;
-            color: #fff;
+            background-color: #f8f9fa;
+            color: var(--text-color);
             font-family: 'Noto Sans KR', sans-serif;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
+
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
+
         .game-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0 15px;
             margin: 20px 0;
             font-size: 1rem;
         }
-        .game-table th,
-        .game-table td {
-            padding: 12px;
-            text-align: center;
-            border: 1px solid #ddd;
-        }
+
         .game-table th {
-            background-color: #f8f9fa;
+            background-color: var(--pastel-pink);
+            color: var(--text-color);
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
             font-weight: bold;
         }
+
+        .game-table td {
+            background-color: var(--pastel-pink-light);
+            padding: 15px;
+            text-align: center;
+            border-radius: 0 0 10px 10px;
+        }
+
         .team-select {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 10px;
+            border: 2px solid var(--pastel-pink-border);
+            border-radius: 8px;
             font-size: 1rem;
             background-color: #fff;
+            color: var(--text-color);
         }
+
         .team-select:focus {
-            border-color: #007bff;
+            border-color: var(--pastel-pink-focus);
             outline: none;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 3px rgba(255, 182, 193, 0.3);
         }
+
         .time-input-group {
             display: flex;
-            gap: 5px;
+            gap: 8px;
             align-items: center;
-            flex-wrap: wrap;
+            justify-content: center;
+            background-color: #fff;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid var(--pastel-pink-border);
         }
+
         .time-input-group select {
             padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 1px solid var(--pastel-pink-border);
+            border-radius: 6px;
             background-color: #fff;
             font-size: 1rem;
-            min-width: 70px;
+            min-width: 80px;
+            color: var(--text-color);
         }
+
         .time-input-group input {
             width: 60px;
             padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 1px solid var(--pastel-pink-border);
+            border-radius: 6px;
             text-align: center;
             font-size: 1rem;
+            color: var(--text-color);
         }
+
         .selected-time {
             display: inline-block;
             padding: 8px 12px;
-            background-color: #e9ecef;
-            border-radius: 4px;
-            margin-left: 5px;
+            background-color: var(--pastel-pink);
+            border-radius: 6px;
+            margin-left: 8px;
             font-weight: bold;
-            color: #495057;
+            color: var(--text-color);
             font-size: 1rem;
+            border: 1px solid var(--pastel-pink-border);
         }
+
         .matchup-image {
             width: 200px;
             height: 100px;
+            background-color: #fff;
+            border: 2px solid var(--pastel-pink-border);
             border-radius: 8px;
-            object-fit: cover;
-            background: #1a1f24;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-weight: bold;
-            font-size: 1.2em;
-            border: 1px solid #4ec3ff;
-            padding: 6px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
         }
+
+        .matchup-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, var(--pastel-pink), var(--pastel-pink-light));
+            opacity: 0.5;
+        }
+
+        .matchup-text {
+            position: relative;
+            z-index: 1;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
         .save-btn {
-            background: #4ec3ff;
-            color: #1a1f24;
-            border: none;
-            padding: 12px 30px;
+            background-color: var(--pastel-pink);
+            color: var(--text-color);
+            border: 2px solid var(--pastel-pink-border);
+            padding: 12px 24px;
             border-radius: 8px;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             display: block;
-            margin: 0 auto;
+            margin: 20px auto;
         }
+
         .save-btn:hover {
-            background: #3db2ef;
-            transform: translateY(-2px);
+            background-color: var(--pastel-pink-focus);
+            color: #fff;
         }
+
         .date-display {
             font-size: 1.5em;
             margin-bottom: 20px;
             color: #4ec3ff;
         }
+
         .time-display {
             display: flex;
             align-items: center;
             gap: 5px;
         }
+
         /* 반응형 디자인 */
         @media (max-width: 1200px) {
+            .container {
+                padding: 15px;
+            }
             .game-table {
                 font-size: 0.9rem;
             }
@@ -133,10 +194,17 @@
             .time-input-group input,
             .selected-time {
                 font-size: 0.9rem;
-                padding: 6px;
+            }
+            .matchup-image {
+                width: 180px;
+                height: 90px;
             }
         }
+
         @media (max-width: 992px) {
+            .container {
+                padding: 10px;
+            }
             .game-table {
                 font-size: 0.85rem;
             }
@@ -145,23 +213,34 @@
             .time-input-group input,
             .selected-time {
                 font-size: 0.85rem;
+            }
+            .matchup-image {
+                width: 160px;
+                height: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
                 padding: 5px;
             }
-        }
-        @media (max-width: 768px) {
             .game-table {
                 font-size: 0.8rem;
             }
             .game-table th,
             .game-table td {
-                padding: 8px;
+                padding: 10px;
             }
             .team-select,
             .time-input-group select,
             .time-input-group input,
             .selected-time {
                 font-size: 0.8rem;
-                padding: 4px;
+                padding: 6px;
+            }
+            .matchup-image {
+                width: 140px;
+                height: 70px;
             }
         }
     </style>
@@ -245,7 +324,9 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="matchup-image" id="matchupImage${i}"></div>
+                                    <div class="matchup-image" id="matchupImage${i}">
+                                        <div class="matchup-text"></div>
+                                    </div>
                                 </td>
                             </tr>
                         `);
@@ -288,6 +369,7 @@
             const awayTeam = document.getElementById(`awayTeam${row}`).value;
             const stadium = document.getElementById(`stadium${row}`);
             const matchupImage = document.getElementById(`matchupImage${row}`);
+            const matchupText = matchupImage.querySelector('.matchup-text');
             
             // 홈팀 선택 시 자동으로 구장 선택
             if (homeTeam && teamStadiums[homeTeam]) {
@@ -295,9 +377,9 @@
             }
             
             if (homeTeam && awayTeam && stadium.value) {
-                matchupImage.textContent = `${homeTeam} vs ${awayTeam} (${stadium.value})`;
+                matchupText.textContent = `${homeTeam} vs ${awayTeam}\n${stadium.value}`;
             } else {
-                matchupImage.textContent = '';
+                matchupText.textContent = '';
             }
         }
 

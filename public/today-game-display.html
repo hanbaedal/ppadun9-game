@@ -3,108 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>게임내용 - 빠던나인</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>오늘의 게임 내용</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="/css/common.css">
     <style>
+        /* 공통 스타일 */
+        :root {
+            --pastel-pink: #FFE5E5;
+            --pastel-pink-light: #FFF5F5;
+            --pastel-pink-border: #FFB6C1;
+            --pastel-pink-focus: #FF69B4;
+            --text-color: #666;
+        }
+
         body {
-            background-color: #1a1f24;
-            color: #fff;
+            background-color: #f8f9fa;
+            color: var(--text-color);
             font-family: 'Noto Sans KR', sans-serif;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        .header {
+
+        .page-title {
+            color: var(--text-color);
             text-align: center;
             margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: bold;
         }
+
         .game-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0 10px;
-            margin-bottom: 30px;
+            border-spacing: 0 15px;
+            margin: 20px 0;
+            font-size: 1rem;
         }
+
         .game-table th {
-            background: #4ec3ff;
-            color: #1a1f24;
-            padding: 12px;
+            background-color: var(--pastel-pink);
+            color: var(--text-color);
+            padding: 15px;
             text-align: center;
-            border-radius: 8px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
         }
+
         .game-table td {
-            background: #2a2f34;
-            padding: 12px;
+            background-color: var(--pastel-pink-light);
+            padding: 15px;
             text-align: center;
-            border-radius: 8px;
+            border-radius: 0 0 10px 10px;
         }
-        .date-input {
-            width: 200px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #4ec3ff;
-            background: #1a1f24;
-            color: #fff;
-            margin-bottom: 20px;
-        }
-        .matchup-image {
-            width: 200px;
-            height: 100px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: #1a1f24;
+
+        .game-info {
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 10px;
+        }
+
+        .team-name {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .stadium-name {
+            color: var(--pastel-pink-focus);
+            font-weight: 500;
+        }
+
+        .time-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .time-label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .time-value {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .game-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-normal {
+            background-color: var(--pastel-pink);
+            color: var(--text-color);
+        }
+
+        .status-cold {
+            background-color: #FFB6C1;
             color: #fff;
-            font-weight: bold;
-            font-size: 1.2em;
-            border: 1px solid #4ec3ff;
         }
-        .search-btn {
-            background: #4ec3ff;
-            color: #1a1f24;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-left: 10px;
+
+        .status-suspended {
+            background-color: #FFD700;
+            color: #666;
         }
-        .search-btn:hover {
-            background: #3db2ef;
-            transform: translateY(-2px);
+
+        .status-no-game {
+            background-color: #FF69B4;
+            color: #fff;
         }
-        .date-display {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            color: #4ec3ff;
+
+        /* 반응형 디자인 */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 15px;
+            }
+            .game-table {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .container {
+                padding: 10px;
+            }
+            .game-table {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 5px;
+            }
+            .game-table {
+                font-size: 0.8rem;
+            }
+            .game-table th,
+            .game-table td {
+                padding: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>게임내용</h1>
-            <div class="date-display" id="currentDate"></div>
-            <div class="d-flex justify-content-center align-items-center">
-                <input type="date" class="date-input" id="searchDate">
-                <button class="search-btn" onclick="searchGames()">조회</button>
-            </div>
-        </div>
+        <h1 class="page-title">오늘의 게임 내용</h1>
+        <div class="date-display" id="dateDisplay"></div>
         <table class="game-table">
             <thead>
                 <tr>
                     <th>번호</th>
-                    <th>홈팀</th>
-                    <th>원정팀</th>
-                    <th>야구장</th>
+                    <th>매치업</th>
                     <th>게임시작</th>
                     <th>게임종료</th>
-                    <th>노게임</th>
+                    <th>상태</th>
                 </tr>
             </thead>
             <tbody id="gameTableBody">
@@ -113,34 +175,47 @@
     </div>
 
     <script>
-        // 날짜 업데이트
+        // 날짜 표시 업데이트
         function updateDate() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
-            document.getElementById('currentDate').textContent = `${year}년 ${month}월 ${day}일`;
-            document.getElementById('searchDate').value = dateStr;
-            return dateStr.replace(/-/g, '');
+            const today = new Date();
+            const dateStr = today.getFullYear() + '년 ' +
+                           (today.getMonth() + 1) + '월 ' +
+                           today.getDate() + '일';
+            document.getElementById('dateDisplay').textContent = dateStr;
         }
 
-        // 게임 데이터 조회
-        async function searchGames() {
-            const searchDate = document.getElementById('searchDate').value.replace(/-/g, '');
+        // 게임 데이터 가져오기
+        async function fetchGames() {
             try {
-                const response = await fetch(`/api/today-game/${searchDate}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.games) {
-                        displayGames(data.games);
-                    } else {
-                        alert('해당 날짜의 게임 정보가 없습니다.');
-                    }
+                const today = new Date();
+                const date = today.getFullYear().toString() +
+                            (today.getMonth() + 1).toString().padStart(2, '0') +
+                            today.getDate().toString().padStart(2, '0');
+
+                const response = await fetch(`/api/today-game/${date}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayGames(result.games);
+                } else {
+                    console.error('Error fetching games:', result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('게임 데이터를 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 게임 상태에 따른 스타일 클래스 반환
+        function getStatusClass(status) {
+            switch(status) {
+                case '콜드게임':
+                    return 'status-cold';
+                case '서스펜디드 게임':
+                    return 'status-suspended';
+                case '노 게임':
+                    return 'status-no-game';
+                default:
+                    return 'status-normal';
             }
         }
 
@@ -148,17 +223,36 @@
         function displayGames(games) {
             const tbody = document.getElementById('gameTableBody');
             tbody.innerHTML = '';
-            
+
             games.forEach(game => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${game.number}</td>
-                    <td>${game.homeTeam}</td>
-                    <td>${game.awayTeam}</td>
-                    <td>${game.stadium}</td>
-                    <td>${game.startTime}</td>
-                    <td>${game.endTime || ''}</td>
-                    <td>${game.noGame || '정상게임'}</td>
+                    <td>
+                        <div class="game-info">
+                            <span class="team-name">${game.homeTeam}</span>
+                            <span>vs</span>
+                            <span class="team-name">${game.awayTeam}</span>
+                            <span class="stadium-name">(${game.stadium})</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="time-info">
+                            <span class="time-label">시작</span>
+                            <span class="time-value">${game.startTime}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="time-info">
+                            <span class="time-label">종료</span>
+                            <span class="time-value">${game.endTime || '-'}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="game-status ${getStatusClass(game.noGame)}">
+                            ${game.noGame}
+                        </span>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -167,7 +261,7 @@
         // 페이지 로드 시 실행
         window.onload = function() {
             updateDate();
-            searchGames();
+            fetchGames();
         };
     </script>
 </body>
