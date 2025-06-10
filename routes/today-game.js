@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const db = require('../db');
 
 // 게임 스키마 정의
 const gameSchema = new mongoose.Schema({
@@ -165,16 +164,21 @@ router.post('/', async (req, res) => {
 });
 
 // 오늘의 게임 조회
-router.get('/:date', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
-        const { date } = req.params;
-        const games = await db.query(
-            'SELECT * FROM today_game WHERE date = ? ORDER BY number',
-            [date]
-        );
+        const { date } = req.query;
+        
+        if (!date) {
+            return res.status(400).json({
+                success: false,
+                message: '날짜가 필요합니다.'
+            });
+        }
 
-        // 게임이 없으면 5개의 빈 행 생성
-        if (games.length === 0) {
+        const dailyGame = await DailyGame.findOne({ date });
+
+        if (!dailyGame) {
+            // 게임이 없으면 5개의 빈 행 생성
             const emptyGames = Array.from({ length: 5 }, (_, i) => ({
                 number: i + 1,
                 homeTeam: null,
@@ -188,10 +192,14 @@ router.get('/:date', async (req, res) => {
             return res.json({ success: true, games: emptyGames });
         }
 
-        res.json({ success: true, games });
+        res.json({ success: true, games: dailyGame.games });
     } catch (error) {
         console.error('Error fetching games:', error);
-        res.status(500).json({ success: false, message: '게임 데이터를 가져오는데 실패했습니다.' });
+        res.status(500).json({ 
+            success: false, 
+            message: '게임 데이터를 가져오는데 실패했습니다.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -200,14 +208,18 @@ router.post('/start', async (req, res) => {
     const { date, number, startTime } = req.body;
     
     try {
-        await db.query(
-            'UPDATE today_game SET startTime = ? WHERE date = ? AND number = ?',
-            [startTime, date, number]
+        await DailyGame.updateOne(
+            { date, 'games.number': number },
+            { $set: { 'games.$.startTime': startTime } }
         );
         res.json({ success: true });
     } catch (error) {
         console.error('Error updating start time:', error);
-        res.status(500).json({ success: false, message: '시작 시간 업데이트에 실패했습니다.' });
+        res.status(500).json({ 
+            success: false, 
+            message: '시작 시간 업데이트에 실패했습니다.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -216,14 +228,18 @@ router.post('/end', async (req, res) => {
     const { date, number, endTime } = req.body;
     
     try {
-        await db.query(
-            'UPDATE today_game SET endTime = ? WHERE date = ? AND number = ?',
-            [endTime, date, number]
+        await DailyGame.updateOne(
+            { date, 'games.number': number },
+            { $set: { 'games.$.endTime': endTime } }
         );
         res.json({ success: true });
     } catch (error) {
         console.error('Error updating end time:', error);
-        res.status(500).json({ success: false, message: '종료 시간 업데이트에 실패했습니다.' });
+        res.status(500).json({ 
+            success: false, 
+            message: '종료 시간 업데이트에 실패했습니다.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -232,14 +248,18 @@ router.post('/no', async (req, res) => {
     const { date, number, noGame } = req.body;
     
     try {
-        await db.query(
-            'UPDATE today_game SET noGame = ? WHERE date = ? AND number = ?',
-            [noGame, date, number]
+        await DailyGame.updateOne(
+            { date, 'games.number': number },
+            { $set: { 'games.$.noGame': noGame } }
         );
         res.json({ success: true });
     } catch (error) {
         console.error('Error updating game status:', error);
-        res.status(500).json({ success: false, message: '게임 상태 업데이트에 실패했습니다.' });
+        res.status(500).json({ 
+            success: false, 
+            message: '게임 상태 업데이트에 실패했습니다.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
