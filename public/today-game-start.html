@@ -31,19 +31,42 @@
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 2px solid #e0e0e0;
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .home-icon {
+            font-size: 1.5em;
+            color: #333;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            background-color: #f0f0f0;
         }
 
         .page-title {
             margin: 0;
             font-size: 1.8em;
-            color: #000000;
+            color: #0066cc;
             font-weight: 700;
         }
 
         .date-display {
-            font-size: 1.4em;
+            font-size: 1.6em;
             font-weight: bold;
             color: #333;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
         }
 
         .button {
@@ -56,6 +79,7 @@
             font-size: 15px;
             font-weight: 500;
             transition: background-color 0.2s;
+            margin-top: 20px;
         }
 
         .button:hover {
@@ -89,23 +113,16 @@
             letter-spacing: 0.5px;
         }
 
-        /* 경기번호별 배경색 */
-        .game-number-1 { background-color: #FFE5E5; }
-        .game-number-2 { background-color: #E5FFE5; }
-        .game-number-3 { background-color: #E5E5FF; }
-        .game-number-4 { background-color: #FFE5FF; }
-        .game-number-5 { background-color: #E5FFE5; }
-
-        /* 경기번호가 있는 행의 배경색 */
-        tr:nth-child(1) td { background-color: #FFE5E5; }
-        tr:nth-child(2) td { background-color: #E5FFE5; }
-        tr:nth-child(3) td { background-color: #E5E5FF; }
-        tr:nth-child(4) td { background-color: #FFE5FF; }
-        tr:nth-child(5) td { background-color: #E5FFE5; }
+        /* 경기별 배경색 */
+        tr:nth-child(1) td { background-color: #FFE5E5; }  /* 1경기: 연한 빨간색 */
+        tr:nth-child(2) td { background-color: #E5FFE5; }  /* 2경기: 연한 초록색 */
+        tr:nth-child(3) td { background-color: #E5E5FF; }  /* 3경기: 연한 파란색 */
+        tr:nth-child(4) td { background-color: #FFE5FF; }  /* 4경기: 연한 보라색 */
+        tr:nth-child(5) td { background-color: #E5FFE5; }  /* 5경기: 연한 초록색 */
 
         .game-number {
             font-weight: 600;
-            width: 80px;
+            width: 100px;
             color: #333;
             font-size: 15px;
         }
@@ -241,17 +258,17 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <a href="/today-game.html" class="home-icon">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <h1 class="page-title">KBO 야구경기 시작시간 설정</h1>
-        <div style="width: 40px;"></div>
-    </div>
-
-    <div class="date-display" id="dateDisplay"></div>
-
     <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="/today-game.html" class="home-icon">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="page-title">KBO 야구경기 시작시간 설정</h1>
+            </div>
+            <div class="date-display" id="dateDisplay"></div>
+        </div>
+
         <table class="game-table">
             <thead>
                 <tr>
