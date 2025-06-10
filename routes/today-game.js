@@ -107,20 +107,33 @@ router.post('/', async (req, res) => {
 
         // 데이터 유효성 검사
         for (const game of games) {
-            if (!game.number || !game.homeTeam || !game.awayTeam || !game.stadium || !game.startTime) {
+            // 필수 필드 검사
+            if (!game.number) {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
-                    message: '필수 필드가 누락되었습니다.'
+                    message: '경기 번호가 누락되었습니다.'
                 });
             }
 
-            // 같은 팀이 홈/원정에 중복되지 않도록 검사
-            if (game.homeTeam === game.awayTeam) {
+            // 팀 선택 검사
+            if (game.homeTeam && game.awayTeam) {
+                // 같은 팀이 홈/원정에 중복되지 않도록 검사
+                if (game.homeTeam === game.awayTeam) {
+                    await session.abortTransaction();
+                    return res.status(400).json({
+                        success: false,
+                        message: '같은 팀이 홈/원정에 중복될 수 없습니다.'
+                    });
+                }
+            }
+
+            // 시작 시간 형식 검사
+            if (game.startTime && !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(game.startTime)) {
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
-                    message: '같은 팀이 홈/원정에 중복될 수 없습니다.'
+                    message: '잘못된 시작 시간 형식입니다.'
                 });
             }
         }
@@ -133,13 +146,13 @@ router.post('/', async (req, res) => {
             date,
             games: games.map(game => ({
                 number: game.number,
-                homeTeam: game.homeTeam,
-                awayTeam: game.awayTeam,
-                stadium: game.stadium,
-                startTime: game.startTime,
+                homeTeam: game.homeTeam || null,
+                awayTeam: game.awayTeam || null,
+                stadium: game.stadium || null,
+                startTime: game.startTime || null,
                 endTime: game.endTime || null,
                 noGame: game.noGame || '정상게임',
-                note: game.note
+                note: game.note || ''
             }))
         });
 
