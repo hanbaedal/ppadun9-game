@@ -7,45 +7,29 @@ const gameSchema = new mongoose.Schema({
     number: {
         type: Number,
         required: true,
-        enum: [1, 2, 3, 4, 5],
-        index: true
+        enum: [1, 2, 3, 4, 5]
     },
     homeTeam: {
         type: String,
         enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움'],
-        index: true,
         default: null
     },
     awayTeam: {
         type: String,
         enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움'],
-        index: true,
         default: null
     },
     stadium: {
         type: String,
         enum: ['잠실', '문학', '사직', '대구', '광주', '수원', '창원', '대전', '고척'],
-        index: true,
         default: null
     },
     startTime: {
         type: String,
-        validate: {
-            validator: function(v) {
-                return v === null || /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
-            },
-            message: '잘못된 시간 형식입니다.'
-        },
         default: null
     },
     endTime: {
         type: String,
-        validate: {
-            validator: function(v) {
-                return v === null || /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
-            },
-            message: '잘못된 시간 형식입니다.'
-        },
         default: null
     },
     noGame: {
@@ -55,8 +39,7 @@ const gameSchema = new mongoose.Schema({
     },
     note: {
         type: String,
-        default: '',
-        maxlength: 100
+        default: ''
     }
 }, { _id: false });
 
@@ -65,14 +48,7 @@ const dailyGameSchema = new mongoose.Schema({
     date: {
         type: String,
         required: true,
-        unique: true,
-        index: true,
-        validate: {
-            validator: function(v) {
-                return /^\d{8}$/.test(v);
-            },
-            message: '잘못된 날짜 형식입니다.'
-        }
+        unique: true
     },
     games: [gameSchema]
 }, { 
@@ -80,97 +56,8 @@ const dailyGameSchema = new mongoose.Schema({
     versionKey: false
 });
 
-// 인덱스 생성
-dailyGameSchema.index({ date: 1 });
-dailyGameSchema.index({ 'games.number': 1 });
-dailyGameSchema.index({ 'games.homeTeam': 1, 'games.awayTeam': 1 });
-dailyGameSchema.index({ 'games.stadium': 1 });
-
 // 모델 생성
 const DailyGame = mongoose.model('DailyGame', dailyGameSchema);
-
-// 오늘의 게임 저장
-router.post('/', async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        const { date, games } = req.body;
-
-        if (!date || !games || !Array.isArray(games)) {
-            await session.abortTransaction();
-            return res.status(400).json({
-                success: false,
-                message: '잘못된 데이터 형식입니다.'
-            });
-        }
-
-        // 데이터 유효성 검사
-        for (const game of games) {
-            // 필수 필드 검사
-            if (!game.number) {
-                await session.abortTransaction();
-                return res.status(400).json({
-                    success: false,
-                    message: '경기 번호가 누락되었습니다.'
-                });
-            }
-
-            // 팀 선택 검사
-            if (game.homeTeam && game.awayTeam) {
-                // 같은 팀이 홈/원정에 중복되지 않도록 검사
-                if (game.homeTeam === game.awayTeam) {
-                    await session.abortTransaction();
-                    return res.status(400).json({
-                        success: false,
-                        message: '같은 팀이 홈/원정에 중복될 수 없습니다.'
-                    });
-                }
-            }
-        }
-
-        try {
-            // 기존 데이터 삭제
-            await DailyGame.deleteOne({ date }).session(session);
-
-            // 새 데이터 저장
-            const dailyGame = new DailyGame({
-                date,
-                games: games.map(game => ({
-                    number: game.number,
-                    homeTeam: game.homeTeam || null,
-                    awayTeam: game.awayTeam || null,
-                    stadium: game.stadium || null,
-                    startTime: game.startTime || null,
-                    endTime: game.endTime || null,
-                    noGame: game.noGame || '정상게임',
-                    note: game.note || ''
-                }))
-            });
-
-            await dailyGame.save({ session });
-            await session.commitTransaction();
-            
-            res.json({
-                success: true,
-                message: '게임 정보가 저장되었습니다.'
-            });
-        } catch (saveError) {
-            await session.abortTransaction();
-            console.error('Error saving games:', saveError);
-            throw saveError;
-        }
-    } catch (error) {
-        console.error('Error in save operation:', error);
-        res.status(500).json({
-            success: false,
-            message: '서버 오류가 발생했습니다.',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    } finally {
-        session.endSession();
-    }
-});
 
 // 오늘의 게임 조회
 router.get('/', async (req, res) => {
@@ -212,41 +99,153 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 게임 시작 시간 업데이트
-router.post('/start', async (req, res) => {
-    const { date, number, startTime } = req.body;
-    
+// 오늘의 게임 저장
+router.post('/', async (req, res) => {
     try {
-        await DailyGame.updateOne(
-            { date, 'games.number': number },
-            { $set: { 'games.$.startTime': startTime } }
-        );
-        res.json({ success: true });
+        const { date, games } = req.body;
+
+        if (!date || !games || !Array.isArray(games)) {
+            return res.status(400).json({
+                success: false,
+                message: '잘못된 데이터 형식입니다.'
+            });
+        }
+
+        // 데이터 유효성 검사
+        for (const game of games) {
+            if (!game.number) {
+                return res.status(400).json({
+                    success: false,
+                    message: '경기 번호가 누락되었습니다.'
+                });
+            }
+
+            if (game.homeTeam && game.awayTeam && game.homeTeam === game.awayTeam) {
+                return res.status(400).json({
+                    success: false,
+                    message: '같은 팀이 홈/원정에 중복될 수 없습니다.'
+                });
+            }
+        }
+
+        // 기존 데이터 삭제 후 새 데이터 저장
+        await DailyGame.deleteOne({ date });
+        
+        const dailyGame = new DailyGame({
+            date,
+            games: games.map(game => ({
+                number: game.number,
+                homeTeam: game.homeTeam || null,
+                awayTeam: game.awayTeam || null,
+                stadium: game.stadium || null,
+                startTime: game.startTime || null,
+                endTime: game.endTime || null,
+                noGame: game.noGame || '정상게임',
+                note: game.note || ''
+            }))
+        });
+
+        await dailyGame.save();
+        
+        res.json({
+            success: true,
+            message: '게임 정보가 저장되었습니다.'
+        });
     } catch (error) {
-        console.error('Error updating start time:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: '시작 시간 업데이트에 실패했습니다.',
+        console.error('Error saving games:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
 
-// 게임 종료 시간 업데이트
-router.post('/end', async (req, res) => {
-    const { date, number, endTime } = req.body;
-    
+// 시작 시간 업데이트
+router.post('/start', async (req, res) => {
     try {
-        await DailyGame.updateOne(
-            { date, 'games.number': number },
-            { $set: { 'games.$.endTime': endTime } }
+        const { date, gameNumber, startTime } = req.body;
+
+        if (!date || !gameNumber || !startTime) {
+            return res.status(400).json({
+                success: false,
+                message: '필수 정보가 누락되었습니다.'
+            });
+        }
+
+        const result = await DailyGame.updateOne(
+            { 
+                date,
+                'games.number': gameNumber
+            },
+            {
+                $set: {
+                    'games.$.startTime': startTime
+                }
+            }
         );
-        res.json({ success: true });
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 게임을 찾을 수 없습니다.'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: '시작 시간이 업데이트되었습니다.'
+        });
+    } catch (error) {
+        console.error('Error updating start time:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// 종료 시간 업데이트
+router.post('/end', async (req, res) => {
+    try {
+        const { date, gameNumber, endTime } = req.body;
+
+        if (!date || !gameNumber || !endTime) {
+            return res.status(400).json({
+                success: false,
+                message: '필수 정보가 누락되었습니다.'
+            });
+        }
+
+        const result = await DailyGame.updateOne(
+            { 
+                date,
+                'games.number': gameNumber
+            },
+            {
+                $set: {
+                    'games.$.endTime': endTime
+                }
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 게임을 찾을 수 없습니다.'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: '종료 시간이 업데이트되었습니다.'
+        });
     } catch (error) {
         console.error('Error updating end time:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: '종료 시간 업데이트에 실패했습니다.',
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
@@ -254,19 +253,44 @@ router.post('/end', async (req, res) => {
 
 // 게임 상태 업데이트
 router.post('/no', async (req, res) => {
-    const { date, number, noGame } = req.body;
-    
     try {
-        await DailyGame.updateOne(
-            { date, 'games.number': number },
-            { $set: { 'games.$.noGame': noGame } }
+        const { date, gameNumber, noGame } = req.body;
+
+        if (!date || !gameNumber || !noGame) {
+            return res.status(400).json({
+                success: false,
+                message: '필수 정보가 누락되었습니다.'
+            });
+        }
+
+        const result = await DailyGame.updateOne(
+            { 
+                date,
+                'games.number': gameNumber
+            },
+            {
+                $set: {
+                    'games.$.noGame': noGame
+                }
+            }
         );
-        res.json({ success: true });
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 게임을 찾을 수 없습니다.'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: '게임 상태가 업데이트되었습니다.'
+        });
     } catch (error) {
         console.error('Error updating game status:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: '게임 상태 업데이트에 실패했습니다.',
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

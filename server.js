@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const connectDB = require('./config/database');
 
 // 환경 변수 설정
 dotenv.config();
@@ -15,6 +16,9 @@ if (!process.env.MONGODB_URI) {
 
 const app = express();
 
+// 데이터베이스 연결
+connectDB();
+
 // 로깅 미들웨어
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -24,6 +28,7 @@ app.use((req, res, next) => {
 // 미들웨어 설정
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // API 라우트 설정
 app.use('/api/auth', require('./routes/auth'));
