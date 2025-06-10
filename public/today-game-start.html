@@ -68,6 +68,7 @@
         .game-table th {
             background-color: #f8f9fa;
             font-weight: 500;
+            color: #0066cc;
         }
 
         .game-table input {
@@ -84,6 +85,17 @@
             box-shadow: 0 0 0 2px rgba(0,102,204,0.2);
         }
 
+        .game-number {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .game-number-1 { background-color: #FFE5E5; }
+        .game-number-2 { background-color: #E5FFE5; }
+        .game-number-3 { background-color: #E5E5FF; }
+        .game-number-4 { background-color: #FFE5FF; }
+        .game-number-5 { background-color: #E5FFE5; }
+
         .save-btn {
             background-color: #0066cc;
             color: white;
@@ -99,11 +111,50 @@
             background-color: #0052a3;
         }
 
-        .game-number-1 { background-color: #FFE5E5; }
-        .game-number-2 { background-color: #E5FFE5; }
-        .game-number-3 { background-color: #E5E5FF; }
-        .game-number-4 { background-color: #FFE5FF; }
-        .game-number-5 { background-color: #E5FFE5; }
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .time-input-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .time-input-group input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .am-pm-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .am-pm-btn.active {
+            background-color: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+
+        .team-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
     </style>
 </head>
 <body>
@@ -121,7 +172,7 @@
         <table class="game-table">
             <thead>
                 <tr>
-                    <th>번호</th>
+                    <th>경기</th>
                     <th>홈팀</th>
                     <th>원정팀</th>
                     <th>구장</th>
@@ -131,6 +182,51 @@
                 </tr>
             </thead>
             <tbody id="gameTableBody">
+                <tr>
+                    <td class="game-number game-number-1">1 경기</td>
+                    <td><input type="text" id="homeTeam1" placeholder="홈팀"></td>
+                    <td><input type="text" id="awayTeam1" placeholder="원정팀"></td>
+                    <td><input type="text" id="stadium1" placeholder="구장"></td>
+                    <td><input type="time" id="startTime1"></td>
+                    <td><input type="time" id="endTime1" readonly></td>
+                    <td>정상게임</td>
+                </tr>
+                <tr>
+                    <td class="game-number game-number-2">2 경기</td>
+                    <td><input type="text" id="homeTeam2" placeholder="홈팀"></td>
+                    <td><input type="text" id="awayTeam2" placeholder="원정팀"></td>
+                    <td><input type="text" id="stadium2" placeholder="구장"></td>
+                    <td><input type="time" id="startTime2"></td>
+                    <td><input type="time" id="endTime2" readonly></td>
+                    <td>정상게임</td>
+                </tr>
+                <tr>
+                    <td class="game-number game-number-3">3 경기</td>
+                    <td><input type="text" id="homeTeam3" placeholder="홈팀"></td>
+                    <td><input type="text" id="awayTeam3" placeholder="원정팀"></td>
+                    <td><input type="text" id="stadium3" placeholder="구장"></td>
+                    <td><input type="time" id="startTime3"></td>
+                    <td><input type="time" id="endTime3" readonly></td>
+                    <td>정상게임</td>
+                </tr>
+                <tr>
+                    <td class="game-number game-number-4">4 경기</td>
+                    <td><input type="text" id="homeTeam4" placeholder="홈팀"></td>
+                    <td><input type="text" id="awayTeam4" placeholder="원정팀"></td>
+                    <td><input type="text" id="stadium4" placeholder="구장"></td>
+                    <td><input type="time" id="startTime4"></td>
+                    <td><input type="time" id="endTime4" readonly></td>
+                    <td>정상게임</td>
+                </tr>
+                <tr>
+                    <td class="game-number game-number-5">5 경기</td>
+                    <td><input type="text" id="homeTeam5" placeholder="홈팀"></td>
+                    <td><input type="text" id="awayTeam5" placeholder="원정팀"></td>
+                    <td><input type="text" id="stadium5" placeholder="구장"></td>
+                    <td><input type="time" id="startTime5"></td>
+                    <td><input type="time" id="endTime5" readonly></td>
+                    <td>정상게임</td>
+                </tr>
             </tbody>
         </table>
         <div style="text-align: center; margin: 20px;">
@@ -139,6 +235,194 @@
     </div>
 
     <script>
+        // KBO 팀 정보
+        const kboTeams = [
+            { name: '두산 베어스', stadium: '잠실야구장' },
+            { name: 'LG 트윈스', stadium: '잠실야구장' },
+            { name: 'SSG 랜더스', stadium: '인천SSG랜더스필드' },
+            { name: '키움 히어로즈', stadium: '고척스카이돔' },
+            { name: 'KT 위즈', stadium: '수원KT위즈파크' },
+            { name: 'KIA 타이거즈', stadium: '광주기아챔피언스필드' },
+            { name: 'NC 다이노스', stadium: '창원NC파크' },
+            { name: '롯데 자이언츠', stadium: '사직야구장' },
+            { name: '삼성 라이온즈', stadium: '대구삼성라이온즈파크' },
+            { name: '한화 이글스', stadium: '대전한화생명이글스파크' }
+        ];
+
+        // 시간 옵션 생성
+        function generateHourOptions() {
+            let options = '';
+            for (let i = 1; i <= 12; i++) {
+                options += `<option value="${i}">${i}</option>`;
+            }
+            return options;
+        }
+
+        function generateMinuteOptions() {
+            let options = '';
+            for (let i = 0; i < 60; i++) {
+                const minute = i.toString().padStart(2, '0');
+                options += `<option value="${minute}">${minute}</option>`;
+            }
+            return options;
+        }
+
+        // 팀 선택 시 구장 자동 설정
+        function updateStadium(gameNumber, isHomeTeam) {
+            const teamSelect = document.getElementById(isHomeTeam ? `homeTeam${gameNumber}` : `awayTeam${gameNumber}`);
+            const stadiumInput = document.getElementById(`stadium${gameNumber}`);
+            const selectedTeam = kboTeams.find(team => team.name === teamSelect.value);
+            
+            if (selectedTeam && isHomeTeam) {
+                stadiumInput.value = selectedTeam.stadium;
+            }
+        }
+
+        // AM/PM 토글
+        function toggleAmPm(gameNumber, isStartTime) {
+            const btn = document.getElementById(`${isStartTime ? 'start' : 'end'}AmPm${gameNumber}`);
+            btn.classList.toggle('active');
+            btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
+        }
+
+        // 게임 데이터 표시
+        function displayGames(games) {
+            const tbody = document.getElementById('gameTableBody');
+            tbody.innerHTML = '';
+
+            // 5개의 행 생성
+            for (let i = 1; i <= 5; i++) {
+                const game = games.find(g => g.number === i) || {
+                    number: i,
+                    homeTeam: null,
+                    awayTeam: null,
+                    stadium: null,
+                    startTime: null,
+                    endTime: null,
+                    noGame: '정상게임'
+                };
+
+                const [startHour, startMinute] = game.startTime ? game.startTime.split(':') : ['', ''];
+                const isStartPM = startHour && parseInt(startHour) >= 12;
+                const displayStartHour = startHour ? (parseInt(startHour) % 12 || 12) : '';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="game-number game-number-${i}">${i} 경기</td>
+                    <td>
+                        <select class="team-select" id="homeTeam${i}" onchange="updateStadium(${i}, true)">
+                            <option value="">홈팀 선택</option>
+                            ${kboTeams.map(team => `
+                                <option value="${team.name}" ${game.homeTeam === team.name ? 'selected' : ''}>
+                                    ${team.name}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="team-select" id="awayTeam${i}" onchange="updateStadium(${i}, false)">
+                            <option value="">원정팀 선택</option>
+                            ${kboTeams.map(team => `
+                                <option value="${team.name}" ${game.awayTeam === team.name ? 'selected' : ''}>
+                                    ${team.name}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </td>
+                    <td><input type="text" id="stadium${i}" value="${game.stadium || ''}" readonly></td>
+                    <td>
+                        <div class="time-input-group">
+                            <button class="am-pm-btn ${isStartPM ? 'active' : ''}" id="startAmPm${i}" 
+                                    onclick="toggleAmPm(${i}, true)">${isStartPM ? 'PM' : 'AM'}</button>
+                            <select id="startHour${i}">
+                                ${generateHourOptions()}
+                            </select>
+                            <span>:</span>
+                            <select id="startMinute${i}">
+                                ${generateMinuteOptions()}
+                            </select>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="time-input-group">
+                            <button class="am-pm-btn" id="endAmPm${i}" onclick="toggleAmPm(${i}, false)">AM</button>
+                            <select id="endHour${i}" disabled>
+                                ${generateHourOptions()}
+                            </select>
+                            <span>:</span>
+                            <select id="endMinute${i}" disabled>
+                                ${generateMinuteOptions()}
+                            </select>
+                        </div>
+                    </td>
+                    <td>정상게임</td>
+                `;
+                tbody.appendChild(tr);
+
+                // 저장된 시간이 있으면 선택
+                if (startHour && startMinute) {
+                    document.getElementById(`startHour${i}`).value = displayStartHour;
+                    document.getElementById(`startMinute${i}`).value = startMinute;
+                }
+            }
+        }
+
+        // 게임 데이터 저장
+        async function saveGames() {
+            try {
+                const today = new Date();
+                const date = today.getFullYear().toString() +
+                            (today.getMonth() + 1).toString().padStart(2, '0') +
+                            today.getDate().toString().padStart(2, '0');
+
+                const games = [];
+                for (let i = 1; i <= 5; i++) {
+                    const startAmPm = document.getElementById(`startAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
+                    const startHour = document.getElementById(`startHour${i}`).value;
+                    const startMinute = document.getElementById(`startMinute${i}`).value;
+                    
+                    let startTime = null;
+                    if (startHour && startMinute) {
+                        let hour = parseInt(startHour);
+                        if (startAmPm === 'PM' && hour !== 12) hour += 12;
+                        if (startAmPm === 'AM' && hour === 12) hour = 0;
+                        startTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
+                    }
+
+                    games.push({
+                        number: i,
+                        homeTeam: document.getElementById(`homeTeam${i}`).value || null,
+                        awayTeam: document.getElementById(`awayTeam${i}`).value || null,
+                        stadium: document.getElementById(`stadium${i}`).value || null,
+                        startTime: startTime,
+                        endTime: null,
+                        noGame: '정상게임'
+                    });
+                }
+
+                const response = await fetch('/api/today-game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: date,
+                        games: games
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('게임 정보가 저장되었습니다.');
+                } else {
+                    alert('저장 중 오류가 발생했습니다: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('저장 중 오류가 발생했습니다.');
+            }
+        }
+
         // 날짜 표시 업데이트
         function updateDate() {
             const today = new Date();
@@ -166,81 +450,6 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-            }
-        }
-
-        // 게임 데이터 표시
-        function displayGames(games) {
-            const tbody = document.getElementById('gameTableBody');
-            tbody.innerHTML = '';
-
-            // 5개의 행 생성
-            for (let i = 1; i <= 5; i++) {
-                const game = games.find(g => g.number === i) || {
-                    number: i,
-                    homeTeam: null,
-                    awayTeam: null,
-                    stadium: null,
-                    startTime: null,
-                    endTime: null,
-                    noGame: '정상게임'
-                };
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="game-number-${i}">${i} 경기</td>
-                    <td><input type="text" id="homeTeam${i}" value="${game.homeTeam || ''}" placeholder="홈팀"></td>
-                    <td><input type="text" id="awayTeam${i}" value="${game.awayTeam || ''}" placeholder="원정팀"></td>
-                    <td><input type="text" id="stadium${i}" value="${game.stadium || ''}" placeholder="구장"></td>
-                    <td><input type="time" id="startTime${i}" value="${game.startTime || ''}"></td>
-                    <td><input type="time" id="endTime${i}" value="${game.endTime || ''}" readonly></td>
-                    <td>${game.noGame || '정상게임'}</td>
-                `;
-                tbody.appendChild(tr);
-            }
-        }
-
-        // 게임 데이터 저장
-        async function saveGames() {
-            try {
-                const today = new Date();
-                const date = today.getFullYear().toString() +
-                            (today.getMonth() + 1).toString().padStart(2, '0') +
-                            today.getDate().toString().padStart(2, '0');
-
-                const games = [];
-                for (let i = 1; i <= 5; i++) {
-                    games.push({
-                        number: i,
-                        homeTeam: document.getElementById(`homeTeam${i}`).value || null,
-                        awayTeam: document.getElementById(`awayTeam${i}`).value || null,
-                        stadium: document.getElementById(`stadium${i}`).value || null,
-                        startTime: document.getElementById(`startTime${i}`).value || null,
-                        endTime: document.getElementById(`endTime${i}`).value || null,
-                        noGame: '정상게임'
-                    });
-                }
-
-                const response = await fetch('/api/today-game', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        date: date,
-                        games: games
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('게임 정보가 저장되었습니다.');
-                } else {
-                    alert('저장 중 오류가 발생했습니다: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('저장 중 오류가 발생했습니다.');
             }
         }
 
