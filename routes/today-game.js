@@ -12,41 +12,41 @@ const gameSchema = new mongoose.Schema({
     },
     homeTeam: {
         type: String,
-        required: true,
         enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움'],
-        index: true
+        index: true,
+        default: null
     },
     awayTeam: {
         type: String,
-        required: true,
         enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움'],
-        index: true
+        index: true,
+        default: null
     },
     stadium: {
         type: String,
-        required: true,
         enum: ['잠실', '문학', '사직', '대구', '광주', '수원', '창원', '대전', '고척'],
-        index: true
+        index: true,
+        default: null
     },
     startTime: {
         type: String,
-        required: true,
-        validate: {
-            validator: function(v) {
-                return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
-            },
-            message: '잘못된 시간 형식입니다.'
-        }
-    },
-    endTime: {
-        type: String,
-        default: null,
         validate: {
             validator: function(v) {
                 return v === null || /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
             },
             message: '잘못된 시간 형식입니다.'
-        }
+        },
+        default: null
+    },
+    endTime: {
+        type: String,
+        validate: {
+            validator: function(v) {
+                return v === null || /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+            },
+            message: '잘못된 시간 형식입니다.'
+        },
+        default: null
     },
     noGame: {
         type: String,
@@ -127,45 +127,41 @@ router.post('/', async (req, res) => {
                     });
                 }
             }
-
-            // 시작 시간 형식 검사
-            if (game.startTime && !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(game.startTime)) {
-                await session.abortTransaction();
-                return res.status(400).json({
-                    success: false,
-                    message: '잘못된 시작 시간 형식입니다.'
-                });
-            }
         }
 
-        // 기존 데이터 삭제
-        await DailyGame.deleteOne({ date }).session(session);
+        try {
+            // 기존 데이터 삭제
+            await DailyGame.deleteOne({ date }).session(session);
 
-        // 새 데이터 저장
-        const dailyGame = new DailyGame({
-            date,
-            games: games.map(game => ({
-                number: game.number,
-                homeTeam: game.homeTeam || null,
-                awayTeam: game.awayTeam || null,
-                stadium: game.stadium || null,
-                startTime: game.startTime || null,
-                endTime: game.endTime || null,
-                noGame: game.noGame || '정상게임',
-                note: game.note || ''
-            }))
-        });
+            // 새 데이터 저장
+            const dailyGame = new DailyGame({
+                date,
+                games: games.map(game => ({
+                    number: game.number,
+                    homeTeam: game.homeTeam || null,
+                    awayTeam: game.awayTeam || null,
+                    stadium: game.stadium || null,
+                    startTime: game.startTime || null,
+                    endTime: game.endTime || null,
+                    noGame: game.noGame || '정상게임',
+                    note: game.note || ''
+                }))
+            });
 
-        await dailyGame.save({ session });
-        await session.commitTransaction();
-        
-        res.json({
-            success: true,
-            message: '게임 정보가 저장되었습니다.'
-        });
+            await dailyGame.save({ session });
+            await session.commitTransaction();
+            
+            res.json({
+                success: true,
+                message: '게임 정보가 저장되었습니다.'
+            });
+        } catch (saveError) {
+            await session.abortTransaction();
+            console.error('Error saving games:', saveError);
+            throw saveError;
+        }
     } catch (error) {
-        await session.abortTransaction();
-        console.error('Error saving games:', error);
+        console.error('Error in save operation:', error);
         res.status(500).json({
             success: false,
             message: '서버 오류가 발생했습니다.',
