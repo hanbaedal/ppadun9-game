@@ -3,70 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘의 게임 - 빠던나인</title>
+    <title>오늘의 게임 설정 - 빠던나인</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            background: #181e23;
+            color: #fff;
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
         }
-        .game-container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        .header {
+            background: #111;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 0 0 18px 18px;
+        }
+        .header .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header .welcome {
+            font-weight: bold;
+            color: #4ec3ff;
+            font-size: 1.1em;
+        }
+        .main-container {
+            max-width: 800px;
+            margin: 32px auto;
+            background: #232d36;
+            border-radius: 18px;
+            padding: 32px 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+        }
+        .game-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 24px;
+        }
+        .game-table th {
+            background: #2c3742;
+            padding: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .game-table td {
+            background: #2c3742;
+            padding: 12px;
+            text-align: center;
+        }
+        .game-table tr:hover td {
+            background: #364552;
+        }
+        .team-select {
+            width: 120px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #4ec3ff;
+            background: #1a1f24;
+            color: #fff;
+        }
+        .time-input {
+            width: 120px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #4ec3ff;
+            background: #1a1f24;
+            color: #fff;
+        }
+        .note-input {
+            width: 200px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #4ec3ff;
+            background: #1a1f24;
+            color: #fff;
+        }
+        .save-btn {
+            background: #4ec3ff;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 24px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .save-btn:hover {
+            background: #3db0e0;
+        }
+        .date-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #4ec3ff;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">프로젝트</a>
-            <span class="navbar-text text-light" id="userName"></span>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login.html">로그인</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="logoutLink">로그아웃</a>
-                    </li>
-                </ul>
-            </div>
+    <div class="header">
+        <div class="logo">
+            <img src="img/logo.png" alt="logo" width="38" height="38">
+            <span class="welcome">해수님 환영합니다!</span>
         </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="game-container">
-                    <h2 class="mb-4">오늘의 게임</h2>
-                    <div class="alert alert-info">
-                        오늘의 게임 콘텐츠가 준비 중입니다.
-                    </div>
-                </div>
-            </div>
+        <div class="icons">
+            <button class="icon-btn" onclick="location.href='index.html'">←<br><span style="font-size:0.7em;">뒤로</span></button>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="main-container">
+        <div class="date-title" id="currentDate"></div>
+        <table class="game-table">
+            <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>홈팀</th>
+                    <th>원정팀</th>
+                    <th>게임시작</th>
+                    <th>게임종료</th>
+                    <th>참고사항</th>
+                </tr>
+            </thead>
+            <tbody id="gameTableBody">
+                <!-- 게임 데이터가 여기에 동적으로 추가됩니다 -->
+            </tbody>
+        </table>
+        <button class="save-btn" onclick="saveGames()">저장하기</button>
+    </div>
+
     <script>
-        // 로그인 체크
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            window.location.href = '/login.html';
-        } else {
-            // 사용자 이름 표시
-            document.getElementById('userName').textContent = `${user.name}님`;
+        // 오늘 날짜 표시
+        function updateDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('currentDate').textContent = `${year}년 ${month}월 ${day}일`;
+            return `${year}${month}${day}`;
         }
 
-        // 로그아웃
-        document.getElementById('logoutLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
+        // 게임 테이블 생성
+        function createGameTable() {
+            const tbody = document.getElementById('gameTableBody');
+            tbody.innerHTML = '';
+            
+            for (let i = 1; i <= 5; i++) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i}</td>
+                    <td>
+                        <select class="team-select" id="homeTeam${i}">
+                            <option value="">선택</option>
+                            <option value="두산">두산</option>
+                            <option value="LG">LG</option>
+                            <option value="기아">기아</option>
+                            <option value="삼성">삼성</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="team-select" id="awayTeam${i}">
+                            <option value="">선택</option>
+                            <option value="두산">두산</option>
+                            <option value="LG">LG</option>
+                            <option value="기아">기아</option>
+                            <option value="삼성">삼성</option>
+                        </select>
+                    </td>
+                    <td><input type="time" class="time-input" id="startTime${i}"></td>
+                    <td><input type="time" class="time-input" id="endTime${i}"></td>
+                    <td><input type="text" class="note-input" id="note${i}" placeholder="참고사항"></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        // 게임 데이터 저장
+        async function saveGames() {
+            const date = updateDate();
+            const games = [];
+
+            for (let i = 1; i <= 5; i++) {
+                games.push({
+                    number: i,
+                    homeTeam: document.getElementById(`homeTeam${i}`).value,
+                    awayTeam: document.getElementById(`awayTeam${i}`).value,
+                    startTime: document.getElementById(`startTime${i}`).value,
+                    endTime: document.getElementById(`endTime${i}`).value,
+                    note: document.getElementById(`note${i}`).value
+                });
+            }
+
+            try {
+                const response = await fetch('/api/today-game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        date: date,
+                        games: games
+                    })
+                });
+
+                if (response.ok) {
+                    alert('게임 정보가 저장되었습니다.');
+                    location.href = 'index.html';
+                } else {
+                    alert('저장 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('서버 연결 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDate();
+            createGameTable();
         });
     </script>
 </body>

@@ -28,6 +28,7 @@ app.use(express.json());
 // API 라우트 설정
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/members', require('./routes/members'));
+app.use('/api/today-game', require('./routes/today-game'));
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
