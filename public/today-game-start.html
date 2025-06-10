@@ -119,6 +119,7 @@
             font-size: 14px;
             color: #333;
             transition: border-color 0.2s;
+            height: 40px;
         }
 
         .team-select:focus {
@@ -138,6 +139,7 @@
             align-items: center;
             gap: 6px;
             padding: 4px;
+            height: 40px;
         }
 
         .am-pm-btn {
@@ -149,6 +151,7 @@
             font-size: 13px;
             font-weight: 500;
             transition: all 0.2s;
+            height: 40px;
         }
 
         .am-pm-btn.active {
@@ -170,7 +173,8 @@
             background-color: white;
             font-size: 14px;
             color: #333;
-            min-width: 60px;
+            min-width: 80px;
+            height: 40px;
             transition: border-color 0.2s;
         }
 
@@ -195,6 +199,8 @@
             font-size: 14px;
             color: #333;
             transition: border-color 0.2s;
+            height: 40px;
+            box-sizing: border-box;
         }
 
         input[type="text"]:focus {
@@ -210,13 +216,13 @@
         }
 
         /* 컬럼 너비 조정 */
-        th:nth-child(1), td:nth-child(1) { width: 80px; }  /* 경기번호 */
-        th:nth-child(2), td:nth-child(2) { width: 180px; } /* 홈팀 */
-        th:nth-child(3), td:nth-child(3) { width: 180px; } /* 원정팀 */
-        th:nth-child(4), td:nth-child(4) { width: 200px; } /* 구장 */
-        th:nth-child(5), td:nth-child(5) { width: 200px; } /* 시작시간 */
-        th:nth-child(6), td:nth-child(6) { width: 200px; } /* 종료시간 */
-        th:nth-child(7), td:nth-child(7) { width: 120px; } /* 경기상황 */
+        th:nth-child(1), td:nth-child(1) { width: 100px; }  /* 경기번호 */
+        th:nth-child(2), td:nth-child(2) { width: 200px; } /* 홈팀 */
+        th:nth-child(3), td:nth-child(3) { width: 200px; } /* 원정팀 */
+        th:nth-child(4), td:nth-child(4) { width: 250px; } /* 구장 */
+        th:nth-child(5), td:nth-child(5) { width: 250px; } /* 시작시간 */
+        th:nth-child(6), td:nth-child(6) { width: 250px; } /* 종료시간 */
+        th:nth-child(7), td:nth-child(7) { width: 150px; } /* 경기상황 */
 
         /* 호버 효과 */
         tr:hover td {
@@ -507,12 +513,38 @@
                 const result = await response.json();
                 if (result.success) {
                     alert('게임 정보가 저장되었습니다.');
+                    // 저장 후 데이터 다시 불러오기
+                    fetchGames();
                 } else {
                     alert('저장 중 오류가 발생했습니다: ' + result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 alert('저장 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 게임 데이터 불러오기
+        async function fetchGames() {
+            try {
+                const today = new Date();
+                const date = today.getFullYear().toString() +
+                            (today.getMonth() + 1).toString().padStart(2, '0') +
+                            today.getDate().toString().padStart(2, '0');
+
+                const response = await fetch(`/api/today-game?date=${date}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayGames(result.games);
+                } else {
+                    // 데이터가 없는 경우 빈 테이블 표시
+                    displayGames([]);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                // 오류 발생 시 빈 테이블 표시
+                displayGames([]);
             }
         }
 
@@ -523,27 +555,6 @@
                            (today.getMonth() + 1) + '월 ' +
                            today.getDate() + '일';
             document.getElementById('dateDisplay').textContent = dateStr;
-        }
-
-        // 게임 데이터 가져오기
-        async function fetchGames() {
-            try {
-                const today = new Date();
-                const date = today.getFullYear().toString() +
-                            (today.getMonth() + 1).toString().padStart(2, '0') +
-                            today.getDate().toString().padStart(2, '0');
-
-                const response = await fetch(`/api/today-game/${date}`);
-                const result = await response.json();
-
-                if (result.success) {
-                    displayGames(result.games);
-                } else {
-                    console.error('Error fetching games:', result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
         }
 
         // 페이지 로드 시 실행
