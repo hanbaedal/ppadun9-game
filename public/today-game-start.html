@@ -23,34 +23,64 @@
         }
         .game-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 10px;
-            margin-bottom: 30px;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1rem;
+        }
+        .game-table th,
+        .game-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
         }
         .game-table th {
-            background: #4ec3ff;
-            color: #1a1f24;
-            padding: 12px;
-            text-align: center;
-            border-radius: 8px;
-        }
-        .game-table td {
-            background: #2a2f34;
-            padding: 12px;
-            text-align: center;
-            border-radius: 8px;
+            background-color: #f8f9fa;
+            font-weight: bold;
         }
         .team-select {
-            width: 100px;
-            font-size: 14px;
-        }
-        .time-input {
-            width: 120px;
+            width: 100%;
             padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #4ec3ff;
-            background: #1a1f24;
-            color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: #fff;
+        }
+        .team-select:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        .time-input-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .time-input-group select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            font-size: 1rem;
+            min-width: 70px;
+        }
+        .time-input-group input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .selected-time {
+            display: inline-block;
+            padding: 8px 12px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-left: 5px;
+            font-weight: bold;
+            color: #495057;
+            font-size: 1rem;
         }
         .matchup-image {
             width: 200px;
@@ -88,49 +118,51 @@
             margin-bottom: 20px;
             color: #4ec3ff;
         }
-        .time-input-group {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .time-input-group select {
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #fff;
-            font-size: 14px;
-            min-width: 60px;
-        }
-        .time-input-group select:focus {
-            border-color: #007bff;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
-        }
-        .time-input-group input {
-            width: 50px;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .time-input-group input:focus {
-            border-color: #007bff;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
-        }
-        .selected-time {
-            display: inline-block;
-            padding: 5px 10px;
-            background-color: #e9ecef;
-            border-radius: 4px;
-            margin-left: 5px;
-            font-weight: bold;
-            color: #495057;
-        }
         .time-display {
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+        /* 반응형 디자인 */
+        @media (max-width: 1200px) {
+            .game-table {
+                font-size: 0.9rem;
+            }
+            .team-select,
+            .time-input-group select,
+            .time-input-group input,
+            .selected-time {
+                font-size: 0.9rem;
+                padding: 6px;
+            }
+        }
+        @media (max-width: 992px) {
+            .game-table {
+                font-size: 0.85rem;
+            }
+            .team-select,
+            .time-input-group select,
+            .time-input-group input,
+            .selected-time {
+                font-size: 0.85rem;
+                padding: 5px;
+            }
+        }
+        @media (max-width: 768px) {
+            .game-table {
+                font-size: 0.8rem;
+            }
+            .game-table th,
+            .game-table td {
+                padding: 8px;
+            }
+            .team-select,
+            .time-input-group select,
+            .time-input-group input,
+            .selected-time {
+                font-size: 0.8rem;
+                padding: 4px;
+            }
         }
     </style>
 </head>
@@ -236,18 +268,43 @@
             return dateStr;
         }
 
+        // 팀별 홈구장 매핑
+        const teamStadiums = {
+            '두산': '잠실',
+            'LG': '잠실',
+            '기아': '광주',
+            '삼성': '대구',
+            'SSG': '문학',
+            'NC': '창원',
+            '롯데': '사직',
+            '한화': '대전',
+            'KT': '수원',
+            '키움': '고척'
+        };
+
         // 매치업 이미지 업데이트
         function updateMatchupImage(row) {
             const homeTeam = document.getElementById(`homeTeam${row}`).value;
             const awayTeam = document.getElementById(`awayTeam${row}`).value;
-            const stadium = document.getElementById(`stadium${row}`).value;
+            const stadium = document.getElementById(`stadium${row}`);
             const matchupImage = document.getElementById(`matchupImage${row}`);
             
-            if (homeTeam && awayTeam && stadium) {
-                matchupImage.textContent = `${homeTeam} vs ${awayTeam} (${stadium})`;
+            // 홈팀 선택 시 자동으로 구장 선택
+            if (homeTeam && teamStadiums[homeTeam]) {
+                stadium.value = teamStadiums[homeTeam];
+            }
+            
+            if (homeTeam && awayTeam && stadium.value) {
+                matchupImage.textContent = `${homeTeam} vs ${awayTeam} (${stadium.value})`;
             } else {
                 matchupImage.textContent = '';
             }
+        }
+
+        // 구장 선택 시 매치업 이미지 업데이트
+        function updateStadium(row) {
+            const stadium = document.getElementById(`stadium${row}`);
+            updateMatchupImage(row);
         }
 
         // 게임 데이터 저장

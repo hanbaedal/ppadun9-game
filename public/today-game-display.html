@@ -102,13 +102,13 @@
                     <th>홈팀</th>
                     <th>원정팀</th>
                     <th>야구장</th>
-                    <th>참고사항</th>
                     <th>게임시작</th>
                     <th>게임종료</th>
                     <th>노게임</th>
                 </tr>
             </thead>
-            <tbody id="gameTableBody"></tbody>
+            <tbody id="gameTableBody">
+            </tbody>
         </table>
     </div>
 
@@ -156,7 +156,6 @@
                     <td>${game.homeTeam}</td>
                     <td>${game.awayTeam}</td>
                     <td>${game.stadium}</td>
-                    <td>${game.note}</td>
                     <td>${game.startTime}</td>
                     <td>${game.endTime || ''}</td>
                     <td>${game.noGame || '정상게임'}</td>
