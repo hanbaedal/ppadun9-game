@@ -3,283 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘의 게임 설정 - 빠던나인</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>오늘의 게임 - 빠던나인</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
-            background: #181e23;
+            background-color: #1a1f24;
             color: #fff;
-            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
         .header {
-            background: #111;
-            padding: 18px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-radius: 0 0 18px 18px;
+            text-align: center;
+            margin-bottom: 50px;
         }
-        .header .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .header .welcome {
-            font-weight: bold;
-            color: #4ec3ff;
-            font-size: 1.1em;
-        }
-        .main-container {
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
             max-width: 800px;
-            margin: 32px auto;
-            background: #232d36;
-            border-radius: 18px;
-            padding: 32px 24px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+            margin: 0 auto;
         }
-        .game-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 8px;
-            margin-top: 24px;
-        }
-        .game-table th {
-            background: #2c3742;
-            padding: 12px;
-            font-weight: 600;
+        .menu-item {
+            background: #2a2f34;
+            border: 2px solid #4ec3ff;
+            border-radius: 15px;
+            padding: 30px;
             text-align: center;
-        }
-        .game-table td {
-            background: #2c3742;
-            padding: 12px;
-            text-align: center;
-        }
-        .game-table tr:hover td {
-            background: #364552;
-        }
-        .team-select {
-            width: 120px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #4ec3ff;
-            background: #1a1f24;
-            color: #fff;
-        }
-        .time-input {
-            width: 120px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #4ec3ff;
-            background: #1a1f24;
-            color: #fff;
-        }
-        .note-input {
-            width: 200px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #4ec3ff;
-            background: #1a1f24;
-            color: #fff;
-            display: none;
-        }
-        .matchup-image {
-            width: 200px;
-            height: 100px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: #1a1f24;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #fff;
+            min-height: 200px;
+        }
+        .menu-item:hover {
+            transform: translateY(-5px);
+            background: #3a3f44;
+            box-shadow: 0 5px 15px rgba(78, 195, 255, 0.3);
+        }
+        .menu-icon {
+            font-size: 3em;
+            color: #4ec3ff;
+            margin-bottom: 20px;
+        }
+        .menu-title {
+            font-size: 1.5em;
             font-weight: bold;
-            font-size: 1.2em;
-            border: 1px solid #4ec3ff;
-        }
-        .save-btn {
-            background: #4ec3ff;
+            margin-bottom: 10px;
             color: #fff;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            margin-top: 24px;
-            cursor: pointer;
-            transition: background 0.2s;
         }
-        .save-btn:hover {
-            background: #3db0e0;
+        .menu-description {
+            color: #aaa;
+            font-size: 1em;
         }
-        .date-title {
-            font-size: 1.4em;
-            font-weight: 600;
-            margin-bottom: 24px;
+        .date-display {
+            font-size: 1.5em;
+            margin-bottom: 20px;
             color: #4ec3ff;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">
-            <img src="img/logo.png" alt="logo" width="38" height="38">
-            <span class="welcome">해수님 환영합니다!</span>
+    <div class="container">
+        <div class="header">
+            <h1>오늘의 게임</h1>
+            <div class="date-display" id="currentDate"></div>
         </div>
-        <div class="icons">
-            <button class="icon-btn" onclick="location.href='index.html'">←<br><span style="font-size:0.7em;">뒤로</span></button>
+        <div class="menu-grid">
+            <div class="menu-item" onclick="location.href='today-game-start.html'">
+                <i class="fas fa-play-circle menu-icon"></i>
+                <div class="menu-title">게임시작</div>
+                <div class="menu-description">오늘의 게임 시작 시간을 설정합니다.</div>
+            </div>
+            <div class="menu-item" onclick="location.href='today-game-end.html'">
+                <i class="fas fa-stop-circle menu-icon"></i>
+                <div class="menu-title">게임종료</div>
+                <div class="menu-description">오늘의 게임 종료 시간을 설정합니다.</div>
+            </div>
+            <div class="menu-item" onclick="location.href='today-game-no.html'">
+                <i class="fas fa-ban menu-icon"></i>
+                <div class="menu-title">노게임</div>
+                <div class="menu-description">콜드게임, 서스펜디드 게임, 노 게임을 설정합니다.</div>
+            </div>
+            <div class="menu-item" onclick="location.href='today-game-display.html'">
+                <i class="fas fa-list-alt menu-icon"></i>
+                <div class="menu-title">게임내용</div>
+                <div class="menu-description">날짜별 게임 내용을 조회합니다.</div>
+            </div>
         </div>
-    </div>
-
-    <div class="main-container">
-        <div class="date-title" id="currentDate"></div>
-        <table class="game-table">
-            <thead>
-                <tr>
-                    <th>번호</th>
-                    <th>홈팀</th>
-                    <th>원정팀</th>
-                    <th>게임시작</th>
-                    <th>게임종료</th>
-                    <th>참고사항</th>
-                </tr>
-            </thead>
-            <tbody id="gameTableBody">
-                <!-- 게임 데이터가 여기에 동적으로 추가됩니다 -->
-            </tbody>
-        </table>
-        <button class="save-btn" onclick="saveGames()">저장하기</button>
     </div>
 
     <script>
-        // 오늘 날짜 표시
+        // 날짜 업데이트
         function updateDate() {
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             document.getElementById('currentDate').textContent = `${year}년 ${month}월 ${day}일`;
-            return `${year}${month}${day}`;
-        }
-
-        // 게임 테이블 생성
-        function createGameTable() {
-            const tbody = document.getElementById('gameTableBody');
-            tbody.innerHTML = '';
-            
-            for (let i = 1; i <= 5; i++) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${i}</td>
-                    <td>
-                        <select class="team-select" id="homeTeam${i}" onchange="updateMatchupImage(${i})">
-                            <option value="">선택</option>
-                            <option value="두산">두산 베어스</option>
-                            <option value="LG">LG 트윈스</option>
-                            <option value="기아">KIA 타이거즈</option>
-                            <option value="삼성">삼성 라이온즈</option>
-                            <option value="SSG">SSG 랜더스</option>
-                            <option value="NC">NC 다이노스</option>
-                            <option value="롯데">롯데 자이언츠</option>
-                            <option value="한화">한화 이글스</option>
-                            <option value="KT">KT 위즈</option>
-                            <option value="키움">키움 히어로즈</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select class="team-select" id="awayTeam${i}" onchange="updateMatchupImage(${i})">
-                            <option value="">선택</option>
-                            <option value="두산">두산 베어스</option>
-                            <option value="LG">LG 트윈스</option>
-                            <option value="기아">KIA 타이거즈</option>
-                            <option value="삼성">삼성 라이온즈</option>
-                            <option value="SSG">SSG 랜더스</option>
-                            <option value="NC">NC 다이노스</option>
-                            <option value="롯데">롯데 자이언츠</option>
-                            <option value="한화">한화 이글스</option>
-                            <option value="KT">KT 위즈</option>
-                            <option value="키움">키움 히어로즈</option>
-                        </select>
-                    </td>
-                    <td><input type="time" class="time-input" id="startTime${i}"></td>
-                    <td><input type="time" class="time-input" id="endTime${i}"></td>
-                    <td>
-                        <input type="text" class="note-input" id="note${i}" placeholder="참고사항">
-                        <div class="matchup-image" id="matchupImage${i}">팀을 선택하세요</div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            }
-        }
-
-        // 매치업 이미지 업데이트
-        function updateMatchupImage(index) {
-            const homeTeam = document.getElementById(`homeTeam${index}`).value;
-            const awayTeam = document.getElementById(`awayTeam${index}`).value;
-            const matchupImage = document.getElementById(`matchupImage${index}`);
-            const noteInput = document.getElementById(`note${index}`);
-
-            if (homeTeam && awayTeam) {
-                // 매치업 이미지 생성
-                const matchupText = `${homeTeam} vs ${awayTeam}`;
-                matchupImage.textContent = matchupText;
-                
-                // 참고사항에 매치업 정보 저장
-                noteInput.value = matchupText;
-            } else {
-                matchupImage.textContent = '팀을 선택하세요';
-                noteInput.value = '';
-            }
-        }
-
-        // 게임 데이터 저장
-        async function saveGames() {
-            const date = updateDate();
-            const games = [];
-
-            for (let i = 1; i <= 5; i++) {
-                const homeTeam = document.getElementById(`homeTeam${i}`).value;
-                const awayTeam = document.getElementById(`awayTeam${i}`).value;
-                
-                if (homeTeam && awayTeam) {  // 팀이 선택된 경우만 저장
-                    games.push({
-                        number: i,
-                        homeTeam: homeTeam,
-                        awayTeam: awayTeam,
-                        startTime: document.getElementById(`startTime${i}`).value,
-                        endTime: document.getElementById(`endTime${i}`).value,
-                        note: document.getElementById(`note${i}`).value
-                    });
-                }
-            }
-
-            try {
-                const response = await fetch('/api/today-game', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        date: date,
-                        games: games
-                    })
-                });
-
-                if (response.ok) {
-                    alert('게임 정보가 저장되었습니다.');
-                    location.href = 'index.html';
-                } else {
-                    alert('저장 중 오류가 발생했습니다.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('서버 연결 중 오류가 발생했습니다.');
-            }
         }
 
         // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onload = function() {
             updateDate();
-            createGameTable();
-        });
+        };
     </script>
 </body>
 </html> 

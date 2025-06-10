@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임내용 - 빠던나인</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #1a1f24;
+            color: #fff;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .game-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-bottom: 30px;
+        }
+        .game-table th {
+            background: #4ec3ff;
+            color: #1a1f24;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+        }
+        .game-table td {
+            background: #2a2f34;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+        }
+        .date-input {
+            width: 200px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #4ec3ff;
+            background: #1a1f24;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .matchup-image {
+            width: 200px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #1a1f24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.2em;
+            border: 1px solid #4ec3ff;
+        }
+        .search-btn {
+            background: #4ec3ff;
+            color: #1a1f24;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        .search-btn:hover {
+            background: #3db2ef;
+            transform: translateY(-2px);
+        }
+        .date-display {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #4ec3ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>게임내용</h1>
+            <div class="date-display" id="currentDate"></div>
+            <div class="d-flex justify-content-center align-items-center">
+                <input type="date" class="date-input" id="searchDate">
+                <button class="search-btn" onclick="searchGames()">조회</button>
+            </div>
+        </div>
+        <table class="game-table">
+            <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>홈팀</th>
+                    <th>원정팀</th>
+                    <th>게임시작</th>
+                    <th>게임종료</th>
+                    <th>참고사항</th>
+                </tr>
+            </thead>
+            <tbody id="gameTableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // 날짜 업데이트
+        function updateDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            document.getElementById('currentDate').textContent = `${year}년 ${month}월 ${day}일`;
+            document.getElementById('searchDate').value = dateStr;
+            return dateStr.replace(/-/g, '');
+        }
+
+        // 게임 데이터 조회
+        async function searchGames() {
+            const searchDate = document.getElementById('searchDate').value.replace(/-/g, '');
+            try {
+                const response = await fetch(`/api/today-game/${searchDate}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.games) {
+                        displayGames(data.games);
+                    } else {
+                        alert('해당 날짜의 게임 정보가 없습니다.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('게임 데이터를 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 게임 데이터 표시
+        function displayGames(games) {
+            const tbody = document.getElementById('gameTableBody');
+            tbody.innerHTML = '';
+            
+            games.forEach(game => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${game.number}</td>
+                    <td>${game.homeTeam}</td>
+                    <td>${game.awayTeam}</td>
+                    <td>${game.startTime || '-'}</td>
+                    <td>${game.endTime || '-'}</td>
+                    <td>
+                        <div class="matchup-image" id="matchupImage${game.number}">${game.note}</div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 페이지 로드 시 실행
+        window.onload = function() {
+            updateDate();
+            searchGames();
+        };
+    </script>
+</body>
+</html> 

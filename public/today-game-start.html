@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임시작 - 빠던나인</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #1a1f24;
+            color: #fff;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .game-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-bottom: 30px;
+        }
+        .game-table th {
+            background: #4ec3ff;
+            color: #1a1f24;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+        }
+        .game-table td {
+            background: #2a2f34;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+        }
+        .team-select {
+            width: 150px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #4ec3ff;
+            background: #1a1f24;
+            color: #fff;
+        }
+        .time-input {
+            width: 120px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #4ec3ff;
+            background: #1a1f24;
+            color: #fff;
+        }
+        .matchup-image {
+            width: 200px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #1a1f24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.2em;
+            border: 1px solid #4ec3ff;
+        }
+        .save-btn {
+            background: #4ec3ff;
+            color: #1a1f24;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0 auto;
+        }
+        .save-btn:hover {
+            background: #3db2ef;
+            transform: translateY(-2px);
+        }
+        .date-display {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #4ec3ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>게임시작</h1>
+            <div class="date-display" id="currentDate"></div>
+        </div>
+        <table class="game-table">
+            <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>홈팀</th>
+                    <th>원정팀</th>
+                    <th>게임시작</th>
+                    <th>참고사항</th>
+                </tr>
+            </thead>
+            <tbody id="gameTableBody"></tbody>
+        </table>
+        <button class="save-btn" onclick="saveGames()">저장</button>
+    </div>
+
+    <script>
+        // 날짜 업데이트
+        function updateDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${year}${month}${day}`;
+            document.getElementById('currentDate').textContent = `${year}년 ${month}월 ${day}일`;
+            return dateStr;
+        }
+
+        // 게임 테이블 생성
+        function createGameTable() {
+            const tbody = document.getElementById('gameTableBody');
+            tbody.innerHTML = '';
+            
+            for (let i = 1; i <= 5; i++) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i}</td>
+                    <td>
+                        <select class="team-select" id="homeTeam${i}" onchange="updateMatchupImage(${i})">
+                            <option value="">선택</option>
+                            <option value="두산">두산 베어스</option>
+                            <option value="LG">LG 트윈스</option>
+                            <option value="기아">KIA 타이거즈</option>
+                            <option value="삼성">삼성 라이온즈</option>
+                            <option value="SSG">SSG 랜더스</option>
+                            <option value="NC">NC 다이노스</option>
+                            <option value="롯데">롯데 자이언츠</option>
+                            <option value="한화">한화 이글스</option>
+                            <option value="KT">KT 위즈</option>
+                            <option value="키움">키움 히어로즈</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="team-select" id="awayTeam${i}" onchange="updateMatchupImage(${i})">
+                            <option value="">선택</option>
+                            <option value="두산">두산 베어스</option>
+                            <option value="LG">LG 트윈스</option>
+                            <option value="기아">KIA 타이거즈</option>
+                            <option value="삼성">삼성 라이온즈</option>
+                            <option value="SSG">SSG 랜더스</option>
+                            <option value="NC">NC 다이노스</option>
+                            <option value="롯데">롯데 자이언츠</option>
+                            <option value="한화">한화 이글스</option>
+                            <option value="KT">KT 위즈</option>
+                            <option value="키움">키움 히어로즈</option>
+                        </select>
+                    </td>
+                    <td><input type="time" class="time-input" id="startTime${i}"></td>
+                    <td>
+                        <div class="matchup-image" id="matchupImage${i}">팀을 선택하세요</div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        // 매치업 이미지 업데이트
+        function updateMatchupImage(index) {
+            const homeTeam = document.getElementById(`homeTeam${index}`).value;
+            const awayTeam = document.getElementById(`awayTeam${index}`).value;
+            const matchupImage = document.getElementById(`matchupImage${index}`);
+
+            if (homeTeam && awayTeam) {
+                matchupImage.textContent = `${homeTeam} vs ${awayTeam}`;
+            } else {
+                matchupImage.textContent = '팀을 선택하세요';
+            }
+        }
+
+        // 게임 데이터 저장
+        async function saveGames() {
+            const date = updateDate();
+            const games = [];
+
+            for (let i = 1; i <= 5; i++) {
+                const homeTeam = document.getElementById(`homeTeam${i}`).value;
+                const awayTeam = document.getElementById(`awayTeam${i}`).value;
+                
+                if (homeTeam && awayTeam) {
+                    games.push({
+                        number: i,
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        startTime: document.getElementById(`startTime${i}`).value,
+                        note: document.getElementById(`matchupImage${i}`).textContent
+                    });
+                }
+            }
+
+            try {
+                const response = await fetch('/api/today-game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        date: date,
+                        games: games
+                    })
+                });
+
+                if (response.ok) {
+                    alert('게임 정보가 저장되었습니다.');
+                    location.href = 'index.html';
+                } else {
+                    alert('저장 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('서버 연결 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 페이지 로드 시 실행
+        window.onload = function() {
+            updateDate();
+            createGameTable();
+        };
+    </script>
+</body>
+</html> 
