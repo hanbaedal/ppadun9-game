@@ -4,17 +4,47 @@ const mongoose = require('mongoose');
 
 // 게임 스키마 정의
 const gameSchema = new mongoose.Schema({
-    number: Number,
-    homeTeam: String,
-    awayTeam: String,
-    startTime: String,
-    endTime: String,
-    note: String
+    number: {
+        type: Number,
+        required: true,
+        enum: [1, 2, 3, 4, 5]
+    },
+    homeTeam: {
+        type: String,
+        required: true,
+        enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움']
+    },
+    awayTeam: {
+        type: String,
+        required: true,
+        enum: ['두산', 'LG', '기아', '삼성', 'SSG', 'NC', '롯데', '한화', 'KT', '키움']
+    },
+    startTime: {
+        type: String,
+        required: true
+    },
+    endTime: {
+        type: String,
+        default: null
+    },
+    noGame: {
+        type: String,
+        enum: ['', '콜드게임', '서스펜디드 게임', '노 게임'],
+        default: ''
+    },
+    note: {
+        type: String,
+        default: ''
+    }
 });
 
 // 날짜별 게임 스키마 정의
 const dailyGameSchema = new mongoose.Schema({
-    date: String,
+    date: {
+        type: String,
+        required: true,
+        unique: true
+    },
     games: [gameSchema]
 });
 
@@ -32,7 +62,15 @@ router.post('/', async (req, res) => {
         // 새 데이터 저장
         const dailyGame = new DailyGame({
             date,
-            games
+            games: games.map(game => ({
+                number: game.number,
+                homeTeam: game.homeTeam,
+                awayTeam: game.awayTeam,
+                startTime: game.startTime,
+                endTime: game.endTime || null,
+                noGame: game.noGame || '',
+                note: game.note
+            }))
         });
 
         await dailyGame.save();
