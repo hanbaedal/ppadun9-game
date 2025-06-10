@@ -3,30 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘의 게임</title>
+    <title>오늘의 경기 설정</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #333;
+            transition: transform 0.3s ease;
+            text-align: center;
+            min-height: 200px;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-item i {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .menu-item h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .menu-item p {
+            margin: 10px 0 0;
+            font-size: 1em;
+            color: #666;
+        }
+
+        /* 파스텔 톤 색상 */
+        .menu-start {
+            background-color: #FFE5E5; /* 연한 파스텔 핑크 */
+        }
+
+        .menu-end {
+            background-color: #E5FFE5; /* 연한 파스텔 그린 */
+        }
+
+        .menu-status {
+            background-color: #E5E5FF; /* 연한 파스텔 블루 */
+        }
+
+        .menu-display {
+            background-color: #FFE5FF; /* 연한 파스텔 퍼플 */
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .home-icon {
+            font-size: 1.5em;
+            color: #333;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            background-color: #f0f0f0;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 1.8em;
+            color: #333;
+        }
+
+        .date-display {
+            text-align: center;
+            font-size: 1.5em;
+            color: #333;
+            margin: 30px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="page-title">오늘의 게임</h1>
-        <div class="date-display" id="dateDisplay"></div>
-        <table class="game-table">
-            <thead>
-                <tr>
-                    <th>번호</th>
-                    <th>홈팀</th>
-                    <th>원정팀</th>
-                    <th>구장</th>
-                    <th>게임시작</th>
-                    <th>게임종료</th>
-                    <th>상태</th>
-                </tr>
-            </thead>
-            <tbody id="gameTableBody">
-            </tbody>
-        </table>
+    <div class="header">
+        <a href="/" class="home-icon">
+            <i class="fas fa-home"></i>
+        </a>
+        <h1 class="page-title">오늘의 경기 설정</h1>
+        <div style="width: 40px;"></div> <!-- 헤더 균형을 위한 빈 공간 -->
+    </div>
+
+    <div class="date-display" id="dateDisplay"></div>
+
+    <div class="menu-container">
+        <a href="/today-game-start.html" class="menu-item menu-start">
+            <i class="fas fa-play-circle"></i>
+            <h2>경기 시작</h2>
+            <p>경기 시작 시간 설정</p>
+        </a>
+        <a href="/today-game-end.html" class="menu-item menu-end">
+            <i class="fas fa-stop-circle"></i>
+            <h2>경기 종료</h2>
+            <p>경기 종료 시간 설정</p>
+        </a>
+        <a href="/today-game-status.html" class="menu-item menu-status">
+            <i class="fas fa-info-circle"></i>
+            <h2>경기 상황</h2>
+            <p>경기 상태 관리</p>
+        </a>
+        <a href="/today-game-display.html" class="menu-item menu-display">
+            <i class="fas fa-list-alt"></i>
+            <h2>경기 내용</h2>
+            <p>전체 경기 정보 확인</p>
+        </a>
     </div>
 
     <script>
@@ -39,69 +153,9 @@
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
-        // 게임 데이터 가져오기
-        async function fetchGames() {
-            try {
-                const today = new Date();
-                const date = today.getFullYear().toString() +
-                            (today.getMonth() + 1).toString().padStart(2, '0') +
-                            today.getDate().toString().padStart(2, '0');
-
-                const response = await fetch(`/api/today-game/${date}`);
-                const result = await response.json();
-
-                if (result.success) {
-                    displayGames(result.games);
-                } else {
-                    console.error('Error fetching games:', result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        // 게임 상태에 따른 스타일 클래스 반환
-        function getStatusClass(status) {
-            switch(status) {
-                case '콜드게임':
-                    return 'status-cold';
-                case '서스펜디드 게임':
-                    return 'status-suspended';
-                case '노 게임':
-                    return 'status-no-game';
-                default:
-                    return 'status-normal';
-            }
-        }
-
-        // 게임 데이터 표시
-        function displayGames(games) {
-            const tbody = document.getElementById('gameTableBody');
-            tbody.innerHTML = '';
-
-            games.forEach(game => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${game.number}</td>
-                    <td>${game.homeTeam}</td>
-                    <td>${game.awayTeam}</td>
-                    <td>${game.stadium}</td>
-                    <td>${game.startTime}</td>
-                    <td>${game.endTime || '-'}</td>
-                    <td>
-                        <span class="game-status ${getStatusClass(game.noGame)}">
-                            ${game.noGame}
-                        </span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
         // 페이지 로드 시 실행
         window.onload = function() {
             updateDate();
-            fetchGames();
         };
     </script>
 </body>
