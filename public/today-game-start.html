@@ -3,27 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>게임시작</title>
+    <title>KBO 야구경기 시작시간 설정</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .home-icon {
+            font-size: 1.5em;
+            color: #333;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            background-color: #f0f0f0;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 1.8em;
+            color: #0066cc;
+            font-weight: 700;
+        }
+
+        .date-display {
+            text-align: center;
+            font-size: 1.5em;
+            color: #333;
+            margin: 30px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-weight: 500;
+        }
+
+        .game-table {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .game-table th,
+        .game-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .game-table th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .game-table input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .game-table input:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 2px rgba(0,102,204,0.2);
+        }
+
+        .save-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background-color: #0052a3;
+        }
+
+        .game-number-1 { background-color: #FFE5E5; }
+        .game-number-2 { background-color: #E5FFE5; }
+        .game-number-3 { background-color: #E5E5FF; }
+        .game-number-4 { background-color: #FFE5FF; }
+        .game-number-5 { background-color: #E5FFE5; }
+    </style>
 </head>
 <body>
+    <div class="header">
+        <a href="/today-game.html" class="home-icon">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title">KBO 야구경기 시작시간 설정</h1>
+        <div style="width: 40px;"></div>
+    </div>
+
+    <div class="date-display" id="dateDisplay"></div>
+
     <div class="container">
-        <h1 class="page-title">게임시작</h1>
-        <div class="date-display" id="dateDisplay"></div>
         <table class="game-table">
             <thead>
                 <tr>
                     <th>번호</th>
-                    <th>매치업</th>
-                    <th>게임시작</th>
-                    <th>저장</th>
+                    <th>홈팀</th>
+                    <th>원정팀</th>
+                    <th>구장</th>
+                    <th>시작시간</th>
+                    <th>종료시간</th>
+                    <th>경기상황</th>
                 </tr>
             </thead>
             <tbody id="gameTableBody">
             </tbody>
         </table>
+        <div style="text-align: center; margin: 20px;">
+            <button class="save-btn" onclick="saveGames()">저장</button>
+        </div>
     </div>
 
     <script>
@@ -34,26 +146,6 @@
                            (today.getMonth() + 1) + '월 ' +
                            today.getDate() + '일';
             document.getElementById('dateDisplay').textContent = dateStr;
-        }
-
-        // 시간 옵션 생성
-        function generateHourOptions() {
-            let options = '';
-            for (let i = 0; i < 24; i++) {
-                const hour = i.toString().padStart(2, '0');
-                options += `<option value="${hour}">${hour}</option>`;
-            }
-            return options;
-        }
-
-        // 분 옵션 생성
-        function generateMinuteOptions() {
-            let options = '';
-            for (let i = 0; i < 60; i++) {
-                const minute = i.toString().padStart(2, '0');
-                options += `<option value="${minute}">${minute}</option>`;
-            }
-            return options;
         }
 
         // 게임 데이터 가져오기
@@ -82,73 +174,67 @@
             const tbody = document.getElementById('gameTableBody');
             tbody.innerHTML = '';
 
-            games.forEach(game => {
-                const [savedHour, savedMinute] = game.startTime ? game.startTime.split(':') : ['', ''];
-                
+            // 5개의 행 생성
+            for (let i = 1; i <= 5; i++) {
+                const game = games.find(g => g.number === i) || {
+                    number: i,
+                    homeTeam: null,
+                    awayTeam: null,
+                    stadium: null,
+                    startTime: null,
+                    endTime: null,
+                    noGame: '정상게임'
+                };
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="game-number-${game.number}">${game.number}</td>
-                    <td>
-                        <div class="game-info">
-                            <span class="team-name">${game.homeTeam}</span>
-                            <span>vs</span>
-                            <span class="team-name">${game.awayTeam}</span>
-                            <span class="stadium-name">(${game.stadium})</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="time-input-group">
-                            <select class="hour-select" id="hour${game.number}" onchange="updateTime(${game.number})">
-                                ${generateHourOptions()}
-                            </select>
-                            <span>:</span>
-                            <select class="minute-select" id="minute${game.number}" onchange="updateTime(${game.number})">
-                                ${generateMinuteOptions()}
-                            </select>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="save-btn" onclick="saveGameTime(${game.number})">저장</button>
-                    </td>
+                    <td class="game-number-${i}">${i} 경기</td>
+                    <td><input type="text" id="homeTeam${i}" value="${game.homeTeam || ''}" placeholder="홈팀"></td>
+                    <td><input type="text" id="awayTeam${i}" value="${game.awayTeam || ''}" placeholder="원정팀"></td>
+                    <td><input type="text" id="stadium${i}" value="${game.stadium || ''}" placeholder="구장"></td>
+                    <td><input type="time" id="startTime${i}" value="${game.startTime || ''}"></td>
+                    <td><input type="time" id="endTime${i}" value="${game.endTime || ''}" readonly></td>
+                    <td>${game.noGame || '정상게임'}</td>
                 `;
                 tbody.appendChild(tr);
-
-                // 저장된 시간이 있으면 선택
-                if (savedHour && savedMinute) {
-                    document.getElementById(`hour${game.number}`).value = savedHour;
-                    document.getElementById(`minute${game.number}`).value = savedMinute;
-                }
-            });
+            }
         }
 
-        // 게임 시간 저장
-        async function saveGameTime(gameNumber) {
-            const hourSelect = document.getElementById(`hour${gameNumber}`);
-            const minuteSelect = document.getElementById(`minute${gameNumber}`);
-            
-            const time = `${hourSelect.value}:${minuteSelect.value}`;
-            
+        // 게임 데이터 저장
+        async function saveGames() {
             try {
                 const today = new Date();
                 const date = today.getFullYear().toString() +
                             (today.getMonth() + 1).toString().padStart(2, '0') +
                             today.getDate().toString().padStart(2, '0');
 
-                const response = await fetch('/api/today-game/start', {
+                const games = [];
+                for (let i = 1; i <= 5; i++) {
+                    games.push({
+                        number: i,
+                        homeTeam: document.getElementById(`homeTeam${i}`).value || null,
+                        awayTeam: document.getElementById(`awayTeam${i}`).value || null,
+                        stadium: document.getElementById(`stadium${i}`).value || null,
+                        startTime: document.getElementById(`startTime${i}`).value || null,
+                        endTime: document.getElementById(`endTime${i}`).value || null,
+                        noGame: '정상게임'
+                    });
+                }
+
+                const response = await fetch('/api/today-game', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         date: date,
-                        number: gameNumber,
-                        startTime: time
+                        games: games
                     })
                 });
 
                 const result = await response.json();
                 if (result.success) {
-                    alert('게임 시작 시간이 저장되었습니다.');
+                    alert('게임 정보가 저장되었습니다.');
                 } else {
                     alert('저장 중 오류가 발생했습니다: ' + result.message);
                 }
