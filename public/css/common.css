@@ -5,6 +5,13 @@
     --pastel-pink-border: #FFB6C1;
     --pastel-pink-focus: #FF69B4;
     --text-color: #666;
+    
+    /* 새로운 파스텔 톤 색상 */
+    --pastel-blue: #E5F0FF;
+    --pastel-green: #E5FFE5;
+    --pastel-yellow: #FFFDE5;
+    --pastel-purple: #F5E5FF;
+    --pastel-orange: #FFE5D9;
 }
 
 body {
@@ -25,6 +32,11 @@ body {
     margin-bottom: 30px;
     font-size: 2rem;
     font-weight: bold;
+    background: linear-gradient(45deg, var(--pastel-pink), var(--pastel-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding: 10px;
+    border-radius: 10px;
 }
 
 /* 테이블 스타일 */
@@ -102,15 +114,7 @@ body {
 }
 
 .selected-time {
-    display: inline-block;
-    padding: 8px 12px;
-    background-color: var(--pastel-pink);
-    border-radius: 6px;
-    margin-left: 8px;
-    font-weight: bold;
-    color: var(--text-color);
-    font-size: 1rem;
-    border: 1px solid var(--pastel-pink-border);
+    display: none;
 }
 
 /* 매치업 이미지 스타일 */
@@ -229,6 +233,68 @@ body {
 .status-no-game {
     background-color: #FF69B4;
     color: #fff;
+}
+
+/* 게임 번호 스타일 */
+.game-number-1 {
+    background-color: var(--pastel-pink) !important;
+}
+
+.game-number-2 {
+    background-color: var(--pastel-blue) !important;
+}
+
+.game-number-3 {
+    background-color: var(--pastel-green) !important;
+}
+
+.game-number-4 {
+    background-color: var(--pastel-yellow) !important;
+}
+
+.game-number-5 {
+    background-color: var(--pastel-purple) !important;
+}
+
+/* 게임 상태 선택 스타일 */
+.game-status-select {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid var(--pastel-pink-border);
+    border-radius: 6px;
+    background-color: #fff;
+    font-size: 1rem;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.game-status-select:focus {
+    border-color: var(--pastel-pink-focus);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 182, 193, 0.3);
+}
+
+.game-status-select option {
+    padding: 8px;
+    background-color: #fff;
+    color: var(--text-color);
+}
+
+.game-status-select option[value="정상게임"] {
+    background-color: var(--pastel-pink-light);
+}
+
+.game-status-select option[value="콜드게임"] {
+    background-color: var(--pastel-blue);
+}
+
+.game-status-select option[value="서스펜디드 게임"] {
+    background-color: var(--pastel-yellow);
+}
+
+.game-status-select option[value="노 게임"] {
+    background-color: var(--pastel-purple);
 }
 
 /* 반응형 디자인 */

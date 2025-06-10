@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const db = require('../db');
 
 // 게임 스키마 정의
 const gameSchema = new mongoose.Schema({
@@ -167,34 +168,78 @@ router.post('/', async (req, res) => {
 router.get('/:date', async (req, res) => {
     try {
         const { date } = req.params;
+        const games = await db.query(
+            'SELECT * FROM today_game WHERE date = ? ORDER BY number',
+            [date]
+        );
 
-        if (!date || date.length !== 8) {
-            return res.status(400).json({
-                success: false,
-                message: '잘못된 날짜 형식입니다.'
-            });
+        // 게임이 없으면 5개의 빈 행 생성
+        if (games.length === 0) {
+            const emptyGames = Array.from({ length: 5 }, (_, i) => ({
+                number: i + 1,
+                homeTeam: null,
+                awayTeam: null,
+                stadium: null,
+                startTime: null,
+                endTime: null,
+                noGame: '정상게임',
+                note: null
+            }));
+            return res.json({ success: true, games: emptyGames });
         }
 
-        const dailyGame = await DailyGame.findOne({ date }).lean();
-        
-        if (!dailyGame) {
-            return res.json({
-                success: true,
-                games: []
-            });
-        }
-
-        res.json({
-            success: true,
-            games: dailyGame.games
-        });
+        res.json({ success: true, games });
     } catch (error) {
         console.error('Error fetching games:', error);
-        res.status(500).json({
-            success: false,
-            message: '서버 오류가 발생했습니다.',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        res.status(500).json({ success: false, message: '게임 데이터를 가져오는데 실패했습니다.' });
+    }
+});
+
+// 게임 시작 시간 업데이트
+router.post('/start', async (req, res) => {
+    const { date, number, startTime } = req.body;
+    
+    try {
+        await db.query(
+            'UPDATE today_game SET startTime = ? WHERE date = ? AND number = ?',
+            [startTime, date, number]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating start time:', error);
+        res.status(500).json({ success: false, message: '시작 시간 업데이트에 실패했습니다.' });
+    }
+});
+
+// 게임 종료 시간 업데이트
+router.post('/end', async (req, res) => {
+    const { date, number, endTime } = req.body;
+    
+    try {
+        await db.query(
+            'UPDATE today_game SET endTime = ? WHERE date = ? AND number = ?',
+            [endTime, date, number]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating end time:', error);
+        res.status(500).json({ success: false, message: '종료 시간 업데이트에 실패했습니다.' });
+    }
+});
+
+// 게임 상태 업데이트
+router.post('/no', async (req, res) => {
+    const { date, number, noGame } = req.body;
+    
+    try {
+        await db.query(
+            'UPDATE today_game SET noGame = ? WHERE date = ? AND number = ?',
+            [noGame, date, number]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating game status:', error);
+        res.status(500).json({ success: false, message: '게임 상태 업데이트에 실패했습니다.' });
     }
 });
 
