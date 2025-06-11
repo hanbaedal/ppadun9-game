@@ -1,24 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const GameProgress = require('../models/game-progress');
-const mongoose = require('mongoose');
+const DailyGame = require('../models/Game');
 
 // 오늘의 경기 목록 가져오기
 router.get('/today-games', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
-        const games = await mongoose.connection.db.collection('today-game-start')
-            .find({ date: today })
-            .toArray();
+        const today = new Date();
+        const dateStr = today.getFullYear().toString() +
+                       (today.getMonth() + 1).toString().padStart(2, '0') +
+                       today.getDate().toString().padStart(2, '0');
+
+        // DailyGame 모델에서 오늘의 경기 데이터 조회
+        const dailyGame = await DailyGame.findOne({ date: dateStr });
+        
+        if (!dailyGame) {
+            return res.json({
+                success: true,
+                games: []
+            });
+        }
 
         res.json({
             success: true,
-            games: games.map(game => ({
+            games: dailyGame.games.map(game => ({
                 homeTeam: game.homeTeam,
                 awayTeam: game.awayTeam,
                 stadium: game.stadium,
                 startTime: game.startTime,
-                endTime: game.endTime
+                endTime: game.endTime,
+                noGame: game.noGame
             }))
         });
     } catch (error) {

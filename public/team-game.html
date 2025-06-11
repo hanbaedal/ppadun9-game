@@ -244,16 +244,16 @@
 
         .game-selection {
             margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
         }
 
         .game-images {
             display: flex;
             justify-content: space-between;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 20px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
         }
 
         .game-image-item {
@@ -261,9 +261,48 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            padding: 10px;
+            padding: 15px;
             border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: relative;
+            min-width: 200px;
+        }
+
+        .game-image-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .game-image-item.selected {
+            border: 2px solid #007bff;
+        }
+
+        .team-logos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .team-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .vs-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .game-number {
+            font-size: 1.1em;
+            font-weight: 500;
+            margin-top: 5px;
+            color: #333;
         }
 
         .game-status {
@@ -289,42 +328,6 @@
         .status-ended {
             background-color: #343a40;
             color: white;
-        }
-
-        .game-image-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .game-image-item.selected {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .team-logos {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .team-logo {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-        }
-
-        .vs-text {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #666;
-        }
-
-        .game-number {
-            font-size: 1.1em;
-            font-weight: 500;
-            margin-top: 5px;
         }
 
         .game-form {
@@ -479,11 +482,14 @@
                         
                         // 경기 상태 확인
                         const now = new Date();
-                        const startTime = new Date(game.startTime);
+                        const startTime = game.startTime ? new Date(game.startTime) : null;
                         let statusClass = '';
                         let statusText = '';
                         
-                        if (!game.startTime || now < startTime) {
+                        if (game.noGame !== '정상게임') {
+                            statusClass = 'status-cancelled';
+                            statusText = game.noGame;
+                        } else if (!startTime || now < startTime) {
                             statusClass = 'status-before';
                             statusText = '경기전';
                         } else if (!game.endTime) {
@@ -495,13 +501,13 @@
                         }
                         
                         gameItem.innerHTML = `
+                            <div class="game-status ${statusClass}">${statusText}</div>
                             <div class="team-logos">
                                 <img src="/images/teams/${game.homeTeam}.png" alt="${game.homeTeam}" class="team-logo" onerror="this.src='/images/teams/default.png'">
                                 <span class="vs-text">VS</span>
                                 <img src="/images/teams/${game.awayTeam}.png" alt="${game.awayTeam}" class="team-logo" onerror="this.src='/images/teams/default.png'">
                             </div>
                             <div class="game-number">${index + 1} 경기</div>
-                            <div class="game-status ${statusClass}">${statusText}</div>
                         `;
                         
                         gameItem.addEventListener('click', () => {
