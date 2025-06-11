@@ -4,24 +4,83 @@ const GameProgress = require('../models/game-progress');
 const DailyGame = require('../models/Game');
 const mongoose = require('mongoose');
 
+// MongoDB Atlas 연결 설정
+const MONGODB_URI = process.env.MONGODB_URI;
+
+// 데이터베이스 연결 함수
+async function connectDB() {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            console.log('MongoDB 연결 시도...');
+            console.log('연결 문자열:', MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//****:****@'));
+            await mongoose.connect(MONGODB_URI, {
+                useNewUrlParser: true,
+                useUnifiedTopology: true
+            });
+            console.log('MongoDB Atlas 연결 성공');
+            
+            // 연결 후 데이터베이스 정보 출력
+            const db = mongoose.connection.db;
+            console.log('현재 데이터베이스:', db.databaseName);
+            
+            // 컬렉션 목록 조회
+            const collections = await db.listCollections().toArray();
+            console.log('사용 가능한 컬렉션:', collections.map(c => c.name));
+        }
+    } catch (error) {
+        console.error('MongoDB 연결 실패:', error);
+        throw error;
+    }
+}
+
+// 연결 테스트 엔드포인트
+router.get('/test-connection', async (req, res) => {
+    try {
+        await connectDB();
+        res.json({
+            success: true,
+            message: 'MongoDB Atlas 연결 성공',
+            database: mongoose.connection.db.databaseName,
+            collections: await mongoose.connection.db.listCollections().toArray()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'MongoDB Atlas 연결 실패',
+            error: error.message
+        });
+    }
+});
+
 // 오늘의 경기 목록 가져오기 (Read)
 router.get('/today-games', async (req, res) => {
+    console.log('today-games API 호출됨');
     try {
+        // 데이터베이스 연결 확인
+        await connectDB();
+        console.log('DB 연결 확인 완료');
+
         // 오늘 날짜를 YYYYMMDD 형식으로 생성
         const today = new Date();
         const dateStr = today.getFullYear() +
             String(today.getMonth() + 1).padStart(2, '0') +
             String(today.getDate()).padStart(2, '0');
         
-        console.log('조회 날짜:', dateStr); // 디버깅용 로그
+        console.log('조회 날짜:', dateStr);
 
         // member-management 데이터베이스의 dailygames 컬렉션에서 데이터 조회
         const db = mongoose.connection.useDb('member-management');
+        console.log('사용할 데이터베이스:', db.name);
+
+        // 컬렉션 목록 조회
+        const collections = await db.listCollections().toArray();
+        console.log('사용 가능한 컬렉션:', collections.map(c => c.name));
+
         const collection = db.collection('dailygames');
         
         // 컬렉션이 존재하는지 확인
-        const collections = await db.listCollections().toArray();
         const collectionExists = collections.some(col => col.name === 'dailygames');
+        console.log('dailygames 컬렉션 존재 여부:', collectionExists);
         
         if (!collectionExists) {
             console.log('dailygames 컬렉션이 존재하지 않습니다.');
@@ -32,10 +91,12 @@ router.get('/today-games', async (req, res) => {
         }
 
         // 해당 날짜의 경기 데이터 조회
+        console.log('경기 데이터 조회 시작:', { date: dateStr });
         const gameData = await collection.findOne({ date: dateStr });
-        console.log('조회된 경기 데이터:', gameData); // 디버깅용 로그
+        console.log('조회된 경기 데이터:', gameData);
 
         if (!gameData || !gameData.games || gameData.games.length === 0) {
+            console.log('해당 날짜의 경기 데이터가 없습니다.');
             return res.json({
                 success: true,
                 games: []
@@ -52,15 +113,24 @@ router.get('/today-games', async (req, res) => {
             noGame: game.noGame || '정상게임'
         }));
 
+        console.log('포맷팅된 경기 데이터:', formattedGames);
+
         res.json({
             success: true,
             games: formattedGames
         });
+        console.log('API 응답 완료');
     } catch (error) {
         console.error('경기 목록 조회 실패:', error);
+        console.error('에러 상세 정보:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
         res.status(500).json({
             success: false,
-            message: '경기 목록을 불러오는데 실패했습니다.'
+            message: '경기 목록을 불러오는데 실패했습니다.',
+            error: error.message
         });
     }
 });

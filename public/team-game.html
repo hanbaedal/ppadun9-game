@@ -35,6 +35,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+            position: relative;
         }
 
         .header-left {
@@ -55,9 +56,13 @@
         }
 
         .page-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
             font-size: 24px;
             font-weight: bold;
             color: #333;
+            margin: 0;
         }
 
         .date-display {
@@ -86,6 +91,31 @@
             display: flex;
             justify-content: space-between;
             gap: 15px;
+            min-height: 100px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            color: #dc3545;
+            background-color: #f8d7da;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .no-games {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin: 10px 0;
         }
 
         .game-item {
@@ -148,8 +178,8 @@
                 <a href="/index.html" class="home-icon">
                     <i class="fas fa-home"></i>
                 </a>
-                <h1 class="page-title">빠던나인 게임진행</h1>
             </div>
+            <h1 class="page-title">빠던나인 게임진행</h1>
             <div class="date-display" id="dateDisplay"></div>
         </div>
 
@@ -174,14 +204,16 @@
 
         // 오늘의 경기 목록 가져오기
         async function fetchTodayGames() {
+            const gameList = document.getElementById('gameList');
+            gameList.innerHTML = '<div class="loading">경기 데이터를 불러오는 중...</div>';
+            
             try {
                 const response = await fetch('/api/game-progress/today-games');
                 const result = await response.json();
                 
+                console.log('서버 응답:', result); // 디버깅용 로그
+                
                 if (result.success) {
-                    const gameList = document.getElementById('gameList');
-                    gameList.innerHTML = '';
-                    
                     if (!result.games || result.games.length === 0) {
                         gameList.innerHTML = '<div class="no-games">오늘의 경기 정보가 없습니다.</div>';
                         return;
@@ -193,6 +225,12 @@
                         game.homeTeam.trim() !== '' && game.awayTeam.trim() !== ''
                     );
                     
+                    if (validGames.length === 0) {
+                        gameList.innerHTML = '<div class="no-games">유효한 경기 정보가 없습니다.</div>';
+                        return;
+                    }
+                    
+                    gameList.innerHTML = '';
                     validGames.forEach((game, index) => {
                         const gameItem = document.createElement('div');
                         gameItem.className = 'game-item';
@@ -206,15 +244,10 @@
                         `;
                         
                         gameItem.addEventListener('click', () => {
-                            // 이전 선택 제거
                             document.querySelectorAll('.game-item').forEach(item => {
                                 item.classList.remove('selected');
                             });
-                            
-                            // 현재 항목 선택
                             gameItem.classList.add('selected');
-                            
-                            // 여기에 선택된 경기에 대한 추가 처리 로직을 구현할 수 있습니다
                         });
                         
                         gameList.appendChild(gameItem);
@@ -224,8 +257,11 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('gameList').innerHTML = 
-                    '<div class="no-games">경기 목록을 불러오는데 실패했습니다.</div>';
+                gameList.innerHTML = `
+                    <div class="error-message">
+                        경기 목록을 불러오는데 실패했습니다.<br>
+                        ${error.message}
+                    </div>`;
             }
         }
 
