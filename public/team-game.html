@@ -245,6 +245,17 @@
             gap: 20px;
         }
 
+        .betting-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .betting-row:last-child {
+            margin-bottom: 0;
+        }
+
         .betting-btn {
             padding: 12px 24px;
             background-color: #28a745;
@@ -304,6 +315,63 @@
             color: #6c757d;
             cursor: not-allowed;
         }
+
+        .betting-btn.stop {
+            background-color: #dc3545;
+        }
+
+        .betting-btn.stop:hover:not(:disabled) {
+            background-color: #c82333;
+        }
+
+        .prediction-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .prediction-section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px 15px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .radio-label:hover {
+            background-color: #f0f0f0;
+        }
+
+        .radio-label input[type="radio"] {
+            margin: 0;
+        }
+
+        .radio-label input[type="radio"]:checked + span {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .radio-label:has(input[type="radio"]:disabled) {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -334,9 +402,42 @@
         </table>
 
         <div class="betting-section">
-            <button id="startBettingBtn" class="betting-btn" disabled>배팅시작</button>
-            <div class="betting-time">
-                배팅시작 시간: <span id="bettingTime">-</span>
+            <div class="betting-row">
+                <button id="startBettingBtn" class="betting-btn" disabled>배팅시작</button>
+                <div class="betting-time">
+                    배팅시작 시간: <span id="bettingTime">-</span>
+                </div>
+            </div>
+            <div class="betting-row">
+                <button id="stopBettingBtn" class="betting-btn stop" disabled>배팅중지</button>
+                <div class="betting-time">
+                    배팅중지 시간: <span id="stopTime">-</span>
+                </div>
+            </div>
+            <div class="prediction-section">
+                <h3>예측결과</h3>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="1루" disabled>
+                        <span>1루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="2루" disabled>
+                        <span>2루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="3루" disabled>
+                        <span>3루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="홈런" disabled>
+                        <span>홈런</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="아웃" disabled>
+                        <span>아웃</span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -503,6 +604,14 @@
             }
         }
 
+        function updateStopTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('stopTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
         // 페이지 로드 시 실행
         window.onload = function() {
             updateDate();
@@ -511,10 +620,33 @@
             // 배팅시작 버튼 이벤트 리스너
             document.getElementById('startBettingBtn').addEventListener('click', function() {
                 if (selectedGame) {
-                    updateBettingTime(); // 한 번만 시간 표시
+                    updateBettingTime();
                     this.disabled = true;
+                    document.getElementById('stopBettingBtn').disabled = false;
                     console.log('배팅 시작:', selectedGame);
                 }
+            });
+
+            // 배팅중지 버튼 이벤트 리스너
+            document.getElementById('stopBettingBtn').addEventListener('click', function() {
+                if (selectedGame) {
+                    updateStopTime();
+                    this.disabled = true;
+                    // 라디오 버튼 활성화
+                    document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                        radio.disabled = false;
+                    });
+                    console.log('배팅 중지:', selectedGame);
+                }
+            });
+
+            // 라디오 버튼 이벤트 리스너
+            document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        console.log('선택된 예측:', this.value);
+                    }
+                });
             });
         };
     </script>
