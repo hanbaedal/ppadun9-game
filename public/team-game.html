@@ -28,29 +28,75 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-            position: relative;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         .home-icon {
-            font-size: 1.5em;
             color: #333;
+            font-size: 14px;
             text-decoration: none;
-            padding: 10px;
+            padding: 8px;
             border-radius: 50%;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.2s;
         }
 
         .home-icon:hover {
-            background-color: #f0f0f0;
+            background-color: #e9ecef;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right a {
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .game-selection {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .game-selection h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .game-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .game-item {
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
         }
 
         .page-title {
@@ -374,9 +420,9 @@
         <div class="header">
             <div class="header-left">
                 <a href="/index.html" class="home-icon">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="fas fa-home"></i>
                 </a>
-                <h1 class="page-title">빠던나인 게임진행</h1>
+                <span class="header-title">팀 게임</span>
             </div>
             <div class="date-display" id="dateDisplay"></div>
         </div>
