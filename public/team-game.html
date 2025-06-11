@@ -312,7 +312,7 @@
 
         .betting-item.center {
             justify-content: center;
-            flex-direction: column;
+            flex-direction: row;
             gap: 15px;
         }
 
@@ -328,6 +328,19 @@
             flex-shrink: 0;
         }
 
+        .betting-time {
+            font-size: 16px;
+            color: #333;
+            padding: 12px 24px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 200px;
+            text-align: center;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+
         .betting-btn {
             padding: 12px 24px;
             background-color: #28a745;
@@ -341,18 +354,7 @@
             width: 120px;
             text-align: center;
             flex-shrink: 0;
-        }
-
-        .betting-time {
-            font-size: 16px;
-            color: #333;
-            padding: 12px 24px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            width: 200px;
-            text-align: center;
-            flex-shrink: 0;
+            margin: 0 auto;
         }
 
         .radio-group {
@@ -530,7 +532,10 @@
             <div class="betting-item center">
                 <button id="startBetting" class="betting-btn">배팅시작</button>
                 <div class="betting-time" id="bettingTime"></div>
+            </div>
+            <div class="betting-item center">
                 <button id="stopBetting" class="betting-btn" style="background-color: #dc3545;" disabled>배팅중지</button>
+                <div class="betting-time" id="stopTime"></div>
             </div>
             <div class="betting-item">
                 <div class="betting-title">예측결과</div>
