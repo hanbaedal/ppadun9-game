@@ -41,7 +41,7 @@
 
         .home-icon {
             color: #333;
-            font-size: 14px;
+            font-size: 16px;
             text-decoration: none;
             padding: 8px;
             border-radius: 50%;
@@ -53,7 +53,7 @@
         }
 
         .header-title {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 500;
             color: #333;
         }
@@ -87,6 +87,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 15px;
+            flex-grow: 1;
         }
 
         .game-item {
@@ -99,6 +100,16 @@
             font-size: 14px;
         }
 
+        .game-item:hover {
+            background-color: #f8f9fa;
+            border-color: #28a745;
+        }
+
+        .game-item.selected {
+            background-color: #e8f5e9;
+            border-color: #28a745;
+        }
+
         .page-title {
             margin: 0;
             font-size: 1.8em;
@@ -107,12 +118,8 @@
         }
 
         .date-display {
-            font-size: 1.6em;
-            font-weight: bold;
-            color: #333;
-            padding: 10px 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
         }
 
         table {
@@ -422,7 +429,7 @@
                 <a href="/index.html" class="home-icon">
                     <i class="fas fa-home"></i>
                 </a>
-                <span class="header-title">팀 게임</span>
+                <span class="header-title">빠던나인 게임진행 설정</span>
             </div>
             <div class="date-display" id="dateDisplay"></div>
         </div>
@@ -443,6 +450,12 @@
         </table>
 
         <div class="betting-section">
+            <div class="betting-item">
+                <div class="betting-title">경기선택</div>
+                <div class="game-list">
+                    <!-- 게임 목록이 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
             <div class="betting-item">
                 <div class="betting-title">게임형태</div>
                 <div class="radio-group">
