@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const GameProgress = require('../models/game-progress');
-const TodayGame = require('../models/today-game');
+const mongoose = require('mongoose');
 
 // 오늘의 경기 목록 조회
 router.get('/today-games', async (req, res) => {
@@ -11,7 +11,10 @@ router.get('/today-games', async (req, res) => {
                        (today.getMonth() + 1).toString().padStart(2, '0') +
                        today.getDate().toString().padStart(2, '0');
 
-        const games = await TodayGame.find({ date: dateStr });
+        // today-game-start.html에서 입력된 경기 데이터 조회
+        const db = mongoose.connection.db;
+        const games = await db.collection('today-game-start').find({ date: dateStr }).toArray();
+        
         res.json({ success: true, games });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
