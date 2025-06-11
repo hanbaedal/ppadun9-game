@@ -249,6 +249,7 @@
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
+            min-height: 60px;
         }
 
         .betting-title {
@@ -258,8 +259,35 @@
             border-radius: 6px;
             font-size: 16px;
             font-weight: 500;
-            min-width: 120px;
+            width: 120px;
             text-align: center;
+            flex-shrink: 0;
+        }
+
+        .betting-btn {
+            padding: 12px 24px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+            width: 120px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .betting-time {
+            font-size: 16px;
+            color: #333;
+            padding: 12px 24px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 200px;
+            flex-shrink: 0;
         }
 
         .radio-group {
@@ -268,6 +296,7 @@
             gap: 20px;
             flex-wrap: nowrap;
             justify-content: flex-start;
+            flex-grow: 1;
         }
 
         .radio-label {
@@ -282,6 +311,7 @@
             transition: all 0.2s;
             white-space: nowrap;
             font-size: 16px;
+            height: 36px;
         }
 
         .radio-label:hover {
@@ -302,19 +332,6 @@
             cursor: not-allowed;
         }
 
-        .betting-btn {
-            padding: 12px 24px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.2s;
-            min-width: 120px;
-        }
-
         .betting-btn:hover:not(:disabled) {
             background-color: #218838;
         }
@@ -330,16 +347,6 @@
 
         .betting-btn.stop:hover:not(:disabled) {
             background-color: #c82333;
-        }
-
-        .betting-time {
-            font-size: 16px;
-            color: #333;
-            padding: 12px 24px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            min-width: 200px;
         }
 
         #bettingTime, #stopTime {
