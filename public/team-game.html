@@ -358,26 +358,46 @@
 
         function getGameStatus(startTime, endTime) {
             const now = new Date();
-            const start = startTime ? new Date(startTime) : null;
-            const end = endTime ? new Date(endTime) : null;
+            const currentTime = now.getHours() * 60 + now.getMinutes(); // 현재 시간을 분으로 변환
+            console.log('현재 시간(분):', currentTime);
 
-            if (!start) return { text: '-', class: '' };
-            
-            // 종료시간이 있고 현재시간이 종료시간 이후면 '경기끝'
-            if (end && now > end) {
-                return { text: '경기끝', class: 'status-ended' };
+            // 시작시간이 없는 경우
+            if (!startTime) {
+                console.log('시작시간 없음');
+                return { text: '-', class: '' };
             }
-            
+
+            // 시작시간을 분으로 변환
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const startTimeInMinutes = startHour * 60 + startMinute;
+            console.log('시작시간(분):', startTimeInMinutes);
+
+            // 종료시간이 있는 경우
+            if (endTime) {
+                const [endHour, endMinute] = endTime.split(':').map(Number);
+                const endTimeInMinutes = endHour * 60 + endMinute;
+                console.log('종료시간(분):', endTimeInMinutes);
+
+                // 현재시간이 종료시간 이후면 '경기끝'
+                if (currentTime > endTimeInMinutes) {
+                    console.log('경기끝 상태');
+                    return { text: '경기끝', class: 'status-ended' };
+                }
+            }
+
             // 현재시간이 시작시간 이전이면 '경기전'
-            if (now < start) {
+            if (currentTime < startTimeInMinutes) {
+                console.log('경기전 상태');
                 return { text: '경기전', class: 'status-before' };
             }
-            
-            // 시작시간 이후이고 종료시간 이전이면 '경기중'
-            if (now >= start && (!end || now <= end)) {
+
+            // 시작시간 이후이고 종료시간이 없거나 현재시간이 종료시간 이전이면 '경기중'
+            if (currentTime >= startTimeInMinutes && (!endTime || currentTime <= endTimeInMinutes)) {
+                console.log('경기중 상태');
                 return { text: '경기중', class: 'status-ongoing' };
             }
 
+            console.log('기본 상태');
             return { text: '-', class: '' };
         }
 
@@ -394,7 +414,7 @@
                 clearInterval(bettingTimer);
             }
             updateBettingTime();
-            bettingTimer = setInterval(updateBettingTime, 1000);
+            bettingTimer = setInterval(updateBettingTime, 1000); // 1초마다 업데이트
         }
 
         function displayGames(games) {
@@ -411,33 +431,11 @@
                     endTime: null
                 };
 
-                // 시간 형식 변환 (YYYYMMDDHHmm -> Date 객체)
-                let startTime = null;
-                let endTime = null;
-                
-                if (game.startTime) {
-                    const start = game.startTime.toString();
-                    startTime = new Date(
-                        start.substring(0, 4),
-                        parseInt(start.substring(4, 6)) - 1,
-                        start.substring(6, 8),
-                        start.substring(8, 10),
-                        start.substring(10, 12)
-                    );
-                }
-                
-                if (game.endTime) {
-                    const end = game.endTime.toString();
-                    endTime = new Date(
-                        end.substring(0, 4),
-                        parseInt(end.substring(4, 6)) - 1,
-                        end.substring(6, 8),
-                        end.substring(8, 10),
-                        end.substring(10, 12)
-                    );
-                }
+                console.log(`${i}경기 시작시간:`, game.startTime);
+                console.log(`${i}경기 종료시간:`, game.endTime);
 
-                const status = getGameStatus(startTime, endTime);
+                const status = getGameStatus(game.startTime, game.endTime);
+                console.log(`${i}경기 상태:`, status);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -518,7 +516,7 @@
             // 배팅시간 버튼 이벤트 리스너
             document.getElementById('bettingTimeBtn').addEventListener('click', function() {
                 if (!this.disabled) {
-                    // 여기에 배팅시간 버튼 클릭 시 실행할 동작 추가
+                    updateBettingTime(); // 클릭할 때마다 시간 업데이트
                     console.log('배팅시간 버튼 클릭');
                 }
             });
