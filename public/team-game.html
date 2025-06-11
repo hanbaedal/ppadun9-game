@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KBO 야구경기 일정</title>
+    <title>빠던나인 게임진행</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/common.css">
@@ -160,10 +160,7 @@
 
         /* 컬럼 너비 조정 */
         th:nth-child(1), td:nth-child(1) { width: 100px; }  /* 경기번호 */
-        th:nth-child(2), td:nth-child(2) { width: 400px; } /* 매치업 */
-        th:nth-child(3), td:nth-child(3) { width: 200px; } /* 시작시간 */
-        th:nth-child(4), td:nth-child(4) { width: 200px; } /* 종료시간 */
-        th:nth-child(5), td:nth-child(5) { width: 200px; } /* 경기상황 */
+        th:nth-child(2), td:nth-child(2) { width: 800px; } /* 매치업 */
 
         /* 호버 효과 */
         tr:hover td {
@@ -208,6 +205,35 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin: 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .select-game-btn {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            margin-left: 10px;
+        }
+
+        .select-game-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .select-game-btn.selected {
+            background-color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -217,24 +243,18 @@
                 <a href="/today-game.html" class="home-icon">
                     <i class="fas fa-arrow-left"></i>
                 </a>
-                <h1 class="page-title">KBO 야구경기 일정</h1>
+                <h1 class="page-title">빠던나인 게임진행</h1>
             </div>
             <div class="date-display" id="dateDisplay"></div>
         </div>
 
-        <div class="date-navigation">
-            <button class="date-nav-btn" onclick="changeDate(-1)">이전 날짜</button>
-            <button class="date-nav-btn" onclick="changeDate(1)">다음 날짜</button>
-        </div>
+        <h2 class="section-title">경기선택</h2>
 
         <table class="game-table">
             <thead>
                 <tr>
                     <th>경기</th>
                     <th>매치업</th>
-                    <th>시작시간</th>
-                    <th>종료시간</th>
-                    <th>경기상황</th>
                 </tr>
             </thead>
             <tbody id="gameTableBody">
@@ -270,15 +290,15 @@
                     number: i,
                     homeTeam: null,
                     awayTeam: null,
-                    stadium: null,
-                    startTime: null,
-                    endTime: null,
-                    noGame: '정상게임'
+                    stadium: null
                 };
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="game-number game-number-${i}">${i} 경기</td>
+                    <td class="game-number game-number-${i}">
+                        ${i} 경기
+                        <button class="select-game-btn" data-game="${i}">선택</button>
+                    </td>
                     <td>
                         <div class="game-info">
                             <span class="team-name">${game.homeTeam || '-'}</span>
@@ -287,33 +307,24 @@
                             <span class="stadium-name">(${game.stadium || '-'})</span>
                         </div>
                     </td>
-                    <td class="game-time">${game.startTime || '-'}</td>
-                    <td class="game-time">${game.endTime || '-'}</td>
-                    <td>
-                        <span class="game-status ${getStatusClass(game.noGame)}">${game.noGame}</span>
-                    </td>
                 `;
                 tbody.appendChild(tr);
             }
-        }
 
-        // 경기상황에 따른 스타일 클래스 반환
-        function getStatusClass(status) {
-            switch(status) {
-                case '정상게임':
-                    return 'status-normal';
-                case '미세먼지/초미세먼지/황사':
-                case '안개':
-                case '천재지변':
-                case '우천':
-                case '폭염':
-                case '번개/천둥':
-                case '태풍/강풍':
-                case '그라운드 상태':
-                    return 'status-delayed';
-                default:
-                    return 'status-cancelled';
-            }
+            // 선택 버튼에 이벤트 리스너 추가
+            document.querySelectorAll('.select-game-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 이전에 선택된 버튼의 스타일 제거
+                    document.querySelectorAll('.select-game-btn').forEach(b => {
+                        b.classList.remove('selected');
+                    });
+                    // 현재 버튼 선택 상태로 변경
+                    this.classList.add('selected');
+                    // 선택된 경기 번호 저장
+                    const selectedGame = this.dataset.game;
+                    console.log('선택된 경기:', selectedGame);
+                });
+            });
         }
 
         // 게임 데이터 불러오기
