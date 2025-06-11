@@ -275,6 +275,30 @@
             font-weight: 600;
             color: #28a745;
         }
+
+        .betting-time-btn {
+            padding: 12px 24px;
+            background-color: #f8f9fa;
+            color: #333;
+            border: 2px solid #28a745;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+            min-width: 200px;
+            text-align: left;
+        }
+
+        .betting-time-btn:hover:not(:disabled) {
+            background-color: #e9ecef;
+        }
+
+        .betting-time-btn:disabled {
+            border-color: #6c757d;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -306,9 +330,9 @@
 
         <div class="betting-section">
             <button id="startBettingBtn" class="betting-btn" disabled>배팅시작</button>
-            <div class="betting-time">
+            <button id="bettingTimeBtn" class="betting-time-btn" disabled>
                 배팅시작 시간: <span id="bettingTime">-</span>
-            </div>
+            </button>
         </div>
     </div>
 
@@ -338,9 +362,23 @@
             const end = endTime ? new Date(endTime) : null;
 
             if (!start) return { text: '-', class: '' };
-            if (end) return { text: '경기끝', class: 'status-ended' };
-            if (now < start) return { text: '경기전', class: 'status-before' };
-            return { text: '경기중', class: 'status-ongoing' };
+            
+            // 종료시간이 있고 현재시간이 종료시간 이후면 '경기끝'
+            if (end && now > end) {
+                return { text: '경기끝', class: 'status-ended' };
+            }
+            
+            // 현재시간이 시작시간 이전이면 '경기전'
+            if (now < start) {
+                return { text: '경기전', class: 'status-before' };
+            }
+            
+            // 시작시간 이후이고 종료시간 이전이면 '경기중'
+            if (now >= start && (!end || now <= end)) {
+                return { text: '경기중', class: 'status-ongoing' };
+            }
+
+            return { text: '-', class: '' };
         }
 
         function updateBettingTime() {
@@ -373,7 +411,33 @@
                     endTime: null
                 };
 
-                const status = getGameStatus(game.startTime, game.endTime);
+                // 시간 형식 변환 (YYYYMMDDHHmm -> Date 객체)
+                let startTime = null;
+                let endTime = null;
+                
+                if (game.startTime) {
+                    const start = game.startTime.toString();
+                    startTime = new Date(
+                        start.substring(0, 4),
+                        parseInt(start.substring(4, 6)) - 1,
+                        start.substring(6, 8),
+                        start.substring(8, 10),
+                        start.substring(10, 12)
+                    );
+                }
+                
+                if (game.endTime) {
+                    const end = game.endTime.toString();
+                    endTime = new Date(
+                        end.substring(0, 4),
+                        parseInt(end.substring(4, 6)) - 1,
+                        end.substring(6, 8),
+                        end.substring(8, 10),
+                        end.substring(10, 12)
+                    );
+                }
+
+                const status = getGameStatus(startTime, endTime);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -446,7 +510,16 @@
                 if (selectedGame) {
                     startBettingTimer();
                     this.disabled = true;
+                    document.getElementById('bettingTimeBtn').disabled = false;
                     console.log('배팅 시작:', selectedGame);
+                }
+            });
+
+            // 배팅시간 버튼 이벤트 리스너
+            document.getElementById('bettingTimeBtn').addEventListener('click', function() {
+                if (!this.disabled) {
+                    // 여기에 배팅시간 버튼 클릭 시 실행할 동작 추가
+                    console.log('배팅시간 버튼 클릭');
                 }
             });
         };
