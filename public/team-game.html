@@ -235,97 +235,27 @@
         }
 
         .betting-section {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .betting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            background-color: #f8f9fa;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .betting-row {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 15px;
-        }
-
-        .betting-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .betting-btn {
-            padding: 12px 24px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .betting-btn:hover:not(:disabled) {
-            background-color: #218838;
-        }
-
-        .betting-btn:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
         }
 
         .betting-time {
-            font-size: 16px;
+            font-size: 1.1em;
             color: #333;
-            padding: 12px 24px;
-            background-color: #f8f9fa;
-            border: 2px solid #28a745;
-            border-radius: 6px;
-            min-width: 200px;
-        }
-
-        #bettingTime {
-            font-weight: 600;
-            color: #28a745;
-        }
-
-        .betting-time-btn {
-            padding: 12px 24px;
-            background-color: #f8f9fa;
-            color: #333;
-            border: 2px solid #28a745;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.2s;
-            min-width: 200px;
-            text-align: left;
-        }
-
-        .betting-time-btn:hover:not(:disabled) {
-            background-color: #e9ecef;
-        }
-
-        .betting-time-btn:disabled {
-            border-color: #6c757d;
-            color: #6c757d;
-            cursor: not-allowed;
-        }
-
-        .betting-btn.stop {
-            background-color: #dc3545;
-        }
-
-        .betting-btn.stop:hover:not(:disabled) {
-            background-color: #c82333;
         }
 
         .prediction-section {
-            margin-top: 20px;
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
@@ -402,13 +332,13 @@
         </table>
 
         <div class="betting-section">
-            <div class="betting-row">
+            <div class="betting-item">
                 <button id="startBettingBtn" class="betting-btn" disabled>배팅시작</button>
                 <div class="betting-time">
                     배팅시작 시간: <span id="bettingTime">-</span>
                 </div>
             </div>
-            <div class="betting-row">
+            <div class="betting-item">
                 <button id="stopBettingBtn" class="betting-btn stop" disabled>배팅중지</button>
                 <div class="betting-time">
                     배팅중지 시간: <span id="stopTime">-</span>
