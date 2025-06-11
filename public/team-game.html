@@ -310,6 +310,10 @@
             width: 100%;
         }
 
+        .betting-item.center {
+            justify-content: center;
+        }
+
         .betting-title {
             padding: 12px 24px;
             background-color: #28a745;
@@ -466,15 +470,15 @@
                 <div class="betting-title">게임형태</div>
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="gameType" value="공격" checked>
+                        <input type="radio" name="gameType" value="attack" checked>
                         <span>공격</span>
                     </label>
-                    <label class="radio-label disabled">
-                        <input type="radio" name="gameType" value="수비" disabled>
+                    <label class="radio-label" style="opacity: 0.5; pointer-events: none;">
+                        <input type="radio" name="gameType" value="defense" disabled>
                         <span>수비</span>
                     </label>
-                    <label class="radio-label disabled">
-                        <input type="radio" name="gameType" value="투수" disabled>
+                    <label class="radio-label" style="opacity: 0.5; pointer-events: none;">
+                        <input type="radio" name="gameType" value="pitcher" disabled>
                         <span>투수</span>
                     </label>
                 </div>
@@ -483,76 +487,65 @@
                 <div class="betting-title">이닝선택</div>
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="1이닝">
+                        <input type="radio" name="inning" value="1">
                         <span>1이닝</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="2이닝">
+                        <input type="radio" name="inning" value="2">
                         <span>2이닝</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="3이닝">
+                        <input type="radio" name="inning" value="3">
                         <span>3이닝</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="4이닝">
+                        <input type="radio" name="inning" value="4">
                         <span>4이닝</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="5이닝">
+                        <input type="radio" name="inning" value="5">
                         <span>5이닝</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="6이닝">
+                        <input type="radio" name="inning" value="6">
                         <span>6이닝</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="7이닝">
+                        <input type="radio" name="inning" value="7">
                         <span>7이닝</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="8이닝">
+                        <input type="radio" name="inning" value="8">
                         <span>8이닝</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="inning" value="9이닝">
+                        <input type="radio" name="inning" value="9">
                         <span>9이닝</span>
                     </label>
                 </div>
             </div>
-            <div class="betting-item">
-                <button id="startBettingBtn" class="betting-btn" disabled>배팅시작</button>
-                <div class="betting-time">
-                    배팅시작 시간: <span id="bettingTime">-</span>
-                </div>
-            </div>
-            <div class="betting-item">
-                <button id="stopBettingBtn" class="betting-btn stop" disabled>배팅중지</button>
-                <div class="betting-time">
-                    배팅중지 시간: <span id="stopTime">-</span>
-                </div>
+            <div class="betting-item center">
+                <button id="startBetting" class="betting-btn">배팅시작</button>
+                <div class="betting-time" id="bettingTime"></div>
+                <button id="stopBetting" class="betting-btn" style="background-color: #dc3545;" disabled>배팅중지</button>
             </div>
             <div class="betting-item">
                 <div class="betting-title">예측결과</div>
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="prediction" value="1루" disabled>
-                        <span>1루</span>
+                        <input type="radio" name="prediction" value="hit" disabled>
+                        <span>안타</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="prediction" value="2루" disabled>
-                        <span>2루</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="prediction" value="3루" disabled>
-                        <span>3루</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="prediction" value="홈런" disabled>
+                        <input type="radio" name="prediction" value="homerun" disabled>
                         <span>홈런</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="prediction" value="아웃" disabled>
+                        <input type="radio" name="prediction" value="strikeout" disabled>
+                        <span>삼진</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="out" disabled>
                         <span>아웃</span>
                     </label>
                 </div>
@@ -690,7 +683,7 @@
                     });
                     this.classList.add('selected');
                     selectedGame = this.dataset.game;
-                    document.getElementById('startBettingBtn').disabled = false;
+                    document.getElementById('startBetting').disabled = false;
                     console.log('선택된 경기:', selectedGame);
                 });
             });
@@ -738,27 +731,27 @@
             // 게임형태 라디오 버튼 이벤트 리스너
             document.querySelectorAll('input[name="gameType"]').forEach(radio => {
                 radio.addEventListener('change', function() {
-                    if (this.checked && this.value === '공격') {
+                    if (this.checked && this.value === 'attack') {
                         console.log('선택된 게임형태:', this.value);
                         // 게임형태가 선택되면 배팅시작 버튼 활성화
-                        document.getElementById('startBettingBtn').disabled = false;
+                        document.getElementById('startBetting').disabled = false;
                     }
                 });
             });
 
             // 배팅시작 버튼 이벤트 리스너
-            document.getElementById('startBettingBtn').addEventListener('click', function() {
+            document.getElementById('startBetting').addEventListener('click', function() {
                 const selectedGameType = document.querySelector('input[name="gameType"]:checked');
-                if (selectedGame && selectedGameType && selectedGameType.value === '공격') {
+                if (selectedGame && selectedGameType && selectedGameType.value === 'attack') {
                     updateBettingTime();
                     this.disabled = true;
-                    document.getElementById('stopBettingBtn').disabled = false;
+                    document.getElementById('stopBetting').disabled = false;
                     console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value);
                 }
             });
 
             // 배팅중지 버튼 이벤트 리스너
-            document.getElementById('stopBettingBtn').addEventListener('click', function() {
+            document.getElementById('stopBetting').addEventListener('click', function() {
                 if (selectedGame) {
                     updateStopTime();
                     this.disabled = true;
