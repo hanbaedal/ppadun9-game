@@ -7,17 +7,19 @@ const mongoose = require('mongoose');
 // 오늘의 경기 목록 가져오기 (Read)
 router.get('/today-games', async (req, res) => {
     try {
+        // 오늘 날짜를 YYYYMMDD 형식으로 생성
         const today = new Date();
-        const dateStr = today.getFullYear().toString() +
-                       (today.getMonth() + 1).toString().padStart(2, '0') +
-                       today.getDate().toString().padStart(2, '0');
-
-        console.log('조회 날짜:', dateStr);
+        const dateStr = today.getFullYear() +
+            String(today.getMonth() + 1).padStart(2, '0') +
+            String(today.getDate()).padStart(2, '0');
+        
+        console.log('조회 날짜:', dateStr); // 디버깅용 로그
 
         // member-management 데이터베이스의 dailygames 컬렉션에서 데이터 조회
         const db = mongoose.connection.useDb('member-management');
         const collection = db.collection('dailygames');
         
+        // 컬렉션이 존재하는지 확인
         const collections = await db.listCollections().toArray();
         const collectionExists = collections.some(col => col.name === 'dailygames');
         
@@ -29,17 +31,19 @@ router.get('/today-games', async (req, res) => {
             });
         }
 
-        const dailyGame = await collection.findOne({ date: dateStr });
-        console.log('조회된 경기 데이터:', dailyGame);
+        // 해당 날짜의 경기 데이터 조회
+        const gameData = await collection.findOne({ date: dateStr });
+        console.log('조회된 경기 데이터:', gameData); // 디버깅용 로그
 
-        if (!dailyGame || !dailyGame.games) {
+        if (!gameData || !gameData.games || gameData.games.length === 0) {
             return res.json({
                 success: true,
                 games: []
             });
         }
 
-        const formattedGames = dailyGame.games.map(game => ({
+        // 경기 데이터 포맷팅
+        const formattedGames = gameData.games.map(game => ({
             homeTeam: game.homeTeam || '',
             awayTeam: game.awayTeam || '',
             stadium: game.stadium || '',

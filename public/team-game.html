@@ -3,448 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>빠던나인 게임진행 설정</title>
+    <title>빠던나인 게임진행</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/common.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            margin: 0;
-            padding: 20px;
             background-color: #f5f5f5;
+            color: #333;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-            position: relative;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         .home-icon {
-            font-size: 1.5em;
             color: #333;
+            font-size: 24px;
             text-decoration: none;
-            padding: 10px;
-            border-radius: 50%;
-            transition: background-color 0.3s ease;
+            transition: color 0.3s;
         }
 
         .home-icon:hover {
-            background-color: #f0f0f0;
+            color: #007bff;
         }
 
         .page-title {
-            margin: 0;
-            font-size: 1.8em;
-            color: #0066cc;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
         }
 
         .date-display {
-            font-size: 1.6em;
-            font-weight: bold;
-            color: #333;
-            padding: 10px 20px;
+            font-size: 18px;
+            color: #666;
+            padding: 8px 15px;
             background-color: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 5px;
         }
 
-        .game-controls {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+        .game-selection {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 30px;
         }
 
-        .control-group {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .control-group h3 {
-            margin: 0 0 15px 0;
+        .game-selection h2 {
+            margin-bottom: 20px;
             color: #333;
-            font-size: 1.2em;
+            font-size: 20px;
         }
 
         .game-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
         }
 
         .game-item {
+            flex: 1;
             padding: 15px;
-            border-bottom: 1px solid #eee;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .game-item:last-child {
-            border-bottom: none;
+            background-color: #f8f9fa;
         }
 
         .game-item:hover {
-            background-color: #e9ecef;
-            transform: translateX(5px);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #007bff;
         }
 
         .game-item.selected {
             background-color: #007bff;
             color: white;
+            border-color: #007bff;
         }
 
-        .game-info {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-        }
-
-        .team-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-        }
-
-        .team-logo {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-        }
-
-        .team-name {
-            font-weight: 500;
-            font-size: 1.1em;
-        }
-
-        .vs {
-            color: #666;
-            font-size: 1.2em;
-            font-weight: bold;
-            padding: 0 20px;
-        }
-
-        .stadium-name {
-            color: #666;
-            font-size: 0.9em;
-            margin-left: auto;
-            padding-right: 20px;
-        }
-
-        select, input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-
-        .betting-controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .betting-button {
-            padding: 15px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1.1em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .start-betting {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .end-betting {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .result-betting {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .betting-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .betting-button:active {
-            transform: translateY(0);
-        }
-
-        .betting-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .time-display {
-            font-size: 1.2em;
-            color: #666;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .status-message {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 4px;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .status-success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .status-error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .game-selection {
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .game-images {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .game-image-item {
-            flex: 1;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: relative;
-            min-width: 200px;
-        }
-
-        .game-image-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .game-image-item.selected {
-            border: 2px solid #007bff;
-        }
-
-        .team-logos {
+        .team-info {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
-        .team-logo {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
+        .team-name {
+            font-weight: 500;
         }
 
-        .vs-text {
-            font-size: 1.2em;
-            font-weight: bold;
+        .vs {
             color: #666;
+            font-weight: bold;
         }
 
         .game-number {
-            font-size: 1.1em;
-            font-weight: 500;
+            font-size: 14px;
+            color: #666;
             margin-top: 5px;
-            color: #333;
         }
 
-        .game-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            font-weight: bold;
-        }
-
-        .status-before {
-            background-color: #dc3545;
+        .selected .vs,
+        .selected .game-number {
             color: white;
-        }
-
-        .status-ongoing {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .status-ended {
-            background-color: #343a40;
-            color: white;
-        }
-
-        .game-form {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1em;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- 헤더 -->
         <div class="header">
             <div class="header-left">
                 <a href="/index.html" class="home-icon">
                     <i class="fas fa-home"></i>
                 </a>
-                <h1 class="page-title">빠던나인 게임진행 설정</h1>
+                <h1 class="page-title">빠던나인 게임진행</h1>
             </div>
             <div class="date-display" id="dateDisplay"></div>
         </div>
 
-        <div class="game-controls">
-            <div class="control-group">
-                <h3>경기 선택</h3>
-                <div class="game-selection">
-                    <div class="game-images" id="gameImages">
-                        <!-- 게임 이미지가 여기에 동적으로 추가됩니다 -->
-                    </div>
-                    <div class="game-form" id="gameForm" style="display: none;">
-                        <div class="form-group">
-                            <label>선택된 경기</label>
-                            <input type="text" id="selectedGame" class="form-control" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>팀 구분</label>
-                            <select id="teamType" class="form-control" required>
-                                <option value="">팀을 선택하세요</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <h3>회차 입력</h3>
-                <select id="inning" required>
-                    <option value="">회차를 선택하세요</option>
-                    <option value="1회">1회</option>
-                    <option value="2회">2회</option>
-                    <option value="3회">3회</option>
-                    <option value="4회">4회</option>
-                    <option value="5회">5회</option>
-                    <option value="6회">6회</option>
-                    <option value="7회">7회</option>
-                    <option value="8회">8회</option>
-                    <option value="9회">9회</option>
-                    <option value="연장1">연장1</option>
-                    <option value="연장2">연장2</option>
-                    <option value="연장3">연장3</option>
-                    <option value="연장4">연장4</option>
-                    <option value="연장5">연장5</option>
-                </select>
-            </div>
-
-            <div class="control-group">
-                <h3>타자 선택</h3>
-                <select id="batter" required>
-                    <option value="">타자를 선택하세요</option>
-                </select>
+        <!-- 경기 선택 -->
+        <div class="game-selection">
+            <h2>경기 선택</h2>
+            <div class="game-list" id="gameList">
+                <!-- 게임 목록이 여기에 동적으로 추가됩니다 -->
             </div>
         </div>
-
-        <div class="betting-controls">
-            <button id="startBetting" class="betting-button start-betting">배팅 시작</button>
-            <button id="endBetting" class="betting-button end-betting">배팅 중지</button>
-            <select id="bettingResult" class="betting-button result-betting">
-                <option value="">배팅 결과 선택</option>
-                <option value="1루">1루</option>
-                <option value="2루">2루</option>
-                <option value="3루">3루</option>
-                <option value="홈런">홈런</option>
-                <option value="아웃">아웃</option>
-            </select>
-        </div>
-
-        <div class="time-display">
-            <div id="startTime"></div>
-            <div id="endTime"></div>
-        </div>
-
-        <div id="statusMessage" class="status-message"></div>
     </div>
 
     <script>
-        let currentGameId = null;
-        let currentGameProgress = null;
-
         // 현재 날짜 표시
         function updateDate() {
             const today = new Date();
@@ -454,34 +172,18 @@
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
-        // 타자 선택 옵션 생성
-        function createBatterOptions() {
-            const batterSelect = document.getElementById('batter');
-            batterSelect.innerHTML = '<option value="">타자를 선택하세요</option>';
-            for (let i = 1; i <= 20; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `${i}타석`;
-                batterSelect.appendChild(option);
-            }
-        }
-
         // 오늘의 경기 목록 가져오기
         async function fetchTodayGames() {
             try {
-                showStatus('경기 데이터를 불러오는 중...', true);
-                
                 const response = await fetch('/api/game-progress/today-games');
                 const result = await response.json();
                 
-                console.log('받은 경기 데이터:', result); // 디버깅용 로그
-                
                 if (result.success) {
-                    const gameImages = document.getElementById('gameImages');
-                    gameImages.innerHTML = '';
+                    const gameList = document.getElementById('gameList');
+                    gameList.innerHTML = '';
                     
                     if (!result.games || result.games.length === 0) {
-                        showStatus('오늘의 경기 정보가 없습니다.', false);
+                        gameList.innerHTML = '<div class="no-games">오늘의 경기 정보가 없습니다.</div>';
                         return;
                     }
                     
@@ -491,264 +193,47 @@
                         game.homeTeam.trim() !== '' && game.awayTeam.trim() !== ''
                     );
                     
-                    if (validGames.length === 0) {
-                        showStatus('유효한 경기 정보가 없습니다.', false);
-                        return;
-                    }
-                    
                     validGames.forEach((game, index) => {
                         const gameItem = document.createElement('div');
-                        gameItem.className = 'game-image-item';
-                        
-                        // 경기 상태 확인
-                        const now = new Date();
-                        const startTime = game.startTime ? new Date(game.startTime) : null;
-                        let statusClass = '';
-                        let statusText = '';
-                        
-                        if (game.noGame && game.noGame !== '정상게임') {
-                            statusClass = 'status-cancelled';
-                            statusText = game.noGame;
-                        } else if (!startTime || now < startTime) {
-                            statusClass = 'status-before';
-                            statusText = '경기전';
-                        } else if (!game.endTime) {
-                            statusClass = 'status-ongoing';
-                            statusText = '경기중';
-                        } else {
-                            statusClass = 'status-ended';
-                            statusText = '경기끝';
-                        }
-                        
+                        gameItem.className = 'game-item';
                         gameItem.innerHTML = `
-                            <div class="game-status ${statusClass}">${statusText}</div>
-                            <div class="team-logos">
-                                <img src="/images/teams/${game.homeTeam}.png" alt="${game.homeTeam}" class="team-logo" onerror="this.src='/images/teams/default.png'">
-                                <span class="vs-text">VS</span>
-                                <img src="/images/teams/${game.awayTeam}.png" alt="${game.awayTeam}" class="team-logo" onerror="this.src='/images/teams/default.png'">
+                            <div class="team-info">
+                                <span class="team-name">${game.homeTeam}</span>
+                                <span class="vs">VS</span>
+                                <span class="team-name">${game.awayTeam}</span>
                             </div>
                             <div class="game-number">${index + 1} 경기</div>
                         `;
                         
                         gameItem.addEventListener('click', () => {
                             // 이전 선택 제거
-                            document.querySelectorAll('.game-image-item').forEach(item => {
+                            document.querySelectorAll('.game-item').forEach(item => {
                                 item.classList.remove('selected');
                             });
                             
                             // 현재 항목 선택
                             gameItem.classList.add('selected');
                             
-                            // 게임 선택 값 설정
-                            const gameSelection = `${game.homeTeam} vs ${game.awayTeam}`;
-                            currentGameId = `${new Date().toISOString().split('T')[0]}-${gameSelection}`;
-                            
-                            // 선택된 경기 표시
-                            document.getElementById('selectedGame').value = gameSelection;
-                            
-                            // 팀 구분 옵션 설정
-                            const teamTypeSelect = document.getElementById('teamType');
-                            teamTypeSelect.innerHTML = `
-                                <option value="">팀을 선택하세요</option>
-                                <option value="홈팀">${game.homeTeam}</option>
-                                <option value="원정팀">${game.awayTeam}</option>
-                            `;
-                            
-                            // 폼 표시
-                            document.getElementById('gameForm').style.display = 'block';
-                            
-                            // 배팅 버튼 상태 초기화
-                            document.getElementById('startBetting').disabled = true;
-                            document.getElementById('endBetting').disabled = true;
-                            document.getElementById('bettingResult').disabled = true;
-                            
-                            showStatus('경기가 선택되었습니다.', true);
+                            // 여기에 선택된 경기에 대한 추가 처리 로직을 구현할 수 있습니다
                         });
                         
-                        gameImages.appendChild(gameItem);
+                        gameList.appendChild(gameItem);
                     });
-                    
-                    showStatus('경기 데이터를 성공적으로 불러왔습니다.', true);
                 } else {
-                    showStatus('경기 목록을 불러오는데 실패했습니다.', false);
+                    throw new Error(result.message || '경기 목록을 불러오는데 실패했습니다.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showStatus('경기 목록을 불러오는데 실패했습니다.', false);
+                document.getElementById('gameList').innerHTML = 
+                    '<div class="no-games">경기 목록을 불러오는데 실패했습니다.</div>';
             }
         }
 
-        // 게임 진행 데이터 생성
-        async function createGameProgress() {
-            const gameSelection = document.getElementById('gameSelection').value;
-            const teamType = document.getElementById('teamType').value;
-            const inning = document.getElementById('inning').value;
-            const batter = document.getElementById('batter').value;
-
-            if (!gameSelection || !teamType || !inning || !batter) {
-                showStatus('모든 필드를 입력해주세요.', false);
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/game-progress/create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        gameSelection,
-                        teamType,
-                        inning,
-                        batter
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    currentGameId = result.gameProgress.gameId;
-                    currentGameProgress = result.gameProgress;
-                    document.getElementById('startBetting').disabled = false;
-                    showStatus('게임 진행 데이터가 생성되었습니다.', true);
-                }
-            } catch (error) {
-                showStatus('게임 진행 데이터 생성에 실패했습니다.', false);
-            }
-        }
-
-        // 배팅 시작
-        async function startBetting() {
-            if (!currentGameId) {
-                showStatus('먼저 게임을 선택해주세요.', false);
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/game-progress/update-betting-start/${currentGameId}`, {
-                    method: 'PUT'
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    currentGameProgress = result.gameProgress;
-                    document.getElementById('startBetting').disabled = true;
-                    document.getElementById('endBetting').disabled = false;
-                    document.getElementById('bettingResult').disabled = true;
-                    
-                    const startTime = new Date(currentGameProgress.bettingStartTime);
-                    document.getElementById('startTime').textContent = 
-                        `시작 시간: ${startTime.toLocaleTimeString()}`;
-                    showStatus('배팅이 시작되었습니다.', true);
-                }
-            } catch (error) {
-                showStatus('배팅 시작에 실패했습니다.', false);
-            }
-        }
-
-        // 배팅 중지
-        async function endBetting() {
-            if (!currentGameId) {
-                showStatus('먼저 게임을 선택해주세요.', false);
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/game-progress/update-betting-end/${currentGameId}`, {
-                    method: 'PUT'
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    currentGameProgress = result.gameProgress;
-                    document.getElementById('endBetting').disabled = true;
-                    document.getElementById('bettingResult').disabled = false;
-                    
-                    const endTime = new Date(currentGameProgress.bettingEndTime);
-                    document.getElementById('endTime').textContent = 
-                        `중지 시간: ${endTime.toLocaleTimeString()}`;
-                    showStatus('배팅이 중지되었습니다.', true);
-                }
-            } catch (error) {
-                showStatus('배팅 중지에 실패했습니다.', false);
-            }
-        }
-
-        // 배팅 결과 업데이트
-        async function updateBettingResult() {
-            if (!currentGameId) {
-                showStatus('먼저 게임을 선택해주세요.', false);
-                return;
-            }
-
-            const bettingResult = document.getElementById('bettingResult').value;
-            if (!bettingResult) {
-                showStatus('배팅 결과를 선택해주세요.', false);
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/game-progress/update-betting-result/${currentGameId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ bettingResult })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    currentGameProgress = result.gameProgress;
-                    document.getElementById('bettingResult').disabled = true;
-                    showStatus('배팅 결과가 업데이트되었습니다.', true);
-                }
-            } catch (error) {
-                showStatus('배팅 결과 업데이트에 실패했습니다.', false);
-            }
-        }
-
-        // 상태 메시지 표시
-        function showStatus(message, isSuccess) {
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.textContent = message;
-            statusMessage.className = 'status-message ' + (isSuccess ? 'status-success' : 'status-error');
-        }
-
-        // 이벤트 리스너 설정
-        document.addEventListener('DOMContentLoaded', () => {
+        // 페이지 로드 시 실행
+        window.onload = function() {
             updateDate();
-            createBatterOptions();
             fetchTodayGames();
-
-            // 게임 선택 변경 시
-            document.getElementById('gameSelection').addEventListener('change', () => {
-                document.getElementById('teamType').disabled = false;
-                document.getElementById('startBetting').disabled = true;
-                document.getElementById('endBetting').disabled = true;
-                document.getElementById('bettingResult').disabled = true;
-            });
-
-            // 팀 구분 변경 시
-            document.getElementById('teamType').addEventListener('change', () => {
-                document.getElementById('inning').disabled = false;
-            });
-
-            // 회차 변경 시
-            document.getElementById('inning').addEventListener('change', () => {
-                document.getElementById('batter').disabled = false;
-            });
-
-            // 타자 변경 시
-            document.getElementById('batter').addEventListener('change', createGameProgress);
-
-            // 배팅 시작 버튼
-            document.getElementById('startBetting').addEventListener('click', startBetting);
-
-            // 배팅 중지 버튼
-            document.getElementById('endBetting').addEventListener('click', endBetting);
-
-            // 배팅 결과 변경 시
-            document.getElementById('bettingResult').addEventListener('change', updateBettingResult);
-        });
+        };
     </script>
 </body>
 </html> 
