@@ -241,33 +241,36 @@
             margin-top: 20px;
         }
 
-        .game-type-section {
+        .betting-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
         }
 
-        .game-type-content {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .game-type-section h3 {
-            margin: 0;
-            color: #333;
+        .betting-title {
+            padding: 12px 24px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 6px;
             font-size: 16px;
             font-weight: 500;
-            white-space: nowrap;
+            min-width: 120px;
+            text-align: center;
         }
 
-        .game-type-section .radio-group {
+        .radio-group {
             display: flex;
+            flex-direction: row;
             gap: 20px;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
         }
 
-        .game-type-section .radio-label {
+        .radio-label {
             display: flex;
             align-items: center;
             gap: 5px;
@@ -277,34 +280,26 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             transition: all 0.2s;
+            white-space: nowrap;
+            font-size: 16px;
         }
 
-        .game-type-section .radio-label:hover {
+        .radio-label:hover {
             background-color: #f0f0f0;
         }
 
-        .game-type-section .radio-label input[type="radio"] {
+        .radio-label input[type="radio"] {
             margin: 0;
         }
 
-        .game-type-section .radio-label input[type="radio"]:checked + span {
+        .radio-label input[type="radio"]:checked + span {
             color: #007bff;
             font-weight: bold;
         }
 
-        .game-type-section .radio-label:has(input[type="radio"]:disabled) {
+        .radio-label:has(input[type="radio"]:disabled) {
             opacity: 0.6;
             cursor: not-allowed;
-        }
-
-        .betting-item {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
         }
 
         .betting-btn {
@@ -355,58 +350,6 @@
         #stopTime {
             color: #dc3545;
         }
-
-        .prediction-section {
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .prediction-section h3 {
-            margin: 0 0 15px 0;
-            color: #333;
-            font-size: 1.1em;
-        }
-
-        .radio-group {
-            display: flex;
-            flex-direction: row;
-            gap: 20px;
-            flex-wrap: nowrap;
-            justify-content: flex-start;
-        }
-
-        .radio-label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            padding: 8px 15px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            transition: all 0.2s;
-            white-space: nowrap;
-            font-size: 16px;
-        }
-
-        .radio-label:hover {
-            background-color: #f0f0f0;
-        }
-
-        .radio-label input[type="radio"] {
-            margin: 0;
-        }
-
-        .radio-label input[type="radio"]:checked + span {
-            color: #007bff;
-            font-weight: bold;
-        }
-
-        .radio-label:has(input[type="radio"]:disabled) {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body>
@@ -437,23 +380,21 @@
         </table>
 
         <div class="betting-section">
-            <div class="game-type-section">
-                <div class="game-type-content">
-                    <h3>게임형태</h3>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="gameType" value="공격">
-                            <span>공격</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="gameType" value="수비">
-                            <span>수비</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="gameType" value="투수">
-                            <span>투수</span>
-                        </label>
-                    </div>
+            <div class="betting-item">
+                <div class="betting-title">게임형태</div>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="gameType" value="공격">
+                        <span>공격</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="gameType" value="수비">
+                        <span>수비</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="gameType" value="투수">
+                        <span>투수</span>
+                    </label>
                 </div>
             </div>
             <div class="betting-item">
@@ -468,31 +409,29 @@
                     배팅중지 시간: <span id="stopTime">-</span>
                 </div>
             </div>
-            <div class="game-type-section">
-                <div class="game-type-content">
-                    <h3>예측결과</h3>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="1루" disabled>
-                            <span>1루</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="2루" disabled>
-                            <span>2루</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="3루" disabled>
-                            <span>3루</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="홈런" disabled>
-                            <span>홈런</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="아웃" disabled>
-                            <span>아웃</span>
-                        </label>
-                    </div>
+            <div class="betting-item">
+                <div class="betting-title">예측결과</div>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="1루" disabled>
+                        <span>1루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="2루" disabled>
+                        <span>2루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="3루" disabled>
+                        <span>3루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="홈런" disabled>
+                        <span>홈런</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="아웃" disabled>
+                        <span>아웃</span>
+                    </label>
                 </div>
             </div>
         </div>
