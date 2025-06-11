@@ -243,16 +243,61 @@
 
         .betting-item {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
         }
 
+        .betting-btn {
+            padding: 12px 24px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+
+        .betting-btn:hover:not(:disabled) {
+            background-color: #218838;
+        }
+
+        .betting-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .betting-btn.stop {
+            background-color: #dc3545;
+        }
+
+        .betting-btn.stop:hover:not(:disabled) {
+            background-color: #c82333;
+        }
+
         .betting-time {
             font-size: 1.1em;
             color: #333;
+            padding: 12px 24px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            min-width: 200px;
+        }
+
+        #bettingTime, #stopTime {
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        #stopTime {
+            color: #dc3545;
         }
 
         .prediction-section {
