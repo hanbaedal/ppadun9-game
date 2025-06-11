@@ -208,13 +208,16 @@
             gameList.innerHTML = '<div class="loading">경기 데이터를 불러오는 중...</div>';
             
             try {
+                console.log('API 호출 시작: /api/game-progress/today-games');
                 const response = await fetch('/api/game-progress/today-games');
-                const result = await response.json();
+                console.log('API 응답 받음:', response.status);
                 
-                console.log('서버 응답:', result); // 디버깅용 로그
+                const result = await response.json();
+                console.log('서버 응답 데이터:', result);
                 
                 if (result.success) {
                     if (!result.games || result.games.length === 0) {
+                        console.log('경기 데이터 없음');
                         gameList.innerHTML = '<div class="no-games">오늘의 경기 정보가 없습니다.</div>';
                         return;
                     }
@@ -225,7 +228,10 @@
                         game.homeTeam.trim() !== '' && game.awayTeam.trim() !== ''
                     );
                     
+                    console.log('유효한 경기 데이터:', validGames);
+                    
                     if (validGames.length === 0) {
+                        console.log('유효한 경기 데이터 없음');
                         gameList.innerHTML = '<div class="no-games">유효한 경기 정보가 없습니다.</div>';
                         return;
                     }
@@ -252,11 +258,12 @@
                         
                         gameList.appendChild(gameItem);
                     });
+                    console.log('경기 목록 표시 완료');
                 } else {
                     throw new Error(result.message || '경기 목록을 불러오는데 실패했습니다.');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('API 호출 에러:', error);
                 gameList.innerHTML = `
                     <div class="error-message">
                         경기 목록을 불러오는데 실패했습니다.<br>
@@ -267,6 +274,7 @@
 
         // 페이지 로드 시 실행
         window.onload = function() {
+            console.log('페이지 로드됨');
             updateDate();
             fetchTodayGames();
         };
