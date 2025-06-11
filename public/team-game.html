@@ -469,14 +469,34 @@
         // 오늘의 경기 목록 가져오기
         async function fetchTodayGames() {
             try {
+                showStatus('경기 데이터를 불러오는 중...', true);
+                
                 const response = await fetch('/api/game-progress/today-games');
                 const result = await response.json();
+                
+                console.log('받은 경기 데이터:', result); // 디버깅용 로그
                 
                 if (result.success) {
                     const gameImages = document.getElementById('gameImages');
                     gameImages.innerHTML = '';
                     
-                    result.games.forEach((game, index) => {
+                    if (!result.games || result.games.length === 0) {
+                        showStatus('오늘의 경기 정보가 없습니다.', false);
+                        return;
+                    }
+                    
+                    // 유효한 경기 데이터만 필터링
+                    const validGames = result.games.filter(game => 
+                        game.homeTeam && game.awayTeam && 
+                        game.homeTeam.trim() !== '' && game.awayTeam.trim() !== ''
+                    );
+                    
+                    if (validGames.length === 0) {
+                        showStatus('유효한 경기 정보가 없습니다.', false);
+                        return;
+                    }
+                    
+                    validGames.forEach((game, index) => {
                         const gameItem = document.createElement('div');
                         gameItem.className = 'game-image-item';
                         
@@ -486,7 +506,7 @@
                         let statusClass = '';
                         let statusText = '';
                         
-                        if (game.noGame !== '정상게임') {
+                        if (game.noGame && game.noGame !== '정상게임') {
                             statusClass = 'status-cancelled';
                             statusText = game.noGame;
                         } else if (!startTime || now < startTime) {
@@ -547,8 +567,13 @@
                         
                         gameImages.appendChild(gameItem);
                     });
+                    
+                    showStatus('경기 데이터를 성공적으로 불러왔습니다.', true);
+                } else {
+                    showStatus('경기 목록을 불러오는데 실패했습니다.', false);
                 }
             } catch (error) {
+                console.error('Error:', error);
                 showStatus('경기 목록을 불러오는데 실패했습니다.', false);
             }
         }
