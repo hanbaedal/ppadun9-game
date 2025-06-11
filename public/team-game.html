@@ -346,10 +346,12 @@
         .radio-group {
             display: flex;
             flex-direction: row;
-            gap: 20px;
+            gap: 10px;
             flex-wrap: nowrap;
             justify-content: flex-start;
             flex-grow: 1;
+            overflow-x: auto;
+            padding: 5px 0;
         }
 
         .radio-label {
@@ -357,14 +359,14 @@
             align-items: center;
             gap: 5px;
             cursor: pointer;
-            padding: 8px 15px;
+            padding: 6px 12px;
             background-color: #fff;
             border: 1px solid #ddd;
             border-radius: 4px;
             transition: all 0.2s;
             white-space: nowrap;
-            font-size: 16px;
-            height: 36px;
+            font-size: 14px;
+            height: 32px;
         }
 
         .radio-label:hover {
@@ -451,12 +453,6 @@
 
         <div class="betting-section">
             <div class="betting-item">
-                <div class="betting-title">경기선택</div>
-                <div class="game-list">
-                    <!-- 게임 목록이 여기에 동적으로 추가됩니다 -->
-                </div>
-            </div>
-            <div class="betting-item">
                 <div class="betting-title">게임형태</div>
                 <div class="radio-group">
                     <label class="radio-label">
@@ -470,6 +466,47 @@
                     <label class="radio-label disabled">
                         <input type="radio" name="gameType" value="투수" disabled>
                         <span>투수</span>
+                    </label>
+                </div>
+            </div>
+            <div class="betting-item">
+                <div class="betting-title">이닝선택</div>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="1이닝">
+                        <span>1이닝</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="2이닝">
+                        <span>2이닝</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="3이닝">
+                        <span>3이닝</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="4이닝">
+                        <span>4이닝</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="5이닝">
+                        <span>5이닝</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="6이닝">
+                        <span>6이닝</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="7이닝">
+                        <span>7이닝</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="8이닝">
+                        <span>8이닝</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="inning" value="9이닝">
+                        <span>9이닝</span>
                     </label>
                 </div>
             </div>
@@ -728,6 +765,15 @@
                 radio.addEventListener('change', function() {
                     if (this.checked) {
                         console.log('선택된 예측:', this.value);
+                    }
+                });
+            });
+
+            // 이닝 선택 라디오 버튼 이벤트 리스너
+            document.querySelectorAll('input[name="inning"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        console.log('선택된 이닝:', this.value);
                     }
                 });
             });
