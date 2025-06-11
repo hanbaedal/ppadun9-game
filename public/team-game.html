@@ -242,19 +242,23 @@
         }
 
         .game-type-section {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
+        }
+
+        .game-type-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
         }
 
         .game-type-section h3 {
             margin: 0;
             color: #333;
             font-size: 1.1em;
+            white-space: nowrap;
         }
 
         .game-type-section .radio-group {
@@ -365,8 +369,10 @@
 
         .radio-group {
             display: flex;
+            flex-direction: row;
             gap: 20px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
         }
 
         .radio-label {
@@ -379,6 +385,7 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .radio-label:hover {
@@ -429,16 +436,18 @@
 
         <div class="betting-section">
             <div class="game-type-section">
-                <h3>게임형태</h3>
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="gameType" value="공격" disabled>
-                        <span>공격</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="gameType" value="수비" disabled>
-                        <span>수비</span>
-                    </label>
+                <div class="game-type-content">
+                    <h3>게임형태</h3>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="gameType" value="공격">
+                            <span>공격</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="gameType" value="수비">
+                            <span>수비</span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="betting-item">
@@ -656,22 +665,25 @@
             updateDate();
             fetchGames();
 
-            // 게임 선택 시 게임형태 라디오 버튼 활성화
-            document.querySelectorAll('.game-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    document.querySelectorAll('input[name="gameType"]').forEach(radio => {
-                        radio.disabled = false;
-                    });
+            // 게임형태 라디오 버튼 이벤트 리스너
+            document.querySelectorAll('input[name="gameType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        console.log('선택된 게임형태:', this.value);
+                        // 게임형태가 선택되면 배팅시작 버튼 활성화
+                        document.getElementById('startBettingBtn').disabled = false;
+                    }
                 });
             });
 
             // 배팅시작 버튼 이벤트 리스너
             document.getElementById('startBettingBtn').addEventListener('click', function() {
-                if (selectedGame) {
+                const selectedGameType = document.querySelector('input[name="gameType"]:checked');
+                if (selectedGame && selectedGameType) {
                     updateBettingTime();
                     this.disabled = true;
                     document.getElementById('stopBettingBtn').disabled = false;
-                    console.log('배팅 시작:', selectedGame);
+                    console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value);
                 }
             });
 
