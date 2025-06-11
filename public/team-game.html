@@ -269,6 +269,11 @@
         .betting-time {
             font-size: 16px;
             color: #333;
+            padding: 12px 24px;
+            background-color: #f8f9fa;
+            border: 2px solid #28a745;
+            border-radius: 6px;
+            min-width: 200px;
         }
 
         #bettingTime {
@@ -330,9 +335,9 @@
 
         <div class="betting-section">
             <button id="startBettingBtn" class="betting-btn" disabled>배팅시작</button>
-            <button id="bettingTimeBtn" class="betting-time-btn" disabled>
+            <div class="betting-time">
                 배팅시작 시간: <span id="bettingTime">-</span>
-            </button>
+            </div>
         </div>
     </div>
 
@@ -508,16 +513,7 @@
                 if (selectedGame) {
                     startBettingTimer();
                     this.disabled = true;
-                    document.getElementById('bettingTimeBtn').disabled = false;
                     console.log('배팅 시작:', selectedGame);
-                }
-            });
-
-            // 배팅시간 버튼 이벤트 리스너
-            document.getElementById('bettingTimeBtn').addEventListener('click', function() {
-                if (!this.disabled) {
-                    updateBettingTime(); // 클릭할 때마다 시간 업데이트
-                    console.log('배팅시간 버튼 클릭');
                 }
             });
         };
