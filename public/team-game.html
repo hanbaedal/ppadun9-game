@@ -263,6 +263,32 @@
             transition: all 0.3s ease;
             padding: 10px;
             border-radius: 8px;
+            position: relative;
+        }
+
+        .game-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status-before {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .status-ongoing {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-ended {
+            background-color: #343a40;
+            color: white;
         }
 
         .game-image-item:hover {
@@ -450,6 +476,24 @@
                     result.games.forEach((game, index) => {
                         const gameItem = document.createElement('div');
                         gameItem.className = 'game-image-item';
+                        
+                        // 경기 상태 확인
+                        const now = new Date();
+                        const startTime = new Date(game.startTime);
+                        let statusClass = '';
+                        let statusText = '';
+                        
+                        if (!game.startTime || now < startTime) {
+                            statusClass = 'status-before';
+                            statusText = '경기전';
+                        } else if (!game.endTime) {
+                            statusClass = 'status-ongoing';
+                            statusText = '경기중';
+                        } else {
+                            statusClass = 'status-ended';
+                            statusText = '경기끝';
+                        }
+                        
                         gameItem.innerHTML = `
                             <div class="team-logos">
                                 <img src="/images/teams/${game.homeTeam}.png" alt="${game.homeTeam}" class="team-logo" onerror="this.src='/images/teams/default.png'">
@@ -457,6 +501,7 @@
                                 <img src="/images/teams/${game.awayTeam}.png" alt="${game.awayTeam}" class="team-logo" onerror="this.src='/images/teams/default.png'">
                             </div>
                             <div class="game-number">${index + 1} 경기</div>
+                            <div class="game-status ${statusClass}">${statusText}</div>
                         `;
                         
                         gameItem.addEventListener('click', () => {

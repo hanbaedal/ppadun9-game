@@ -3,21 +3,30 @@ const router = express.Router();
 const GameProgress = require('../models/game-progress');
 const mongoose = require('mongoose');
 
-// 오늘의 경기 목록 조회
+// 오늘의 경기 목록 가져오기
 router.get('/today-games', async (req, res) => {
     try {
-        const today = new Date();
-        const dateStr = today.getFullYear().toString() +
-                       (today.getMonth() + 1).toString().padStart(2, '0') +
-                       today.getDate().toString().padStart(2, '0');
+        const today = new Date().toISOString().split('T')[0];
+        const games = await mongoose.connection.db.collection('today-game-start')
+            .find({ date: today })
+            .toArray();
 
-        // today-game-start.html에서 입력된 경기 데이터 조회
-        const db = mongoose.connection.db;
-        const games = await db.collection('today-game-start').find({ date: dateStr }).toArray();
-        
-        res.json({ success: true, games });
+        res.json({
+            success: true,
+            games: games.map(game => ({
+                homeTeam: game.homeTeam,
+                awayTeam: game.awayTeam,
+                stadium: game.stadium,
+                startTime: game.startTime,
+                endTime: game.endTime
+            }))
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error('경기 목록 조회 실패:', error);
+        res.status(500).json({
+            success: false,
+            message: '경기 목록을 불러오는데 실패했습니다.'
+        });
     }
 });
 
