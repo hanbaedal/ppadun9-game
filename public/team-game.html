@@ -357,6 +357,16 @@
         #stopTime {
             color: #dc3545;
         }
+
+        .radio-label.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+
+        .radio-label.disabled:hover {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
@@ -391,15 +401,15 @@
                 <div class="betting-title">게임형태</div>
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="gameType" value="공격">
+                        <input type="radio" name="gameType" value="공격" checked>
                         <span>공격</span>
                     </label>
-                    <label class="radio-label">
-                        <input type="radio" name="gameType" value="수비">
+                    <label class="radio-label disabled">
+                        <input type="radio" name="gameType" value="수비" disabled>
                         <span>수비</span>
                     </label>
-                    <label class="radio-label">
-                        <input type="radio" name="gameType" value="투수">
+                    <label class="radio-label disabled">
+                        <input type="radio" name="gameType" value="투수" disabled>
                         <span>투수</span>
                     </label>
                 </div>
@@ -622,7 +632,7 @@
             // 게임형태 라디오 버튼 이벤트 리스너
             document.querySelectorAll('input[name="gameType"]').forEach(radio => {
                 radio.addEventListener('change', function() {
-                    if (this.checked) {
+                    if (this.checked && this.value === '공격') {
                         console.log('선택된 게임형태:', this.value);
                         // 게임형태가 선택되면 배팅시작 버튼 활성화
                         document.getElementById('startBettingBtn').disabled = false;
@@ -633,7 +643,7 @@
             // 배팅시작 버튼 이벤트 리스너
             document.getElementById('startBettingBtn').addEventListener('click', function() {
                 const selectedGameType = document.querySelector('input[name="gameType"]:checked');
-                if (selectedGame && selectedGameType) {
+                if (selectedGame && selectedGameType && selectedGameType.value === '공격') {
                     updateBettingTime();
                     this.disabled = true;
                     document.getElementById('stopBettingBtn').disabled = false;
