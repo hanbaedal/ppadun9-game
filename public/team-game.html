@@ -139,28 +139,27 @@
         .game-status {
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
         }
 
-        .status-normal {
-            background-color: #e3f2fd;
-            color: #1976d2;
+        .status-before {
+            color: #dc3545;
         }
 
-        .status-delayed {
-            background-color: #fff3e0;
-            color: #f57c00;
+        .status-ongoing {
+            color: #28a745;
         }
 
-        .status-cancelled {
-            background-color: #ffebee;
-            color: #d32f2f;
+        .status-ended {
+            color: #333;
         }
 
         /* 컬럼 너비 조정 */
         th:nth-child(1), td:nth-child(1) { width: 100px; }  /* 경기번호 */
-        th:nth-child(2), td:nth-child(2) { width: 800px; } /* 매치업 */
+        th:nth-child(2), td:nth-child(2) { width: 600px; } /* 매치업 */
+        th:nth-child(3), td:nth-child(3) { width: 100px; } /* 경기상황 */
+        th:nth-child(4), td:nth-child(4) { width: 100px; } /* 선택버튼 */
 
         /* 호버 효과 */
         tr:hover td {
@@ -224,7 +223,7 @@
             font-size: 14px;
             font-weight: 500;
             transition: background-color 0.2s;
-            margin-left: 10px;
+            width: 100px;
         }
 
         .select-game-btn:hover {
@@ -255,6 +254,8 @@
                 <tr>
                     <th>경기</th>
                     <th>매치업</th>
+                    <th>경기상황</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody id="gameTableBody">
@@ -280,7 +281,17 @@
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
-        // 게임 데이터 표시
+        function getGameStatus(startTime, endTime) {
+            const now = new Date();
+            const start = startTime ? new Date(startTime) : null;
+            const end = endTime ? new Date(endTime) : null;
+
+            if (!start) return { text: '-', class: '' };
+            if (end) return { text: '경기끝', class: 'status-ended' };
+            if (now < start) return { text: '경기전', class: 'status-before' };
+            return { text: '경기중', class: 'status-ongoing' };
+        }
+
         function displayGames(games) {
             const tbody = document.getElementById('gameTableBody');
             tbody.innerHTML = '';
@@ -290,15 +301,16 @@
                     number: i,
                     homeTeam: null,
                     awayTeam: null,
-                    stadium: null
+                    stadium: null,
+                    startTime: null,
+                    endTime: null
                 };
+
+                const status = getGameStatus(game.startTime, game.endTime);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="game-number game-number-${i}">
-                        ${i} 경기
-                        <button class="select-game-btn" data-game="${i}">선택</button>
-                    </td>
+                    <td class="game-number game-number-${i}">${i} 경기</td>
                     <td>
                         <div class="game-info">
                             <span class="team-name">${game.homeTeam || '-'}</span>
@@ -307,6 +319,12 @@
                             <span class="stadium-name">(${game.stadium || '-'})</span>
                         </div>
                     </td>
+                    <td>
+                        <span class="game-status ${status.class}">${status.text}</span>
+                    </td>
+                    <td>
+                        <button class="select-game-btn" data-game="${i}">선택</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -314,13 +332,10 @@
             // 선택 버튼에 이벤트 리스너 추가
             document.querySelectorAll('.select-game-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    // 이전에 선택된 버튼의 스타일 제거
                     document.querySelectorAll('.select-game-btn').forEach(b => {
                         b.classList.remove('selected');
                     });
-                    // 현재 버튼 선택 상태로 변경
                     this.classList.add('selected');
-                    // 선택된 경기 번호 저장
                     const selectedGame = this.dataset.game;
                     console.log('선택된 경기:', selectedGame);
                 });
