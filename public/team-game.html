@@ -233,6 +233,48 @@
         .select-game-btn.selected {
             background-color: #28a745;
         }
+
+        .betting-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .betting-btn {
+            padding: 12px 24px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .betting-btn:hover:not(:disabled) {
+            background-color: #218838;
+        }
+
+        .betting-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .betting-time {
+            font-size: 16px;
+            color: #333;
+        }
+
+        #bettingTime {
+            font-weight: 600;
+            color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -255,16 +297,25 @@
                     <th>경기</th>
                     <th>매치업</th>
                     <th>경기상황</th>
-                    <th></th>
+                    <th>경기선택</th>
                 </tr>
             </thead>
             <tbody id="gameTableBody">
             </tbody>
         </table>
+
+        <div class="betting-section">
+            <button id="startBettingBtn" class="betting-btn" disabled>배팅시작</button>
+            <div class="betting-time">
+                배팅시작 시간: <span id="bettingTime">-</span>
+            </div>
+        </div>
     </div>
 
     <script>
         let currentDate = new Date();
+        let selectedGame = null;
+        let bettingTimer = null;
 
         // 날짜 변경 함수
         function changeDate(days) {
@@ -290,6 +341,22 @@
             if (end) return { text: '경기끝', class: 'status-ended' };
             if (now < start) return { text: '경기전', class: 'status-before' };
             return { text: '경기중', class: 'status-ongoing' };
+        }
+
+        function updateBettingTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('bettingTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        function startBettingTimer() {
+            if (bettingTimer) {
+                clearInterval(bettingTimer);
+            }
+            updateBettingTime();
+            bettingTimer = setInterval(updateBettingTime, 1000);
         }
 
         function displayGames(games) {
@@ -336,7 +403,8 @@
                         b.classList.remove('selected');
                     });
                     this.classList.add('selected');
-                    const selectedGame = this.dataset.game;
+                    selectedGame = this.dataset.game;
+                    document.getElementById('startBettingBtn').disabled = false;
                     console.log('선택된 경기:', selectedGame);
                 });
             });
@@ -372,6 +440,15 @@
         window.onload = function() {
             updateDate();
             fetchGames();
+
+            // 배팅시작 버튼 이벤트 리스너
+            document.getElementById('startBettingBtn').addEventListener('click', function() {
+                if (selectedGame) {
+                    startBettingTimer();
+                    this.disabled = true;
+                    console.log('배팅 시작:', selectedGame);
+                }
+            });
         };
     </script>
 </body>
