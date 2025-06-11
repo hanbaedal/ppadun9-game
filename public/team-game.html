@@ -3,280 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>빠던나인 게임진행</title>
+    <title>KBO 야구경기 일정</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/common.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 20px;
             background-color: #f5f5f5;
-            color: #333;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
             position: relative;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
         .home-icon {
+            font-size: 1.5em;
             color: #333;
-            font-size: 24px;
             text-decoration: none;
-            transition: color 0.3s;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
         }
 
         .home-icon:hover {
-            color: #007bff;
+            background-color: #f0f0f0;
         }
 
         .page-title {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
             margin: 0;
+            font-size: 1.8em;
+            color: #0066cc;
+            font-weight: 700;
         }
 
         .date-display {
-            font-size: 18px;
-            color: #666;
-            padding: 8px 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-
-        .game-selection {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
-        .game-selection h2 {
-            margin-bottom: 20px;
+            font-size: 1.6em;
+            font-weight: bold;
             color: #333;
-            font-size: 20px;
-        }
-
-        .game-list {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            min-height: 100px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-
-        .error-message {
-            text-align: center;
-            padding: 20px;
-            color: #dc3545;
-            background-color: #f8d7da;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-
-        .no-games {
-            text-align: center;
-            padding: 20px;
-            color: #666;
+            padding: 10px 20px;
             background-color: #f8f9fa;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-
-        .game-item {
-            flex: 1;
-            padding: 15px;
-            border: 1px solid #ddd;
             border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background-color: #f8f9fa;
         }
 
-        .game-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-color: #007bff;
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .game-item.selected {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
         }
 
-        .team-info {
+        th {
+            background-color: #f0f0f0;
+            font-weight: 600;
+            color: #333;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
+        /* 경기별 배경색 */
+        tr:nth-child(1) td { background-color: #FFE5E5; }  /* 1경기: 연한 빨간색 */
+        tr:nth-child(2) td { background-color: #E5FFE5; }  /* 2경기: 연한 초록색 */
+        tr:nth-child(3) td { background-color: #E5E5FF; }  /* 3경기: 연한 파란색 */
+        tr:nth-child(4) td { background-color: #FFE5FF; }  /* 4경기: 연한 보라색 */
+        tr:nth-child(5) td { background-color: #E5FFE5; }  /* 5경기: 연한 초록색 */
+
+        .game-number {
+            font-weight: 600;
+            width: 100px;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .game-info {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
-            margin-bottom: 5px;
         }
 
         .team-name {
             font-weight: 500;
+            color: #333;
         }
 
         .vs {
             color: #666;
-            font-weight: bold;
+            font-size: 13px;
         }
 
-        .game-number {
-            font-size: 14px;
+        .stadium-name {
             color: #666;
-            margin-top: 5px;
+            font-size: 13px;
         }
 
-        .selected .vs,
-        .selected .game-number {
+        .game-time {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .game-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-normal {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-delayed {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-cancelled {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        /* 컬럼 너비 조정 */
+        th:nth-child(1), td:nth-child(1) { width: 100px; }  /* 경기번호 */
+        th:nth-child(2), td:nth-child(2) { width: 400px; } /* 매치업 */
+        th:nth-child(3), td:nth-child(3) { width: 200px; } /* 시작시간 */
+        th:nth-child(4), td:nth-child(4) { width: 200px; } /* 종료시간 */
+        th:nth-child(5), td:nth-child(5) { width: 200px; } /* 경기상황 */
+
+        /* 호버 효과 */
+        tr:hover td {
+            filter: brightness(0.95);
+        }
+
+        /* 첫 번째 행 스타일 */
+        tr:first-child td {
+            border-top: none;
+        }
+
+        /* 마지막 행 스타일 */
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .date-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .date-nav-btn {
+            padding: 8px 16px;
+            background-color: #007bff;
             color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .date-nav-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .date-nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 헤더 -->
         <div class="header">
             <div class="header-left">
-                <a href="/index.html" class="home-icon">
-                    <i class="fas fa-home"></i>
+                <a href="/today-game.html" class="home-icon">
+                    <i class="fas fa-arrow-left"></i>
                 </a>
+                <h1 class="page-title">KBO 야구경기 일정</h1>
             </div>
-            <h1 class="page-title">빠던나인 게임진행</h1>
             <div class="date-display" id="dateDisplay"></div>
         </div>
 
-        <!-- 경기 선택 -->
-        <div class="game-selection">
-            <h2>경기 선택</h2>
-            <div class="game-list" id="gameList">
-                <!-- 게임 목록이 여기에 동적으로 추가됩니다 -->
-            </div>
+        <div class="date-navigation">
+            <button class="date-nav-btn" onclick="changeDate(-1)">이전 날짜</button>
+            <button class="date-nav-btn" onclick="changeDate(1)">다음 날짜</button>
         </div>
+
+        <table class="game-table">
+            <thead>
+                <tr>
+                    <th>경기</th>
+                    <th>매치업</th>
+                    <th>시작시간</th>
+                    <th>종료시간</th>
+                    <th>경기상황</th>
+                </tr>
+            </thead>
+            <tbody id="gameTableBody">
+            </tbody>
+        </table>
     </div>
 
     <script>
-        // 현재 날짜 표시
+        let currentDate = new Date();
+
+        // 날짜 변경 함수
+        function changeDate(days) {
+            currentDate.setDate(currentDate.getDate() + days);
+            updateDate();
+            fetchGames();
+        }
+
+        // 날짜 표시 업데이트
         function updateDate() {
-            const today = new Date();
-            const dateStr = today.getFullYear() + '년 ' +
-                           (today.getMonth() + 1) + '월 ' +
-                           today.getDate() + '일';
+            const dateStr = currentDate.getFullYear() + '년 ' +
+                           (currentDate.getMonth() + 1) + '월 ' +
+                           currentDate.getDate() + '일';
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
-        // 오늘의 경기 목록 가져오기
-        async function fetchTodayGames() {
-            const gameList = document.getElementById('gameList');
-            gameList.innerHTML = '<div class="loading">경기 데이터를 불러오는 중...</div>';
-            
+        // 게임 데이터 표시
+        function displayGames(games) {
+            const tbody = document.getElementById('gameTableBody');
+            tbody.innerHTML = '';
+
+            for (let i = 1; i <= 5; i++) {
+                const game = games.find(g => g.number === i) || {
+                    number: i,
+                    homeTeam: null,
+                    awayTeam: null,
+                    stadium: null,
+                    startTime: null,
+                    endTime: null,
+                    noGame: '정상게임'
+                };
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="game-number game-number-${i}">${i} 경기</td>
+                    <td>
+                        <div class="game-info">
+                            <span class="team-name">${game.homeTeam || '-'}</span>
+                            <span class="vs">vs</span>
+                            <span class="team-name">${game.awayTeam || '-'}</span>
+                            <span class="stadium-name">(${game.stadium || '-'})</span>
+                        </div>
+                    </td>
+                    <td class="game-time">${game.startTime || '-'}</td>
+                    <td class="game-time">${game.endTime || '-'}</td>
+                    <td>
+                        <span class="game-status ${getStatusClass(game.noGame)}">${game.noGame}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        // 경기상황에 따른 스타일 클래스 반환
+        function getStatusClass(status) {
+            switch(status) {
+                case '정상게임':
+                    return 'status-normal';
+                case '미세먼지/초미세먼지/황사':
+                case '안개':
+                case '천재지변':
+                case '우천':
+                case '폭염':
+                case '번개/천둥':
+                case '태풍/강풍':
+                case '그라운드 상태':
+                    return 'status-delayed';
+                default:
+                    return 'status-cancelled';
+            }
+        }
+
+        // 게임 데이터 불러오기
+        async function fetchGames() {
             try {
-                console.log('API 호출 시작: /api/game-progress/today-games');
-                const response = await fetch('/api/game-progress/today-games');
-                console.log('API 응답 받음:', response.status);
+                const date = currentDate.getFullYear().toString() +
+                            (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                            currentDate.getDate().toString().padStart(2, '0');
+
+                const response = await fetch(`/api/today-game?date=${date}`);
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
-                console.log('서버 응답 데이터:', result);
-                
                 if (result.success) {
-                    if (!result.games || result.games.length === 0) {
-                        console.log('경기 데이터 없음');
-                        gameList.innerHTML = '<div class="no-games">오늘의 경기 정보가 없습니다.</div>';
-                        return;
-                    }
-                    
-                    // 유효한 경기 데이터만 필터링
-                    const validGames = result.games.filter(game => 
-                        game.homeTeam && game.awayTeam && 
-                        game.homeTeam.trim() !== '' && game.awayTeam.trim() !== ''
-                    );
-                    
-                    console.log('유효한 경기 데이터:', validGames);
-                    
-                    if (validGames.length === 0) {
-                        console.log('유효한 경기 데이터 없음');
-                        gameList.innerHTML = '<div class="no-games">유효한 경기 정보가 없습니다.</div>';
-                        return;
-                    }
-                    
-                    gameList.innerHTML = '';
-                    validGames.forEach((game, index) => {
-                        const gameItem = document.createElement('div');
-                        gameItem.className = 'game-item';
-                        gameItem.innerHTML = `
-                            <div class="team-info">
-                                <span class="team-name">${game.homeTeam}</span>
-                                <span class="vs">VS</span>
-                                <span class="team-name">${game.awayTeam}</span>
-                            </div>
-                            <div class="game-number">${index + 1} 경기</div>
-                        `;
-                        
-                        gameItem.addEventListener('click', () => {
-                            document.querySelectorAll('.game-item').forEach(item => {
-                                item.classList.remove('selected');
-                            });
-                            gameItem.classList.add('selected');
-                        });
-                        
-                        gameList.appendChild(gameItem);
-                    });
-                    console.log('경기 목록 표시 완료');
+                    displayGames(result.games || []);
                 } else {
-                    throw new Error(result.message || '경기 목록을 불러오는데 실패했습니다.');
+                    throw new Error(result.message || '데이터를 불러오는 중 오류가 발생했습니다.');
                 }
             } catch (error) {
-                console.error('API 호출 에러:', error);
-                gameList.innerHTML = `
-                    <div class="error-message">
-                        경기 목록을 불러오는데 실패했습니다.<br>
-                        ${error.message}
-                    </div>`;
+                console.error('Error:', error);
+                // 오류 발생 시 빈 테이블 표시
+                displayGames([]);
             }
         }
 
         // 페이지 로드 시 실행
         window.onload = function() {
-            console.log('페이지 로드됨');
             updateDate();
-            fetchTodayGames();
+            fetchGames();
         };
     </script>
 </body>
