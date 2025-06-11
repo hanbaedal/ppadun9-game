@@ -511,7 +511,7 @@
             // 배팅시작 버튼 이벤트 리스너
             document.getElementById('startBettingBtn').addEventListener('click', function() {
                 if (selectedGame) {
-                    startBettingTimer();
+                    updateBettingTime(); // 한 번만 시간 표시
                     this.disabled = true;
                     console.log('배팅 시작:', selectedGame);
                 }
