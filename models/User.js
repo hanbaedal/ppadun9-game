@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    username: {
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    userId: {
         type: String,
         required: true,
         unique: true,
@@ -14,6 +19,17 @@ const userSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
+    phone: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    team: {
+        type: String,
+        required: true,
+        enum: ['KIA', 'LG', 'NC', 'SSG', 'KT', '두산', '롯데', '삼성', '한화']
+    },
     password: {
         type: String,
         required: true
@@ -22,6 +38,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['user', 'admin'],
         default: 'user'
+    },
+    points: {
+        type: Number,
+        default: 3000
     },
     createdAt: {
         type: Date,

@@ -7,35 +7,38 @@ const auth = require('../middleware/auth');
 const axios = require('axios');
 const mongoose = require('mongoose');
 
+// 인증번호 저장을 위한 임시 저장소
+const verificationCodes = new Map();
+
 // 회원가입
-router.post('/register', [
-    check('name', '이름을 입력해주세요').exists(),
-    check('userId', '아이디를 입력해주세요').exists(),
-    check('password', '비밀번호를 입력해주세요').exists(),
-    check('phone', '전화번호를 입력해주세요').exists(),
-    check('team', '팀을 선택해주세요').exists()
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        console.log('유효성 검사 실패:', errors.array());
-        return res.status(400).json({ errors: errors.array() });
-    }
-
+router.post('/register', async (req, res) => {
     try {
-        const { name, userId, password, phone, team, points, joinDate } = req.body;
-        console.log('회원가입 시도:', { name, userId, phone, team });
+        const { name, userId, email, phone, team, password, verificationCode } = req.body;
+        console.log('회원가입 시도:', { name, userId, email, phone, team });
 
-        // 중복 체크
-        const existingUser = await User.findOne({ 
-            $or: [{ userId }, { phone }] 
-        });
-        
-        if (existingUser) {
-            console.log('중복 사용자 발견:', existingUser);
-            const field = existingUser.userId === userId ? '아이디' : '전화번호';
-            return res.status(400).json({ 
-                success: false, 
-                msg: `이미 사용 중인 ${field}입니다.` 
+        // 필수 필드 검증
+        if (!name || !userId || !email || !phone || !team || !password) {
+            return res.status(400).json({
+                success: false,
+                message: '모든 필수 필드를 입력해주세요.'
+            });
+        }
+
+        // 이메일 형식 검증
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: '유효하지 않은 이메일 형식입니다.'
+            });
+        }
+
+        // 인증번호 검증
+        const storedVerification = verificationCodes.get(phone);
+        if (!storedVerification || storedVerification.code !== verificationCode) {
+            return res.status(400).json({
+                success: false,
+                message: '유효하지 않은 인증번호입니다.'
             });
         }
 
@@ -43,36 +46,37 @@ router.post('/register', [
         const user = new User({
             name,
             userId,
-            password,  // 비밀번호를 그대로 저장
+            email,
             phone,
             team,
-            points: points || 3000,
-            joinDate: joinDate || new Date()
+            password // 실제로는 해시화해야 함
         });
 
         console.log('생성된 사용자 객체:', user);
 
-        // 사용자 저장
         await user.save();
-        console.log('회원가입 성공:', userId);
+        console.log('회원가입 성공:', user._id);
 
-        res.json({ 
-            success: true, 
-            msg: '회원가입이 완료되었습니다.' 
+        // 인증번호 삭제
+        verificationCodes.delete(phone);
+
+        res.status(201).json({
+            success: true,
+            message: '회원가입이 완료되었습니다.',
+            user: {
+                id: user._id,
+                name: user.name,
+                userId: user.userId,
+                email: user.email,
+                team: user.team
+            }
         });
-    } catch (err) {
-        console.error('회원가입 오류:', err);
-        if (err.code === 11000) {
-            const field = Object.keys(err.keyPattern)[0];
-            const msg = field === 'userId' ? '이미 사용 중인 아이디입니다.' : '이미 등록된 전화번호입니다.';
-            return res.status(400).json({ 
-                success: false, 
-                msg: msg 
-            });
-        }
-        res.status(500).json({ 
-            success: false, 
-            msg: '서버 오류가 발생했습니다.' 
+    } catch (error) {
+        console.error('회원가입 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '회원가입 중 오류가 발생했습니다.',
+            error: error.message
         });
     }
 });
@@ -233,34 +237,29 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // 인증번호 발송
-router.post('/send-verification', async (req, res) => {
-    try {
-        const { phone } = req.body;
-        console.log('인증번호 발송 요청:', phone);
-
-        if (!phone) {
-            return res.status(400).json({ 
-                success: false, 
-                msg: '전화번호를 입력해주세요.' 
-            });
-        }
-
-        // 6자리 랜덤 인증번호 생성
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log('생성된 인증번호:', code);
-
-        res.json({ 
-            success: true, 
-            msg: '인증번호가 발송되었습니다.',
-            code: code  // 실제 서비스에서는 이 부분 제거
-        });
-    } catch (err) {
-        console.error('인증번호 발송 오류:', err);
-        res.status(500).json({ 
-            success: false, 
-            msg: '서버 오류가 발생했습니다.' 
-        });
+router.post('/send-verification', (req, res) => {
+    const { phone } = req.body;
+    if (!phone) {
+        return res.status(400).json({ success: false, message: '전화번호가 필요합니다.' });
     }
+
+    // 6자리 랜덤 인증번호 생성
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log('인증번호 발송 요청:', phone);
+    console.log('생성된 인증번호:', verificationCode);
+
+    // 인증번호 저장 (실제로는 SMS 발송 로직이 들어가야 함)
+    verificationCodes.set(phone, {
+        code: verificationCode,
+        timestamp: Date.now()
+    });
+
+    res.json({ 
+        success: true, 
+        message: '인증번호가 발송되었습니다.',
+        // 개발 환경에서만 인증번호 반환
+        code: process.env.NODE_ENV === 'development' ? verificationCode : undefined
+    });
 });
 
 // 사용자 정보 수정
