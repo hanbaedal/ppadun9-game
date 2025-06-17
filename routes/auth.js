@@ -24,42 +24,58 @@ const transporter = nodemailer.createTransport({
 // 회원가입
 router.post('/register', async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, userId, password, email, phone, team } = req.body;
 
-        // 필수 필드 확인
-        if (!username || !email || !password) {
+        // 필수 필드 검증
+        if (!username || !userId || !password || !email || !phone || !team) {
             return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
         }
 
         // 아이디 중복 확인
-        const existingUser = await User.findOne({ username });
+        const existingUser = await User.findOne({ userId });
         if (existingUser) {
             return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
-        }
-
-        // 이메일 중복 확인
-        const existingEmail = await User.findOne({ email });
-        if (existingEmail) {
-            return res.status(400).json({ message: '이미 사용 중인 이메일입니다.' });
         }
 
         // 비밀번호 해시화
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        // 현재 날짜를 YY:MM:DD 형식으로 변환
+        const today = new Date();
+        const year = today.getFullYear().toString().slice(-2); // 마지막 2자리
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // 01-12
+        const day = String(today.getDate()).padStart(2, '0'); // 01-31
+        const joinDate = `${year}:${month}:${day}`;
+
         // 새 사용자 생성
-        const user = new User({
+        const newUser = new User({
             username,
+            userId,
+            password: hashedPassword,
             email,
-            password: hashedPassword
+            phone,
+            team,
+            points: 3000, // 가입 축하 포인트
+            joinDate: joinDate // 가입일자 (YY:MM:DD 형식)
         });
 
-        await user.save();
+        await newUser.save();
 
-        res.json({ message: '회원가입이 완료되었습니다.' });
+        // JWT 토큰 생성
+        const token = jwt.sign(
+            { userId: newUser._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({
+            message: '회원가입이 완료되었습니다.',
+            token
+        });
     } catch (error) {
         console.error('회원가입 오류:', error);
-        res.status(500).json({ message: '회원가입에 실패했습니다.' });
+        res.status(500).json({ message: '서버 오류가 발생했습니다.' });
     }
 });
 

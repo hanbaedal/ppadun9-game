@@ -1,56 +1,41 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    name: {
+    username: {
         type: String,
-        required: true,
-        trim: true
+        required: true
     },
     userId: {
         type: String,
         required: true,
-        unique: true,
-        trim: true
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true
-    },
-    phone: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true
-    },
-    team: {
-        type: String,
-        required: true,
-        enum: ['KIA', 'LG', 'NC', 'SSG', 'KT', '두산', '롯데', '삼성', '한화']
+        unique: true
     },
     password: {
         type: String,
         required: true
     },
-    role: {
+    email: {
         type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
+    },
+    team: {
+        type: String,
+        required: true
     },
     points: {
         type: Number,
         default: 3000
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
+    joinDate: {
+        type: String,
+        required: true
     }
+}, {
+    timestamps: true
 });
 
 // 비밀번호 검증 메서드

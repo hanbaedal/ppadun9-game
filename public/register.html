@@ -3,102 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>회원가입 - 회원관리 시스템</title>
+    <title>회원가입 - 빠던나인</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/mobile.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/mobile.css">
     <style>
-        .form-container {
+        .register-container {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        
+        .menu-section {
+            width: 250px;
+            background-color: #343a40;
+            padding: 20px;
+            color: white;
+        }
+        
+        .form-section {
+            flex: 1;
+            padding: 40px;
             max-width: 600px;
             margin: 0 auto;
         }
-        .password-toggle {
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            height: 45px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 15px;
+        }
+        
+        .form-control:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+        
+        .btn-primary {
+            height: 45px;
+            font-size: 16px;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            background-color: #357abd;
+        }
+        
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .menu-item {
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
-        .verification-code {
-            display: none;
+        
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
-        .team-buttons {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 10px;
+        
+        .menu-item.active {
+            background-color: #4a90e2;
         }
-        .team-button {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            text-align: center;
-            cursor: pointer;
-        }
-        .team-button.selected {
-            background-color: #007bff;
-            color: white;
+        
+        @media (max-width: 768px) {
+            .register-container {
+                flex-direction: column;
+            }
+            
+            .menu-section {
+                width: 100%;
+                padding: 15px;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
         }
     </style>
 </head>
-<body class="mobile-optimized">
-    <div class="mobile-container">
-        <div class="mobile-header">
-            <a href="/" class="back-button">←</a>
-            <h1>회원가입</h1>
+<body>
+    <div class="register-container">
+        <div class="menu-section">
+            <h4 class="mb-4">빠던나인</h4>
+            <ul class="menu-list">
+                <li class="menu-item active">회원가입</li>
+                <li class="menu-item">로그인</li>
+                <li class="menu-item">홈으로</li>
+            </ul>
         </div>
-
-        <div class="mobile-content">
-            <form id="registerForm" class="mobile-form">
+        
+        <div class="form-section">
+            <h2 class="mb-4">회원가입</h2>
+            <form id="registerForm">
                 <div class="form-group">
-                    <label for="username">아이디</label>
+                    <label for="username">이름</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userId">아이디</label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="username" required minlength="4" maxlength="20">
+                        <input type="text" class="form-control" id="userId" name="userId" required>
                         <div class="input-group-append">
-                            <button type="button" class="btn btn-outline-primary" id="checkUsernameBtn">
-                                중복확인
-                            </button>
+                            <button class="btn btn-outline-secondary" type="button" id="checkIdBtn">중복확인</button>
                         </div>
                     </div>
-                    <small class="form-text text-muted">4~20자의 영문, 숫자만 사용 가능합니다.</small>
-                    <div id="usernameMessage" class="form-text"></div>
                 </div>
-
+                
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">비밀번호 확인</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                
                 <div class="form-group">
                     <label for="email">이메일</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">전화번호</label>
                     <div class="input-group">
-                        <input type="email" class="form-control" id="email" required>
+                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="010-0000-0000" required>
                         <div class="input-group-append">
-                            <button type="button" class="btn btn-outline-primary" id="sendVerificationBtn">
-                                인증
-                            </button>
+                            <button class="btn btn-outline-secondary" type="button" id="sendVerificationBtn">인증번호 발송</button>
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="form-group verification-group" style="display: none;">
                     <label for="verificationCode">인증번호</label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="verificationCode" required>
+                        <input type="text" class="form-control" id="verificationCode" name="verificationCode">
                         <div class="input-group-append">
-                            <button type="button" class="btn btn-outline-primary" id="verifyCodeBtn">
-                                확인
-                            </button>
+                            <button class="btn btn-outline-secondary" type="button" id="verifyCodeBtn">확인</button>
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="form-group">
-                    <label for="password">비밀번호</label>
-                    <input type="password" class="form-control" id="password" required minlength="8">
-                    <small class="form-text text-muted">8자 이상의 영문, 숫자, 특수문자를 포함해야 합니다.</small>
+                    <label for="team">팀 선택</label>
+                    <select class="form-control" id="team" name="team" required>
+                        <option value="">팀을 선택하세요</option>
+                        <option value="KIA">KIA 타이거즈</option>
+                        <option value="LG">LG 트윈스</option>
+                        <option value="NC">NC 다이노스</option>
+                        <option value="SSG">SSG 랜더스</option>
+                        <option value="KT">KT 위즈</option>
+                        <option value="LOTTE">롯데 자이언츠</option>
+                        <option value="SAMSUNG">삼성 라이온즈</option>
+                        <option value="HANWHA">한화 이글스</option>
+                        <option value="DOOSAN">두산 베어스</option>
+                        <option value="KIWOOM">키움 히어로즈</option>
+                    </select>
                 </div>
-
-                <div class="form-group">
-                    <label for="confirmPassword">비밀번호 확인</label>
-                    <input type="password" class="form-control" id="confirmPassword" required>
-                    <div id="passwordMessage" class="form-text"></div>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block" id="submitBtn" disabled>가입하기</button>
+                
+                <button type="submit" class="btn btn-primary">가입하기</button>
             </form>
         </div>
     </div>
@@ -107,135 +186,112 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
-            let isUsernameAvailable = false;
-            let isEmailVerified = false;
-
-            // 아이디 중복확인
-            $('#checkUsernameBtn').click(function() {
-                const username = $('#username').val();
-                if (!username) {
+            // 아이디 중복 확인
+            $('#checkIdBtn').click(function() {
+                const userId = $('#userId').val();
+                if (!userId) {
                     alert('아이디를 입력해주세요.');
                     return;
                 }
-
-                // 아이디 형식 검사
-                if (!/^[a-zA-Z0-9]{4,20}$/.test(username)) {
-                    $('#usernameMessage').removeClass('text-success').addClass('text-danger')
-                        .text('4~20자의 영문, 숫자만 사용 가능합니다.');
-                    isUsernameAvailable = false;
-                    updateSubmitButton();
-                    return;
-                }
-
-                $.post('/api/auth/check-username', { username })
-                    .done(function(response) {
+                
+                $.ajax({
+                    url: '/api/auth/check-username',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username: userId }),
+                    success: function(response) {
                         if (response.available) {
-                            $('#usernameMessage').removeClass('text-danger').addClass('text-success')
-                                .text('사용 가능한 아이디입니다.');
-                            isUsernameAvailable = true;
+                            alert('사용 가능한 아이디입니다.');
                         } else {
-                            $('#usernameMessage').removeClass('text-success').addClass('text-danger')
-                                .text('이미 사용 중인 아이디입니다.');
-                            isUsernameAvailable = false;
+                            alert('이미 사용 중인 아이디입니다.');
                         }
-                        updateSubmitButton();
-                    })
-                    .fail(function(error) {
-                        $('#usernameMessage').removeClass('text-success').addClass('text-danger')
-                            .text('아이디 확인 중 오류가 발생했습니다.');
-                        isUsernameAvailable = false;
-                        updateSubmitButton();
-                    });
+                    },
+                    error: function() {
+                        alert('서버 오류가 발생했습니다.');
+                    }
+                });
             });
-
-            // 비밀번호 확인
-            $('#confirmPassword').on('input', function() {
-                const password = $('#password').val();
-                const confirmPassword = $(this).val();
-
-                if (password === confirmPassword) {
-                    $('#passwordMessage').removeClass('text-danger').addClass('text-success')
-                        .text('비밀번호가 일치합니다.');
-                } else {
-                    $('#passwordMessage').removeClass('text-success').addClass('text-danger')
-                        .text('비밀번호가 일치하지 않습니다.');
-                }
-            });
-
-            // 인증번호 발송
+            
+            // 전화번호 인증번호 발송
             $('#sendVerificationBtn').click(function() {
-                const email = $('#email').val();
-                if (!email) {
-                    alert('이메일을 입력해주세요.');
+                const phone = $('#phone').val();
+                if (!phone) {
+                    alert('전화번호를 입력해주세요.');
                     return;
                 }
-
-                $.post('/api/auth/send-verification', { email })
-                    .done(function(response) {
-                        alert('인증번호가 이메일로 발송되었습니다.');
+                
+                // 전화번호 형식 검사
+                if (!/^010-\d{4}-\d{4}$/.test(phone)) {
+                    alert('올바른 전화번호 형식이 아닙니다. (예: 010-0000-0000)');
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/api/auth/send-verification',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ phone: phone }),
+                    success: function(response) {
+                        alert('인증번호가 전화번호로 발송되었습니다.');
                         $('.verification-group').show();
-                    })
-                    .fail(function(error) {
+                    },
+                    error: function() {
                         alert('인증번호 발송에 실패했습니다.');
-                    });
+                    }
+                });
             });
-
+            
             // 인증번호 확인
             $('#verifyCodeBtn').click(function() {
-                const email = $('#email').val();
+                const phone = $('#phone').val();
                 const code = $('#verificationCode').val();
-
-                $.post('/api/auth/verify-code', { email, code })
-                    .done(function(response) {
-                        alert('인증번호가 확인되었습니다.');
-                        $('#verificationCode').prop('disabled', true);
-                        $('#verifyCodeBtn').prop('disabled', true);
-                        isEmailVerified = true;
-                        updateSubmitButton();
-                    })
-                    .fail(function(error) {
-                        alert('인증번호가 일치하지 않습니다.');
-                        isEmailVerified = false;
-                        updateSubmitButton();
-                    });
+                
+                $.ajax({
+                    url: '/api/auth/verify-code',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ phone: phone, code: code }),
+                    success: function(response) {
+                        if (response.verified) {
+                            alert('전화번호 인증이 완료되었습니다.');
+                            $('#verificationCode').prop('disabled', true);
+                            $('#verifyCodeBtn').prop('disabled', true);
+                        } else {
+                            alert('인증번호가 일치하지 않습니다.');
+                        }
+                    },
+                    error: function() {
+                        alert('인증번호 확인에 실패했습니다.');
+                    }
+                });
             });
-
-            // 가입하기 버튼 상태 업데이트
-            function updateSubmitButton() {
-                const isPasswordValid = $('#password').val().length >= 8;
-                const isPasswordMatch = $('#password').val() === $('#confirmPassword').val();
-                $('#submitBtn').prop('disabled', !(isUsernameAvailable && isEmailVerified && isPasswordValid && isPasswordMatch));
-            }
-
-            // 회원가입 폼 제출
+            
+            // 폼 제출
             $('#registerForm').submit(function(e) {
                 e.preventDefault();
                 
-                if (!isUsernameAvailable) {
-                    alert('아이디 중복확인을 해주세요.');
-                    return;
-                }
-
-                if (!isEmailVerified) {
-                    alert('이메일 인증을 완료해주세요.');
-                    return;
-                }
-
-                const userData = {
+                const formData = {
                     username: $('#username').val(),
-                    email: $('#email').val(),
+                    userId: $('#userId').val(),
                     password: $('#password').val(),
-                    confirmPassword: $('#confirmPassword').val()
+                    email: $('#email').val(),
+                    phone: $('#phone').val(),
+                    team: $('#team').val()
                 };
-
-                $.post('/api/auth/register', userData)
-                    .done(function(response) {
+                
+                $.ajax({
+                    url: '/api/auth/register',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
                         alert('회원가입이 완료되었습니다.');
                         window.location.href = '/login.html';
-                    })
-                    .fail(function(error) {
+                    },
+                    error: function() {
                         alert('회원가입에 실패했습니다.');
-                    });
+                    }
+                });
             });
         });
     </script>
