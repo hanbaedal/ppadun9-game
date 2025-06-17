@@ -1,42 +1,41 @@
 const mongoose = require('mongoose');
 
-const UserSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    userId: {
+const userSchema = new mongoose.Schema({
+    username: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        trim: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        lowercase: true
     },
     password: {
         type: String,
         required: true
     },
-    phone: {
+    role: {
         type: String,
-        required: true,
-        unique: true
+        enum: ['user', 'admin'],
+        default: 'user'
     },
-    team: {
-        type: String,
-        required: true,
-        enum: ['KIA', 'LG', 'NC', 'SSG', 'KT', '두산', '롯데', '삼성', '한화']
+    createdAt: {
+        type: Date,
+        default: Date.now
     },
-    points: {
-        type: Number,
-        default: 3000
-    },
-    joinDate: {
+    updatedAt: {
         type: Date,
         default: Date.now
     }
 });
 
 // 비밀번호 검증 메서드
-UserSchema.methods.comparePassword = function(candidatePassword) {
+userSchema.methods.comparePassword = function(candidatePassword) {
     return this.password === candidatePassword;
 };
 
-module.exports = mongoose.model('User', UserSchema); 
+module.exports = mongoose.model('User', userSchema); 
