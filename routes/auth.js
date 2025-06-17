@@ -6,6 +6,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const axios = require('axios');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 // 인증번호 저장을 위한 임시 저장소
 const verificationCodes = new Map();
@@ -440,6 +441,26 @@ router.delete('/member/:userId', async (req, res) => {
             success: false,
             msg: '서버 오류가 발생했습니다.'
         });
+    }
+});
+
+// 아이디 중복확인
+router.post('/check-username', async (req, res) => {
+    try {
+        const { username } = req.body;
+        
+        // 아이디 형식 검사
+        if (!/^[a-zA-Z0-9]{4,20}$/.test(username)) {
+            return res.json({ available: false, message: '4~20자의 영문, 숫자만 사용 가능합니다.' });
+        }
+
+        // 데이터베이스에서 아이디 검색
+        const existingUser = await User.findOne({ username });
+        
+        res.json({ available: !existingUser });
+    } catch (error) {
+        console.error('아이디 중복확인 오류:', error);
+        res.status(500).json({ message: '서버 오류가 발생했습니다.' });
     }
 });
 

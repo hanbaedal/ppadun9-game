@@ -2,10 +2,12 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>회원가입 - 회원관리 시스템</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/mobile.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <style>
         .form-container {
@@ -37,229 +39,205 @@
         }
     </style>
 </head>
-<body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="text-center">회원가입</h3>
+<body class="mobile-optimized">
+    <div class="mobile-container">
+        <div class="mobile-header">
+            <a href="/" class="back-button">←</a>
+            <h1>회원가입</h1>
+        </div>
+
+        <div class="mobile-content">
+            <form id="registerForm" class="mobile-form">
+                <div class="form-group">
+                    <label for="username">아이디</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="username" required minlength="4" maxlength="20">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-primary" id="checkUsernameBtn">
+                                중복확인
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="form-container">
-                        <form id="registerForm">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">이름</label>
-                                    <input type="text" class="form-control" id="name" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="userId" class="form-label">아이디</label>
-                                    <input type="text" class="form-control" id="userId" required 
-                                           minlength="8" maxlength="16">
-                                    <div class="form-text">아이디는 8자 이상 16자 이하로 입력해주세요.</div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">비밀번호</label>
-                                    <div class="input-group">
-                                <input type="password" class="form-control" id="password" required>
-                                        <span class="input-group-text password-toggle" onclick="togglePassword('password')">
-                                            <i class="bi bi-eye"></i>
-                                        </span>
-                                    </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="passwordConfirm" class="form-label">비밀번호 확인</label>
-                                    <div class="input-group">
-                                <input type="password" class="form-control" id="passwordConfirm" required>
-                                        <span class="input-group-text password-toggle" onclick="togglePassword('passwordConfirm')">
-                                            <i class="bi bi-eye"></i>
-                                        </span>
-                                    </div>
-                                    <div class="form-text" id="passwordMatchMessage"></div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="phone" class="form-label">전화번호</label>
-                                    <div class="input-group mb-2">
-                                <input type="tel" class="form-control" id="phone" required>
-                                        <button type="button" class="btn btn-outline-primary" onclick="sendVerificationCode()">인증번호 발송</button>
-                                    </div>
-                                    <div class="verification-code" id="verificationCodeDiv">
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="verificationCode" placeholder="인증번호 6자리">
-                                            <button type="button" class="btn btn-outline-success" onclick="verifyCode()">인증확인</button>
-                                        </div>
-                                        <div class="form-text" id="verificationMessage"></div>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="team" class="form-label">팀 선택</label>
-                                    <select class="form-select" id="team" required>
-                                        <option value="">팀을 선택해주세요</option>
-                                        <option value="KIA">KIA</option>
-                                        <option value="LG">LG</option>
-                                        <option value="NC">NC</option>
-                                        <option value="SSG">SSG</option>
-                                        <option value="KT">KT</option>
-                                        <option value="두산">두산</option>
-                                        <option value="롯데">롯데</option>
-                                        <option value="삼성">삼성</option>
-                                        <option value="한화">한화</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="points" class="form-label">가입 축하 포인트</label>
-                                    <input type="number" class="form-control" id="points" value="3000" readonly>
-                            </div>
-                            <div class="mb-3">
-                                    <label for="joinDate" class="form-label">가입일자</label>
-                                    <input type="date" class="form-control" id="joinDate" required>
-                            </div>
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary">회원가입</button>
-                            </div>
-                        </form>
-                        <div class="mt-3 text-center">
-                            <a href="/login.html">로그인으로 돌아가기</a>
-                            </div>
+                    <small class="form-text text-muted">4~20자의 영문, 숫자만 사용 가능합니다.</small>
+                    <div id="usernameMessage" class="form-text"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <div class="input-group">
+                        <input type="email" class="form-control" id="email" required>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-primary" id="sendVerificationBtn">
+                                인증
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="form-group verification-group" style="display: none;">
+                    <label for="verificationCode">인증번호</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="verificationCode" required>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-primary" id="verifyCodeBtn">
+                                확인
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" class="form-control" id="password" required minlength="8">
+                    <small class="form-text text-muted">8자 이상의 영문, 숫자, 특수문자를 포함해야 합니다.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">비밀번호 확인</label>
+                    <input type="password" class="form-control" id="confirmPassword" required>
+                    <div id="passwordMessage" class="form-text"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="submitBtn" disabled>가입하기</button>
+            </form>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let isPhoneVerified = false;
-        let verificationCode = '';
+        $(document).ready(function() {
+            let isUsernameAvailable = false;
+            let isEmailVerified = false;
 
-        // 비밀번호 표시/숨김 토글
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const icon = input.nextElementSibling.querySelector('i');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.className = 'bi bi-eye-slash';
-            } else {
-                input.type = 'password';
-                icon.className = 'bi bi-eye';
-            }
-        }
-
-        // 비밀번호 확인
-        document.getElementById('passwordConfirm').addEventListener('input', function() {
-            const password = document.getElementById('password').value;
-            const confirm = this.value;
-            const messageDiv = document.getElementById('passwordMatchMessage');
-            
-            if (password === confirm) {
-                messageDiv.className = 'form-text text-success';
-                messageDiv.textContent = '비밀번호가 일치합니다.';
-            } else {
-                messageDiv.className = 'form-text text-danger';
-                messageDiv.textContent = '비밀번호가 일치하지 않습니다.';
-            }
-        });
-
-        // 인증번호 발송
-        async function sendVerificationCode() {
-            const phone = document.getElementById('phone').value;
-            if (!phone) {
-                alert('전화번호를 입력해주세요.');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/auth/send-verification', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ phone })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    verificationCode = result.code;
-                    document.getElementById('verificationCodeDiv').style.display = 'block';
-                    document.getElementById('verificationCode').value = verificationCode;
-                    verifyCode();
-                    alert('인증번호가 발송되었습니다.');
-                } else {
-                    alert(result.msg);
+            // 아이디 중복확인
+            $('#checkUsernameBtn').click(function() {
+                const username = $('#username').val();
+                if (!username) {
+                    alert('아이디를 입력해주세요.');
+                    return;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('인증번호 발송에 실패했습니다.');
-            }
-        }
 
-        // 인증번호 확인
-        function verifyCode() {
-            const inputCode = document.getElementById('verificationCode').value;
-            const messageDiv = document.getElementById('verificationMessage');
-
-            if (inputCode === verificationCode) {
-                messageDiv.className = 'form-text text-success';
-                messageDiv.textContent = '인증이 완료되었습니다.';
-                isPhoneVerified = true;
-            } else {
-                messageDiv.className = 'form-text text-danger';
-                messageDiv.textContent = '인증번호가 일치하지 않습니다.';
-                isPhoneVerified = false;
-            }
-        }
-
-        // 폼 제출
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            if (!isPhoneVerified) {
-                alert('전화번호 인증을 완료해주세요.');
-                return;
-            }
-
-            const team = document.getElementById('team').value;
-            if (!team) {
-                alert('팀을 선택해주세요.');
-                return;
-            }
-
-            const formData = {
-                name: document.getElementById('name').value,
-                userId: document.getElementById('userId').value,
-                password: document.getElementById('password').value,
-                phone: document.getElementById('phone').value,
-                team: team,
-                points: 3000,
-                joinDate: document.getElementById('joinDate').value
-            };
-
-            try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('회원가입이 완료되었습니다.');
-                    window.location.href = 'login.html';
-                } else {
-                    alert(result.msg);
+                // 아이디 형식 검사
+                if (!/^[a-zA-Z0-9]{4,20}$/.test(username)) {
+                    $('#usernameMessage').removeClass('text-success').addClass('text-danger')
+                        .text('4~20자의 영문, 숫자만 사용 가능합니다.');
+                    isUsernameAvailable = false;
+                    updateSubmitButton();
+                    return;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('회원가입에 실패했습니다.');
-            }
-        });
 
-        // 가입일자 기본값 설정
-        document.getElementById('joinDate').valueAsDate = new Date();
+                $.post('/api/auth/check-username', { username })
+                    .done(function(response) {
+                        if (response.available) {
+                            $('#usernameMessage').removeClass('text-danger').addClass('text-success')
+                                .text('사용 가능한 아이디입니다.');
+                            isUsernameAvailable = true;
+                        } else {
+                            $('#usernameMessage').removeClass('text-success').addClass('text-danger')
+                                .text('이미 사용 중인 아이디입니다.');
+                            isUsernameAvailable = false;
+                        }
+                        updateSubmitButton();
+                    })
+                    .fail(function(error) {
+                        $('#usernameMessage').removeClass('text-success').addClass('text-danger')
+                            .text('아이디 확인 중 오류가 발생했습니다.');
+                        isUsernameAvailable = false;
+                        updateSubmitButton();
+                    });
+            });
+
+            // 비밀번호 확인
+            $('#confirmPassword').on('input', function() {
+                const password = $('#password').val();
+                const confirmPassword = $(this).val();
+
+                if (password === confirmPassword) {
+                    $('#passwordMessage').removeClass('text-danger').addClass('text-success')
+                        .text('비밀번호가 일치합니다.');
+                } else {
+                    $('#passwordMessage').removeClass('text-success').addClass('text-danger')
+                        .text('비밀번호가 일치하지 않습니다.');
+                }
+            });
+
+            // 인증번호 발송
+            $('#sendVerificationBtn').click(function() {
+                const email = $('#email').val();
+                if (!email) {
+                    alert('이메일을 입력해주세요.');
+                    return;
+                }
+
+                $.post('/api/auth/send-verification', { email })
+                    .done(function(response) {
+                        alert('인증번호가 이메일로 발송되었습니다.');
+                        $('.verification-group').show();
+                    })
+                    .fail(function(error) {
+                        alert('인증번호 발송에 실패했습니다.');
+                    });
+            });
+
+            // 인증번호 확인
+            $('#verifyCodeBtn').click(function() {
+                const email = $('#email').val();
+                const code = $('#verificationCode').val();
+
+                $.post('/api/auth/verify-code', { email, code })
+                    .done(function(response) {
+                        alert('인증번호가 확인되었습니다.');
+                        $('#verificationCode').prop('disabled', true);
+                        $('#verifyCodeBtn').prop('disabled', true);
+                        isEmailVerified = true;
+                        updateSubmitButton();
+                    })
+                    .fail(function(error) {
+                        alert('인증번호가 일치하지 않습니다.');
+                        isEmailVerified = false;
+                        updateSubmitButton();
+                    });
+            });
+
+            // 가입하기 버튼 상태 업데이트
+            function updateSubmitButton() {
+                const isPasswordValid = $('#password').val().length >= 8;
+                const isPasswordMatch = $('#password').val() === $('#confirmPassword').val();
+                $('#submitBtn').prop('disabled', !(isUsernameAvailable && isEmailVerified && isPasswordValid && isPasswordMatch));
+            }
+
+            // 회원가입 폼 제출
+            $('#registerForm').submit(function(e) {
+                e.preventDefault();
+                
+                if (!isUsernameAvailable) {
+                    alert('아이디 중복확인을 해주세요.');
+                    return;
+                }
+
+                if (!isEmailVerified) {
+                    alert('이메일 인증을 완료해주세요.');
+                    return;
+                }
+
+                const userData = {
+                    username: $('#username').val(),
+                    email: $('#email').val(),
+                    password: $('#password').val(),
+                    confirmPassword: $('#confirmPassword').val()
+                };
+
+                $.post('/api/auth/register', userData)
+                    .done(function(response) {
+                        alert('회원가입이 완료되었습니다.');
+                        window.location.href = '/login.html';
+                    })
+                    .fail(function(error) {
+                        alert('회원가입에 실패했습니다.');
+                    });
+            });
+        });
     </script>
 </body>
 </html> 
