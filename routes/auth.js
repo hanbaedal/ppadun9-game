@@ -7,144 +7,97 @@ const auth = require('../middleware/auth');
 const axios = require('axios');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 
 // 인증번호 저장을 위한 임시 저장소
 const verificationCodes = new Map();
 
+// 이메일 전송을 위한 transporter 설정
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
 // 회원가입
 router.post('/register', async (req, res) => {
     try {
-        const { name, userId, email, phone, team, password, verificationCode } = req.body;
-        console.log('회원가입 시도:', { name, userId, email, phone, team });
+        const { username, email, password } = req.body;
 
-        // 필수 필드 검증
-        if (!name || !userId || !email || !phone || !team || !password) {
-            return res.status(400).json({
-                success: false,
-                message: '모든 필수 필드를 입력해주세요.'
-            });
+        // 필수 필드 확인
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
         }
 
-        // 이메일 형식 검증
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: '유효하지 않은 이메일 형식입니다.'
-            });
+        // 아이디 중복 확인
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
         }
 
-        // 인증번호 검증
-        const storedVerification = verificationCodes.get(phone);
-        if (!storedVerification || storedVerification.code !== verificationCode) {
-            return res.status(400).json({
-                success: false,
-                message: '유효하지 않은 인증번호입니다.'
-            });
+        // 이메일 중복 확인
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            return res.status(400).json({ message: '이미 사용 중인 이메일입니다.' });
         }
 
-        // 사용자 생성
+        // 비밀번호 해시화
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // 새 사용자 생성
         const user = new User({
-            name,
-            userId,
+            username,
             email,
-            phone,
-            team,
-            password // 실제로는 해시화해야 함
+            password: hashedPassword
         });
-
-        console.log('생성된 사용자 객체:', user);
 
         await user.save();
-        console.log('회원가입 성공:', user._id);
 
-        // 인증번호 삭제
-        verificationCodes.delete(phone);
-
-        res.status(201).json({
-            success: true,
-            message: '회원가입이 완료되었습니다.',
-            user: {
-                id: user._id,
-                name: user.name,
-                userId: user.userId,
-                email: user.email,
-                team: user.team
-            }
-        });
+        res.json({ message: '회원가입이 완료되었습니다.' });
     } catch (error) {
         console.error('회원가입 오류:', error);
-        res.status(500).json({
-            success: false,
-            message: '회원가입 중 오류가 발생했습니다.',
-            error: error.message
-        });
+        res.status(500).json({ message: '회원가입에 실패했습니다.' });
     }
 });
 
 // 로그인
 router.post('/login', async (req, res) => {
     try {
-        const { userId, password } = req.body;
-        console.log('로그인 시도 - 입력값:', { 
-            userId, 
-            password,
-            passwordLength: password ? password.length : 0
-        });
+        const { username, password } = req.body;
 
         // 사용자 찾기
-        const user = await User.findOne({ userId });
-        console.log('사용자 검색 결과:', user ? {
-            userId: user.userId,
-            name: user.name,
-            password: user.password,
-            passwordLength: user.password ? user.password.length : 0
-        } : '사용자 없음');
-        
+        const user = await User.findOne({ username });
         if (!user) {
-            return res.status(400).json({ 
-                success: false, 
-                msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
-            });
+            return res.status(400).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
 
-        // 비밀번호 확인 (단순 비교)
-        console.log('비밀번호 비교:', {
-            inputPassword: password,
-            storedPassword: user.password,
-            isMatch: user.password === password
-        });
-
-        if (user.password !== password) {
-            return res.status(400).json({ 
-                success: false, 
-                msg: '아이디 또는 비밀번호가 일치하지 않습니다.' 
-            });
+        // 비밀번호 확인
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
 
-        // 로그인 성공
-        console.log('로그인 성공:', {
-            userId: user.userId,
-            name: user.name,
-            team: user.team
-        });
+        // JWT 토큰 생성
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
 
-        // 사용자 정보를 localStorage에 저장할 수 있도록 응답
-        res.json({ 
-            success: true, 
+        res.json({
+            token,
             user: {
-                name: user.name,
-                userId: user.userId,
-                team: user.team,
-                points: user.points
+                id: user._id,
+                username: user.username,
+                email: user.email
             }
         });
-    } catch (err) {
-        console.error('로그인 오류:', err);
-        res.status(500).json({ 
-            success: false, 
-            msg: '서버 오류가 발생했습니다.' 
-        });
+    } catch (error) {
+        console.error('로그인 오류:', error);
+        res.status(500).json({ message: '로그인에 실패했습니다.' });
     }
 });
 
@@ -238,29 +191,72 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // 인증번호 발송
-router.post('/send-verification', (req, res) => {
-    const { phone } = req.body;
-    if (!phone) {
-        return res.status(400).json({ success: false, message: '전화번호가 필요합니다.' });
+router.post('/send-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        // 이메일 형식 검사
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ message: '유효한 이메일 주소를 입력해주세요.' });
+        }
+
+        // 6자리 랜덤 인증번호 생성
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // 이메일로 인증번호 전송
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: '회원가입 인증번호',
+            text: `인증번호는 ${verificationCode} 입니다.`
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        // 인증번호 저장 (5분 유효)
+        verificationCodes.set(email, {
+            code: verificationCode,
+            timestamp: Date.now()
+        });
+
+        res.json({ message: '인증번호가 이메일로 발송되었습니다.' });
+    } catch (error) {
+        console.error('인증번호 발송 오류:', error);
+        res.status(500).json({ message: '인증번호 발송에 실패했습니다.' });
     }
+});
 
-    // 6자리 랜덤 인증번호 생성
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log('인증번호 발송 요청:', phone);
-    console.log('생성된 인증번호:', verificationCode);
+// 인증번호 확인
+router.post('/verify-code', async (req, res) => {
+    try {
+        const { email, code } = req.body;
 
-    // 인증번호 저장 (실제로는 SMS 발송 로직이 들어가야 함)
-    verificationCodes.set(phone, {
-        code: verificationCode,
-        timestamp: Date.now()
-    });
+        // 저장된 인증번호 확인
+        const savedData = verificationCodes.get(email);
+        
+        if (!savedData) {
+            return res.status(400).json({ message: '인증번호를 먼저 발송해주세요.' });
+        }
 
-    res.json({ 
-        success: true, 
-        message: '인증번호가 발송되었습니다.',
-        // 개발 환경에서만 인증번호 반환
-        code: process.env.NODE_ENV === 'development' ? verificationCode : undefined
-    });
+        // 5분 제한 확인
+        if (Date.now() - savedData.timestamp > 5 * 60 * 1000) {
+            verificationCodes.delete(email);
+            return res.status(400).json({ message: '인증번호가 만료되었습니다. 다시 발송해주세요.' });
+        }
+
+        // 인증번호 일치 확인
+        if (savedData.code !== code) {
+            return res.status(400).json({ message: '인증번호가 일치하지 않습니다.' });
+        }
+
+        // 인증 성공 시 저장된 인증번호 삭제
+        verificationCodes.delete(email);
+
+        res.json({ message: '인증이 완료되었습니다.' });
+    } catch (error) {
+        console.error('인증번호 확인 오류:', error);
+        res.status(500).json({ message: '인증번호 확인에 실패했습니다.' });
+    }
 });
 
 // 사용자 정보 수정
