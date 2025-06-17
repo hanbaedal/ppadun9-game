@@ -61,4 +61,9 @@ router.post('/today-game', async (req, res) => {
     }
 });
 
+// 기본 라우트
+router.get('/', (req, res) => {
+    res.json({ message: 'Game API is working' });
+});
+
 module.exports = router; 

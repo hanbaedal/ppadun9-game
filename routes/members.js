@@ -69,4 +69,9 @@ router.get('/:id', auth, async (req, res) => {
     }
 });
 
+// 기본 라우트
+router.get('/', (req, res) => {
+    res.json({ message: 'Members API is working' });
+});
+
 module.exports = router; 

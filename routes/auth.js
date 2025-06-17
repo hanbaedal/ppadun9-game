@@ -444,4 +444,9 @@ router.delete('/member/:userId', async (req, res) => {
     }
 });
 
+// 기본 라우트
+router.get('/', (req, res) => {
+    res.json({ message: 'Auth API is working' });
+});
+
 module.exports = router; 
