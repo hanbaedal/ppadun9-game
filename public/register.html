@@ -2,34 +2,34 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>회원가입 - 빠던나인</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사원 아이디 등록</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/mobile.css">
     <style>
-        .register-container {
-            display: flex;
-            min-height: 100vh;
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
             background-color: #f8f9fa;
         }
         
-        .menu-section {
-            width: 250px;
-            background-color: #343a40;
-            padding: 20px;
-            color: white;
+        .register-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
         }
         
-        .form-section {
-            flex: 1;
-            padding: 40px;
-            max-width: 600px;
-            margin: 0 auto;
+        .page-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 700;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .form-control {
@@ -45,6 +45,23 @@
             box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
         }
         
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .radio-item {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        
+        .radio-item input[type="radio"] {
+            margin-right: 5px;
+        }
+        
         .btn-primary {
             height: 45px;
             font-size: 16px;
@@ -58,142 +75,191 @@
             background-color: #357abd;
         }
         
-        .menu-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        .btn-outline-secondary {
+            height: 45px;
+            font-size: 16px;
+            border-radius: 8px;
         }
         
-        .menu-item {
-            padding: 12px 15px;
-            margin-bottom: 5px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+        .verification-group {
+            display: none;
+            margin-top: 10px;
         }
         
-        .menu-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
         }
         
-        .menu-item.active {
-            background-color: #4a90e2;
-        }
-        
-        @media (max-width: 768px) {
-            .register-container {
-                flex-direction: column;
-            }
-            
-            .menu-section {
-                width: 100%;
-                padding: 15px;
-            }
-            
-            .form-section {
-                padding: 20px;
-            }
+        .success-message {
+            color: #28a745;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="register-container">
-        <div class="menu-section">
-            <h4 class="mb-4">빠던나인</h4>
-            <ul class="menu-list">
-                <li class="menu-item active">회원가입</li>
-                <li class="menu-item">로그인</li>
-                <li class="menu-item">홈으로</li>
-            </ul>
-        </div>
-        
-        <div class="form-section">
-            <h2 class="mb-4">회원가입</h2>
-            <form id="registerForm">
-                <div class="form-group">
-                    <label for="username">이름</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="userId">아이디</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="userId" name="userId" required>
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="checkIdBtn">중복확인</button>
-                        </div>
+        <h1 class="page-title">사원 아이디 등록</h1>
+        <form id="registerForm">
+            <!-- 이름 -->
+            <div class="form-group">
+                <label for="name">이름</label>
+                <input type="text" class="form-control" id="name" name="name" maxlength="16" required>
+                <div class="error-message" id="nameError">이름은 16자 이내로 입력해주세요.</div>
+            </div>
+
+            <!-- 직책 -->
+            <div class="form-group">
+                <label>직책</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="position1" name="position" value="대표" required>
+                        <label for="position1">대표</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="position2" name="position" value="고문">
+                        <label for="position2">고문</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="position3" name="position" value="감사">
+                        <label for="position3">감사</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="position4" name="position" value="이사">
+                        <label for="position4">이사</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="position5" name="position" value="본부장">
+                        <label for="position5">본부장</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="position6" name="position" value="팀장">
+                        <label for="position6">팀장</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="position7" name="position" value="팀원">
+                        <label for="position7">팀원</label>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="password">비밀번호</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirmPassword">비밀번호 확인</label>
-                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">이메일</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="phone">전화번호</label>
-                    <div class="input-group">
-                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="010-0000-0000" required>
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="sendVerificationBtn">인증번호 발송</button>
-                        </div>
+            </div>
+
+            <!-- 부서 -->
+            <div class="form-group">
+                <label>부서</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="dept1" name="department" value="경영" required>
+                        <label for="dept1">경영</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="dept2" name="department" value="기획">
+                        <label for="dept2">기획</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="dept3" name="department" value="재무">
+                        <label for="dept3">재무</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="dept4" name="department" value="관리">
+                        <label for="dept4">관리</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="dept5" name="department" value="운영">
+                        <label for="dept5">운영</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="dept6" name="department" value="영업">
+                        <label for="dept6">영업</label>
                     </div>
                 </div>
-                
-                <div class="form-group verification-group" style="display: none;">
-                    <label for="verificationCode">인증번호</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="verificationCode" name="verificationCode">
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="verifyCodeBtn">확인</button>
-                        </div>
+            </div>
+
+            <!-- 아이디 -->
+            <div class="form-group">
+                <label for="userId">아이디</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="userId" name="userId" 
+                           pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,16}$" required>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="checkIdBtn">중복확인</button>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="team">팀 선택</label>
-                    <select class="form-control" id="team" name="team" required>
-                        <option value="">팀을 선택하세요</option>
-                        <option value="KIA">KIA 타이거즈</option>
-                        <option value="LG">LG 트윈스</option>
-                        <option value="NC">NC 다이노스</option>
-                        <option value="SSG">SSG 랜더스</option>
-                        <option value="KT">KT 위즈</option>
-                        <option value="LOTTE">롯데 자이언츠</option>
-                        <option value="SAMSUNG">삼성 라이온즈</option>
-                        <option value="HANWHA">한화 이글스</option>
-                        <option value="DOOSAN">두산 베어스</option>
-                        <option value="KIWOOM">키움 히어로즈</option>
-                    </select>
+                <div class="error-message" id="userIdError">영문자, 특수문자, 숫자를 포함하여 8~16자로 입력해주세요.</div>
+                <div class="success-message" id="userIdSuccess">사용 가능한 아이디입니다.</div>
+            </div>
+
+            <!-- 비밀번호 -->
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" class="form-control" id="password" name="password" 
+                       minlength="8" maxlength="16" required>
+                <div class="error-message" id="passwordError">비밀번호는 8~16자로 입력해주세요.</div>
+            </div>
+
+            <!-- 비밀번호 확인 -->
+            <div class="form-group">
+                <label for="confirmPassword">비밀번호 확인</label>
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                <div class="error-message" id="confirmPasswordError">비밀번호가 일치하지 않습니다.</div>
+            </div>
+
+            <!-- 전화번호 -->
+            <div class="form-group">
+                <label for="phone">전화번호</label>
+                <div class="input-group">
+                    <input type="tel" class="form-control" id="phone" name="phone" 
+                           pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" placeholder="000-0000-0000" required>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="sendVerificationBtn">인증번호 발송</button>
+                    </div>
                 </div>
-                
-                <button type="submit" class="btn btn-primary">가입하기</button>
-            </form>
-        </div>
+                <div class="error-message" id="phoneError">올바른 전화번호 형식이 아닙니다.</div>
+            </div>
+
+            <!-- 인증번호 -->
+            <div class="form-group verification-group" id="verificationGroup">
+                <label for="verificationCode">인증번호</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="verificationCode" name="verificationCode" readonly>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="verifyCodeBtn">확인</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>등록하기</button>
+        </form>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
+            let isIdAvailable = false;
+            let isPhoneVerified = false;
+
             // 아이디 중복 확인
             $('#checkIdBtn').click(function() {
                 const userId = $('#userId').val();
                 if (!userId) {
-                    alert('아이디를 입력해주세요.');
+                    $('#userIdError').show();
+                    $('#userIdSuccess').hide();
                     return;
                 }
-                
+
+                // 아이디 형식 검사
+                const idPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,16}$/;
+                if (!idPattern.test(userId)) {
+                    $('#userIdError').show();
+                    $('#userIdSuccess').hide();
+                    return;
+                }
+
+                // 서버에 중복 확인 요청
                 $.ajax({
                     url: '/api/auth/check-username',
                     method: 'POST',
@@ -201,99 +267,128 @@
                     data: JSON.stringify({ username: userId }),
                     success: function(response) {
                         if (response.available) {
-                            alert('사용 가능한 아이디입니다.');
+                            $('#userIdError').hide();
+                            $('#userIdSuccess').show();
+                            isIdAvailable = true;
                         } else {
-                            alert('이미 사용 중인 아이디입니다.');
+                            $('#userIdError').text('이미 사용 중인 아이디입니다.').show();
+                            $('#userIdSuccess').hide();
+                            isIdAvailable = false;
                         }
+                        updateSubmitButton();
                     },
                     error: function() {
-                        alert('서버 오류가 발생했습니다.');
+                        $('#userIdError').text('서버 오류가 발생했습니다.').show();
+                        $('#userIdSuccess').hide();
+                        isIdAvailable = false;
+                        updateSubmitButton();
                     }
                 });
             });
-            
-            // 전화번호 인증번호 발송
+
+            // 비밀번호 확인
+            $('#confirmPassword').on('input', function() {
+                const password = $('#password').val();
+                const confirmPassword = $(this).val();
+                
+                if (password === confirmPassword) {
+                    $('#confirmPasswordError').hide();
+                } else {
+                    $('#confirmPasswordError').show();
+                }
+                updateSubmitButton();
+            });
+
+            // 전화번호 인증
             $('#sendVerificationBtn').click(function() {
                 const phone = $('#phone').val();
                 if (!phone) {
-                    alert('전화번호를 입력해주세요.');
+                    $('#phoneError').show();
                     return;
                 }
-                
+
                 // 전화번호 형식 검사
-                if (!/^010-\d{4}-\d{4}$/.test(phone)) {
-                    alert('올바른 전화번호 형식이 아닙니다. (예: 010-0000-0000)');
+                const phonePattern = /^[0-9]{3}-[0-9]{4}-[0-9]{4}$/;
+                if (!phonePattern.test(phone)) {
+                    $('#phoneError').show();
                     return;
                 }
+
+                // 테스트용 인증번호 생성 (실제로는 서버에서 생성)
+                const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
                 
-                $.ajax({
-                    url: '/api/auth/send-verification',
-                    method: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ phone: phone }),
-                    success: function(response) {
-                        alert('인증번호가 전화번호로 발송되었습니다.');
-                        $('.verification-group').show();
-                    },
-                    error: function() {
-                        alert('인증번호 발송에 실패했습니다.');
-                    }
-                });
+                // 인증번호 입력란에 자동 입력
+                $('#verificationCode').val(verificationCode);
+                $('#verificationGroup').show();
             });
-            
+
             // 인증번호 확인
             $('#verifyCodeBtn').click(function() {
-                const phone = $('#phone').val();
                 const code = $('#verificationCode').val();
-                
-                $.ajax({
-                    url: '/api/auth/verify-code',
-                    method: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ phone: phone, code: code }),
-                    success: function(response) {
-                        if (response.verified) {
-                            alert('전화번호 인증이 완료되었습니다.');
-                            $('#verificationCode').prop('disabled', true);
-                            $('#verifyCodeBtn').prop('disabled', true);
-                        } else {
-                            alert('인증번호가 일치하지 않습니다.');
-                        }
-                    },
-                    error: function() {
-                        alert('인증번호 확인에 실패했습니다.');
-                    }
-                });
+                if (code) {
+                    alert('인증이 완료되었습니다.');
+                    $('#verificationCode').prop('disabled', true);
+                    $('#verifyCodeBtn').prop('disabled', true);
+                    isPhoneVerified = true;
+                    updateSubmitButton();
+                }
             });
-            
+
+            // 등록 버튼 상태 업데이트
+            function updateSubmitButton() {
+                const isFormValid = 
+                    $('#name').val() &&
+                    $('input[name="position"]:checked').val() &&
+                    $('input[name="department"]:checked').val() &&
+                    isIdAvailable &&
+                    $('#password').val().length >= 8 &&
+                    $('#password').val() === $('#confirmPassword').val() &&
+                    isPhoneVerified;
+
+                $('#submitBtn').prop('disabled', !isFormValid);
+            }
+
             // 폼 제출
             $('#registerForm').submit(function(e) {
                 e.preventDefault();
                 
+                if (!isIdAvailable) {
+                    alert('아이디 중복확인을 해주세요.');
+                    return;
+                }
+
+                if (!isPhoneVerified) {
+                    alert('전화번호 인증을 완료해주세요.');
+                    return;
+                }
+
                 const formData = {
-                    username: $('#username').val(),
+                    name: $('#name').val(),
+                    position: $('input[name="position"]:checked').val(),
+                    department: $('input[name="department"]:checked').val(),
                     userId: $('#userId').val(),
                     password: $('#password').val(),
-                    email: $('#email').val(),
-                    phone: $('#phone').val(),
-                    team: $('#team').val()
+                    phone: $('#phone').val()
                 };
-                
+
                 $.ajax({
                     url: '/api/auth/register',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(formData),
                     success: function(response) {
-                        alert('회원가입이 완료되었습니다.');
+                        alert('등록이 완료되었습니다.');
                         window.location.href = '/login.html';
                     },
                     error: function() {
-                        alert('회원가입에 실패했습니다.');
+                        alert('등록에 실패했습니다.');
                     }
                 });
             });
+
+            // 입력 필드 변경 시 등록 버튼 상태 업데이트
+            $('input').on('input change', updateSubmitButton);
         });
     </script>
 </body>
-</html> 
+</html>

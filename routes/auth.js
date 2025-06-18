@@ -24,55 +24,44 @@ const transporter = nodemailer.createTransport({
 // 회원가입
 router.post('/register', async (req, res) => {
     try {
-        const { username, userId, password, email, phone, team } = req.body;
+        const { name, position, department, userId, password, phone } = req.body;
 
-        // 필수 필드 검증
-        if (!username || !userId || !password || !email || !phone || !team) {
+        // 필수 필드 검사
+        if (!name || !position || !department || !userId || !password || !phone) {
             return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
         }
 
         // 아이디 중복 확인
-        const existingUser = await User.findOne({ userId });
-        if (existingUser) {
+        const existingMember = await User.findOne({ username: userId });
+        if (existingMember) {
             return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
         }
 
-        // 비밀번호 해시화
+        // 비밀번호 해싱
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // 현재 날짜를 YY:MM:DD 형식으로 변환
-        const today = new Date();
-        const year = today.getFullYear().toString().slice(-2); // 마지막 2자리
-        const month = String(today.getMonth() + 1).padStart(2, '0'); // 01-12
-        const day = String(today.getDate()).padStart(2, '0'); // 01-31
+        const now = new Date();
+        const year = now.getFullYear().toString().slice(-2);
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
         const joinDate = `${year}:${month}:${day}`;
 
-        // 새 사용자 생성
-        const newUser = new User({
-            username,
-            userId,
+        // 새 회원 생성
+        const member = new User({
+            name,
+            position,
+            department,
+            username: userId,
             password: hashedPassword,
-            email,
             phone,
-            team,
-            points: 3000, // 가입 축하 포인트
-            joinDate: joinDate // 가입일자 (YY:MM:DD 형식)
+            joinDate
         });
 
-        await newUser.save();
+        await member.save();
 
-        // JWT 토큰 생성
-        const token = jwt.sign(
-            { userId: newUser._id },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
-        res.status(201).json({
-            message: '회원가입이 완료되었습니다.',
-            token
-        });
+        res.status(201).json({ message: '회원가입이 완료되었습니다.' });
     } catch (error) {
         console.error('회원가입 오류:', error);
         res.status(500).json({ message: '서버 오류가 발생했습니다.' });
@@ -84,36 +73,39 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // 사용자 찾기
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(400).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+        // 회원 찾기
+        const member = await User.findOne({ username });
+        if (!member) {
+            return res.status(400).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         }
 
         // 비밀번호 확인
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, member.password);
         if (!isMatch) {
-            return res.status(400).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+            return res.status(400).json({ message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         }
 
         // JWT 토큰 생성
         const token = jwt.sign(
-            { userId: user._id },
+            { id: member._id },
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '1d' }
         );
 
         res.json({
             token,
             user: {
-                id: user._id,
-                username: user.username,
-                email: user.email
+                id: member._id,
+                name: member.name,
+                position: member.position,
+                department: member.department,
+                points: member.points,
+                joinDate: member.joinDate
             }
         });
     } catch (error) {
         console.error('로그인 오류:', error);
-        res.status(500).json({ message: '로그인에 실패했습니다.' });
+        res.status(500).json({ message: '서버 오류가 발생했습니다.' });
     }
 });
 
@@ -462,16 +454,18 @@ router.post('/check-username', async (req, res) => {
         const { username } = req.body;
         
         // 아이디 형식 검사
-        if (!/^[a-zA-Z0-9]{4,20}$/.test(username)) {
-            return res.json({ available: false, message: '4~20자의 영문, 숫자만 사용 가능합니다.' });
+        const idPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,16}$/;
+        if (!idPattern.test(username)) {
+            return res.status(400).json({ 
+                available: false, 
+                message: '아이디는 영문자, 특수문자, 숫자를 포함하여 8~16자로 입력해주세요.' 
+            });
         }
 
-        // 데이터베이스에서 아이디 검색
-        const existingUser = await User.findOne({ username });
-        
-        res.json({ available: !existingUser });
+        const existingMember = await User.findOne({ username });
+        res.json({ available: !existingMember });
     } catch (error) {
-        console.error('아이디 중복확인 오류:', error);
+        console.error('아이디 중복 확인 오류:', error);
         res.status(500).json({ message: '서버 오류가 발생했습니다.' });
     }
 });
