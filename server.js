@@ -31,8 +31,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API 라우트 설정
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/members', require('./routes/members'));
 app.use('/api', require('./routes/game'));
 
 // 정적 파일 제공

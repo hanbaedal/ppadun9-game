@@ -3,23 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>빠던나인 관리자 페이지</title>
+    <title>빠던나인 프로젝트 관리</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #333 !important;
+        }
+        
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 40px;
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px;
+        }
+        
+        .menu-item {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .menu-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .menu-text h3 {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .menu-text p {
+            color: #666;
+            text-align: center;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .sub-menu {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .sub-menu-item {
+            display: block;
+            padding: 8px 0;
+            color: #666;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .sub-menu-item:hover {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .sub-menu-item i {
+            margin-right: 8px;
+            width: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 15px;
+            }
+            
+            .menu-item {
+                padding: 25px;
+            }
+            
+            .menu-icon {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
 </head>
-<body class="mobile-optimized">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container-fluid px-3">
-            <a class="navbar-brand" href="/">빠던나인 관리자 페이지</a>
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cogs me-2"></i>
+                빠던나인 프로젝트 관리
+            </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/login">로그인</a>
-                    </li>                
+                        <a class="nav-link" href="#"><i class="fas fa-user-circle"></i> 관리자</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -28,60 +154,141 @@
     <div class="main-content">
         <div class="container-fluid px-0">
             <div class="menu-grid">
+                <!-- 1. 홈페이지 -->
                 <a href="https://ppadun9-home.netlify.app/" class="menu-item">
                     <div class="menu-icon">🏠</div>
                     <div class="menu-text">
                         <h3>홈페이지</h3>
                         <p>빠던나인 공식 홈페이지</p>
+                        <div class="sub-menu">
+                            <span class="sub-menu-item">
+                                <i class="fas fa-external-link-alt"></i>
+                                공식 웹사이트로 이동
+                            </span>
+                        </div>
                     </div>
                 </a>
+
+                <!-- 2. 직원관리 -->
+                <a href="/employee-management.html" class="menu-item">
+                    <div class="menu-icon">👥</div>
+                    <div class="menu-text">
+                        <h3>직원관리</h3>
+                        <p>직원 등록 및 관리 시스템</p>
+                        <div class="sub-menu">
+                            <span class="sub-menu-item">
+                                <i class="fas fa-user-plus"></i>
+                                직원 등록 및 로그인
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-search"></i>
+                                직원 조회/수정/삭제
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-key"></i>
+                                비밀번호 찾기
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-user"></i>
+                                아이디 찾기
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- 3. 오늘의 경기 등록 -->
                 <a href="/today-game.html" class="menu-item">
                     <div class="menu-icon">⚾</div>
                     <div class="menu-text">
-                        <h3>오늘의 경기</h3>
-                        <p>KBO 야구 경기 설정</p>
+                        <h3>오늘의 경기 등록</h3>
+                        <p>KBO 야구 경기 일정 관리</p>
+                        <div class="sub-menu">
+                            <span class="sub-menu-item">
+                                <i class="fas fa-calendar-plus"></i>
+                                경기 일정 등록
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-edit"></i>
+                                경기 정보 수정
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-list"></i>
+                                경기 목록 조회
+                            </span>
+                        </div>
                     </div>
                 </a>
+
+                <!-- 4. 게임 설정 -->
                 <a href="/team-game.html" class="menu-item">
                     <div class="menu-icon">🎮</div>
                     <div class="menu-text">
                         <h3>게임 설정</h3>
-                        <p>빠던나인 예측 게임</p>
+                        <p>빠던나인 예측게임 관리</p>
+                        <div class="sub-menu">
+                            <span class="sub-menu-item">
+                                <i class="fas fa-play"></i>
+                                배팅 시작
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-pause"></i>
+                                배팅 중지
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-chart-bar"></i>
+                                예측 결과
+                            </span>
+                        </div>
                     </div>
                 </a>
-                <a href="/game-play.html" class="menu-item">
-                    <div class="menu-icon">🎯</div>
+
+                <!-- 5. 회원관리 -->
+                <a href="/member-management.html" class="menu-item">
+                    <div class="menu-icon">👤</div>
                     <div class="menu-text">
-                        <h3>게임 플레이</h3>
-                        <p>빠던나인 게임</p>
+                        <h3>회원관리</h3>
+                        <p>회원 정보 및 포인트 관리</p>
+                        <div class="sub-menu">
+                            <span class="sub-menu-item">
+                                <i class="fas fa-users"></i>
+                                회원정보 조회/수정/삭제
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-trophy"></i>
+                                포인트순위 리스트
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-coins"></i>
+                                포인트 충전 리스트
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-heart"></i>
+                                기부 리스트
+                            </span>
+                        </div>
                     </div>
                 </a>
-                <a href="/member-displays.html" class="menu-item">
-                    <div class="menu-icon">👥</div>
+
+                <!-- 6. 시스템 관리 -->
+                <a href="/system-management.html" class="menu-item">
+                    <div class="menu-icon">⚙️</div>
                     <div class="menu-text">
-                        <h3>회원 정보 조회</h3>
-                        <p>회원 정보 조회 및 수정</p>
-                    </div>
-                </a>
-                <a href="/game-point.html" class="menu-item">
-                    <div class="menu-icon">🏆</div>
-                    <div class="menu-text">
-                        <h3>포인트 순위 조회</h3>
-                        <p>상위 순위 조회 및 수정</p>
-                    </div>
-                </a>
-                <a href="/game-charging.html" class="menu-item">
-                    <div class="menu-icon">💰</div>
-                    <div class="menu-text">
-                        <h3>포인트 충전 조회</h3>
-                        <p>포인트 충전 및 조회</p>
-                    </div>
-                </a>
-                <a href="/game-donation.html" class="menu-item">
-                    <div class="menu-icon">❤️</div>
-                    <div class="menu-text">
-                        <h3>포인트 기부 조회</h3>
-                        <p>포인트 기부 및 조회</p>
+                        <h3>시스템 관리</h3>
+                        <p>시스템 설정 및 모니터링</p>
+                        <div class="sub-menu">
+                            <span class="sub-menu-item">
+                                <i class="fas fa-database"></i>
+                                데이터베이스 관리
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-chart-line"></i>
+                                시스템 통계
+                            </span>
+                            <span class="sub-menu-item">
+                                <i class="fas fa-shield-alt"></i>
+                                보안 설정
+                            </span>
+                        </div>
                     </div>
                 </a>
             </div>
@@ -91,5 +298,6 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/js/main.js"></script>
 </body>
 </html> 

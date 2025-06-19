@@ -1,120 +1,96 @@
-// 토큰 확인
-const token = localStorage.getItem('token');
-if (!token) {
-    window.location.href = '/login.html';
+// 빠던나인 프로젝트 관리 시스템
+console.log('빠던나인 프로젝트 관리 시스템이 로드되었습니다.');
+
+// 시스템 초기화
+function initializeSystem() {
+    console.log('프로젝트 관리 시스템이 초기화되었습니다.');
+    setupEventListeners();
+    loadSystemStatus();
 }
 
-// 회원 목록 가져오기
-async function getMembers() {
-    try {
-        const response = await fetch('/api/members', {
-            headers: {
-                'x-auth-token': token
-            }
+// 이벤트 리스너 설정
+function setupEventListeners() {
+    // 메뉴 아이템 호버 효과
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
         });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+}
 
-        if (!response.ok) {
-            throw new Error('회원 목록을 가져오는데 실패했습니다.');
-        }
+// 시스템 상태 로드
+function loadSystemStatus() {
+    // 현재 시간 표시
+    updateDateTime();
+    
+    // 시스템 통계 로드 (필요시)
+    loadSystemStats();
+}
 
-        const members = await response.json();
-        displayMembers(members);
-    } catch (err) {
-        console.error('회원 목록 조회 오류:', err);
-        alert('회원 목록을 가져오는데 실패했습니다.');
+// 현재 시간 업데이트
+function updateDateTime() {
+    const now = new Date();
+    const dateTimeString = now.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    
+    // 시간 표시 요소가 있다면 업데이트
+    const timeElement = document.getElementById('current-time');
+    if (timeElement) {
+        timeElement.textContent = dateTimeString;
     }
 }
 
-// 회원 목록 표시
-function displayMembers(members) {
-    const content = document.getElementById('content');
-    content.innerHTML = `
-        <h2>회원 목록</h2>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>이름</th>
-                        <th>아이디</th>
-                        <th>전화번호</th>
-                        <th>포인트</th>
-                        <th>가입일</th>
-                        <th>관리</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${members.map(member => `
-                        <tr>
-                            <td>${member.name}</td>
-                            <td>${member.userId}</td>
-                            <td>${member.phone}</td>
-                            <td>${member.points}</td>
-                            <td>${new Date(member.createdAt).toLocaleDateString()}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editMember('${member._id}')">수정</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteMember('${member._id}')">삭제</button>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
-}
-
-// 회원 수정
-async function editMember(id) {
-    const name = prompt('이름을 입력하세요:');
-    const phone = prompt('전화번호를 입력하세요:');
-    const notes = prompt('참고사항을 입력하세요:');
-
-    if (!name || !phone) return;
-
-    try {
-        const response = await fetch(`/api/members/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-auth-token': token
-            },
-            body: JSON.stringify({ name, phone, notes })
+// 시스템 통계 로드
+function loadSystemStats() {
+    // API 호출을 통한 시스템 통계 로드
+    fetch('/api/system/stats')
+        .then(response => response.json())
+        .then(data => {
+            console.log('시스템 통계:', data);
+        })
+        .catch(error => {
+            console.log('시스템 통계 로드 실패:', error);
         });
-
-        if (response.ok) {
-            alert('회원 정보가 수정되었습니다.');
-            getMembers();
-        } else {
-            throw new Error('회원 정보 수정에 실패했습니다.');
-        }
-    } catch (err) {
-        console.error('회원 수정 오류:', err);
-        alert('회원 정보 수정에 실패했습니다.');
-    }
 }
 
-// 회원 삭제
-async function deleteMember(id) {
-    if (!confirm('정말로 이 회원을 삭제하시겠습니까?')) return;
-
-    try {
-        const response = await fetch(`/api/members/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'x-auth-token': token
-            }
-        });
-
-        if (response.ok) {
-            alert('회원이 삭제되었습니다.');
-            getMembers();
-        } else {
-            throw new Error('회원 삭제에 실패했습니다.');
-        }
-    } catch (err) {
-        console.error('회원 삭제 오류:', err);
-        alert('회원 삭제에 실패했습니다.');
-    }
+// 메뉴 네비게이션 함수들
+function navigateToEmployeeManagement() {
+    window.location.href = '/employee-management.html';
 }
 
-// 페이지 로드 시 회원 목록 가져오기
-getMembers(); 
+function navigateToGameManagement() {
+    window.location.href = '/team-game.html';
+}
+
+function navigateToMemberManagement() {
+    window.location.href = '/member-management.html';
+}
+
+function navigateToSystemManagement() {
+    window.location.href = '/system-management.html';
+}
+
+// 페이지 로드 시 시스템 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSystem();
+    
+    // 1초마다 시간 업데이트
+    setInterval(updateDateTime, 1000);
+});
+
+// 전역 함수로 노출
+window.navigateToEmployeeManagement = navigateToEmployeeManagement;
+window.navigateToGameManagement = navigateToGameManagement;
+window.navigateToMemberManagement = navigateToMemberManagement;
+window.navigateToSystemManagement = navigateToSystemManagement; 
