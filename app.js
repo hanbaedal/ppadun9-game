@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // MongoDB 연결
-const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://haesoo:haesoo@cluster0.8jqgq.mongodb.net/ppadun9?retryWrites=true&w=majority';
+const mongoURI = process.env.MONGODB_URI || 'ppadun_user:ppadun8267@cluster0.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
 
 mongoose.connect(mongoURI)
 .then(() => console.log('MongoDB 연결 성공'))
