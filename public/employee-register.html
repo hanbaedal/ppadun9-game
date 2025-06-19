@@ -16,6 +16,10 @@
             max-width: 1920px;
             margin: 0 auto;
             font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
         .navbar {
@@ -24,6 +28,12 @@
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
             max-width: 1920px;
             margin: 0 auto;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            z-index: 1000;
         }
         
         .navbar-brand {
@@ -37,6 +47,11 @@
             min-height: calc(100vh - 80px);
             max-width: 1920px;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
         }
         
         .register-container {
@@ -129,6 +144,29 @@
         
         .form-row.three-columns .form-group {
             flex: 0 0 auto;
+        }
+        
+        /* 비밀번호 그룹 스타일 */
+        .password-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .password-group .form-label {
+            min-width: auto;
+            text-align: left;
+            margin-bottom: 0;
+        }
+        
+        .password-group .form-control {
+            width: 100%;
+        }
+        
+        .password-group .form-text {
+            margin-top: 1px;
+            margin-bottom: 5px;
         }
         
         /* 직책/부서 라디오 그룹 */
@@ -272,6 +310,16 @@
         
         /* 태블릿 화면 (1024x768) */
         @media (max-width: 1024px) {
+            body {
+                justify-content: flex-start;
+                padding-top: 60px;
+            }
+            
+            .main-content {
+                justify-content: flex-start;
+                padding-top: 20px;
+            }
+            
             .register-container {
                 padding: 12px 20px;
             }
@@ -342,12 +390,28 @@
                 padding: 8px 25px;
                 font-size: 0.85rem;
             }
+            
+            /* 비밀번호 그룹 태블릿 조정 */
+            .password-group {
+                gap: 3px;
+            }
+            
+            .password-group .form-text {
+                margin-bottom: 3px;
+            }
         }
         
         /* 모바일 화면 (768px 이하) */
         @media (max-width: 768px) {
             body {
                 font-size: 12px;
+                justify-content: flex-start;
+                padding-top: 60px;
+            }
+            
+            .main-content {
+                justify-content: flex-start;
+                padding-top: 10px;
             }
             
             .register-container {
@@ -503,7 +567,7 @@
                     </div>
 
                     <!-- 아이디, 비밀번호, 비밀번호 확인 -->
-                    <div class="form-row three-columns">
+                    <div class="form-row">
                         <div class="form-group">
                             <label for="username" class="form-label">아이디 *</label>
                             <div class="id-check-container">
@@ -512,14 +576,13 @@
                             </div>
                             <div id="idMessage" class="message"></div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group password-group">
                             <label for="password" class="form-label">비밀번호 *</label>
                             <input type="password" class="form-control" id="password" name="password" 
                                    pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$" required>
                             <small class="form-text text-muted">8자 이상 16자 이하, 영문, 숫자, 특수문자 포함</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmPassword" class="form-label">비밀번호 확인 *</label>
+                            
+                            <label for="confirmPassword" class="form-label" style="margin-top: 8px;">비밀번호 확인 *</label>
                             <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
                             <div id="passwordMessage" class="message"></div>
                         </div>
