@@ -25,6 +25,9 @@
             font-weight: 700;
             font-size: 1.3rem;
             color: #333 !important;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
         
         .main-content {
@@ -57,10 +60,11 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
             overflow: hidden;
-            height: 260px;
+            height: 182px;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
         }
         
         .menu-item:hover {
@@ -81,22 +85,28 @@
         }
         
         .menu-icon {
-            font-size: 2.2rem;
-            margin-bottom: 12px;
+            font-size: 3rem;
+            flex-shrink: 0;
             text-align: center;
+            min-width: 80px;
+        }
+        
+        .menu-text {
+            flex: 1;
+            text-align: left;
         }
         
         .menu-text h3 {
             font-weight: 700;
             margin-bottom: 8px;
             color: #333;
-            text-align: center;
+            text-align: left;
             font-size: 1.1rem;
         }
         
         .menu-text p {
             color: #666;
-            text-align: center;
+            text-align: left;
             margin: 0;
             line-height: 1.4;
             font-size: 0.9rem;
@@ -112,11 +122,13 @@
             
             .menu-item {
                 padding: 18px;
-                height: 234px;
+                height: 164px;
+                gap: 15px;
             }
             
             .menu-icon {
-                font-size: 2rem;
+                font-size: 2.5rem;
+                min-width: 70px;
             }
         }
         
@@ -131,15 +143,20 @@
             .menu-item {
                 padding: 20px;
                 height: auto;
-                min-height: 208px;
+                min-height: 146px;
+                gap: 15px;
             }
             
             .menu-icon {
                 font-size: 2.5rem;
+                min-width: 60px;
             }
             
             .navbar-brand {
                 font-size: 1.1rem;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
             }
         }
         
