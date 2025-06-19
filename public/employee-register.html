@@ -783,28 +783,43 @@
         function updateSubmitButton() {
             const submitBtn = document.getElementById('submitBtn');
             const isFormValid = isIdAvailable && isPasswordMatch && isPhoneVerified;
+            
             submitBtn.disabled = !isFormValid;
+            
+            if (isFormValid) {
+                submitBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            } else {
+                submitBtn.style.background = '#6c757d';
+            }
         }
 
-        // 폼 제출
+        // 폼 제출 처리
         document.getElementById('employeeRegisterForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // 모든 필수 조건 확인
             if (!isIdAvailable || !isPasswordMatch || !isPhoneVerified) {
                 alert('모든 필수 항목을 확인해주세요.');
                 return;
             }
             
-            const formData = new FormData(this);
-            const employeeData = {
-                name: formData.get('name'),
-                position: formData.get('position'),
-                department: formData.get('department'),
-                email: formData.get('email'),
-                username: formData.get('username'),
-                password: formData.get('password'),
-                phone: formData.get('phone')
+            // 폼 데이터 수집
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value,
+                position: document.querySelector('input[name="position"]:checked')?.value,
+                department: document.querySelector('input[name="department"]:checked')?.value,
+                phone: document.getElementById('phone').value.trim()
             };
+            
+            // 필수 필드 검증
+            if (!formData.name || !formData.email || !formData.username || !formData.password || 
+                !formData.position || !formData.department || !formData.phone) {
+                alert('모든 필수 항목을 입력해주세요.');
+                return;
+            }
             
             try {
                 const response = await fetch('/api/employee/register', {
@@ -812,18 +827,32 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(employeeData)
+                    body: JSON.stringify(formData)
                 });
                 
                 const data = await response.json();
                 
-                if (data.success) {
-                    alert('직원 등록이 완료되었습니다.');
-                    window.location.href = '/employee-member.html';
+                if (response.ok) {
+                    alert(data.message);
+                    // 성공 시 폼 초기화
+                    document.getElementById('employeeRegisterForm').reset();
+                    // 상태 초기화
+                    isIdAvailable = false;
+                    isPasswordMatch = false;
+                    isPhoneVerified = false;
+                    updateSubmitButton();
+                    // 메시지 초기화
+                    document.getElementById('idMessage').textContent = '';
+                    document.getElementById('passwordMessage').textContent = '';
+                    document.getElementById('phoneMessage').textContent = '';
+                    document.getElementById('verificationSection').style.display = 'none';
+                    document.getElementById('phoneVerifyBtn').disabled = false;
+                    document.getElementById('phoneVerifyBtn').textContent = '인증번호 발송';
                 } else {
-                    alert(data.message || '등록 중 오류가 발생했습니다.');
+                    alert(data.error || '등록에 실패했습니다.');
                 }
             } catch (error) {
+                console.error('등록 오류:', error);
                 alert('서버 오류가 발생했습니다.');
             }
         });
