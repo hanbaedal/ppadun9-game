@@ -44,32 +44,33 @@
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            padding: 20px 40px;
+            padding: 15px 30px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
         }
         
         .page-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #333;
         }
         
         .page-header h1 {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         
         .page-header p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #666;
+            margin: 0;
         }
         
         .form-row {
             display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
+            gap: 15px;
+            margin-bottom: 10px;
             align-items: flex-start;
         }
         
@@ -77,44 +78,52 @@
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         
         .form-row .form-group .form-label {
-            min-width: 100px;
+            min-width: 90px;
             margin-bottom: 0;
             text-align: right;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.8rem;
         }
         
         .form-control-wrap {
             flex: 1;
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
         
         .form-control {
             border-radius: 6px;
             border: 2px solid #e9ecef;
-            padding: 6px 10px;
+            padding: 5px 8px;
             transition: all 0.3s ease;
-            font-size: 0.85rem;
-            height: 34px;
+            font-size: 0.8rem;
+            height: 30px;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
         
         /* 이름, 이메일 입력란 */
         .form-row .form-group.name-field .form-control,
         .form-row .form-group.email-field .form-control {
-            width: 240px; /* 약 20자 크기 */
+            width: 220px; /* 약 20자 크기 */
         }
         
         /* 아이디, 비밀번호 입력란 */
         .form-row.three-columns .form-group .form-control {
-            width: 192px; /* 약 16자 크기 */
+            width: 180px; /* 약 16자 크기 */
         }
         
         .form-row.three-columns {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             justify-content: flex-start;
         }
         
@@ -131,27 +140,41 @@
             flex: 1;
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            padding: 6px 0;
-            min-height: 34px;
+            gap: 8px;
+            padding: 4px 0;
+            min-height: 30px;
             align-items: center;
+        }
+        
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+        }
+        
+        .radio-item label {
+            margin: 0;
+            font-weight: 500;
+            color: #555;
+            font-size: 0.75rem;
         }
         
         /* 전화번호/인증번호 */
         .id-check-container {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
         }
         
         .id-check-container .form-control {
-            width: 192px;
+            width: 180px;
         }
         
         .form-text {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #6c757d;
-            margin-top: 3px;
+            margin-top: 2px;
         }
         
         .check-btn, .verify-btn {
@@ -159,58 +182,67 @@
             color: white;
             border: none;
             border-radius: 6px;
-            padding: 6px 12px;
-            font-weight: 600;
+            padding: 5px 12px;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            height: 30px;
             white-space: nowrap;
-            font-size: 0.8rem;
-            height: 34px;
         }
         
-        .verify-btn {
-            background: #28a745;
+        .check-btn:hover, .verify-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
         }
         
-        .message {
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin-top: 3px;
-        }
-        
-        .message.success {
-            color: #28a745;
-        }
-        
-        .message.error {
-            color: #dc3545;
+        .check-btn:disabled, .verify-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .submit-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 8px;
             padding: 10px 30px;
             font-size: 0.9rem;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            width: 200px;
-            margin: 20px auto 0;
-            display: block;
+            margin-top: 15px;
+            width: 100%;
         }
         
-        .submit-btn:hover {
+        .submit-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
         
         .submit-btn:disabled {
-            background: #ccc;
+            background: #6c757d;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
+        }
+        
+        .message {
+            font-size: 0.7rem;
+            margin-top: 2px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .message.success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
         }
         
         .back-button {
@@ -240,8 +272,20 @@
         
         /* 태블릿 화면 (1024x768) */
         @media (max-width: 1024px) {
-            body {
-                font-size: 13px;
+            .register-container {
+                padding: 12px 20px;
+            }
+            
+            .page-header {
+                margin-bottom: 12px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .form-row {
+                margin-bottom: 8px;
             }
             
             .form-row .form-group {
@@ -251,7 +295,8 @@
             
             .form-row .form-group .form-label {
                 text-align: left;
-                margin-bottom: 4px;
+                margin-bottom: 3px;
+                min-width: auto;
             }
             
             .form-control-wrap {
@@ -260,6 +305,8 @@
             
             .form-control {
                 width: 100% !important;
+                height: 28px;
+                font-size: 0.75rem;
             }
             
             .form-row.three-columns {
@@ -273,24 +320,70 @@
             .id-check-container .form-control {
                 width: 100%;
             }
+            
+            .check-btn, .verify-btn {
+                height: 28px;
+                font-size: 0.7rem;
+                padding: 4px 10px;
+            }
+            
+            .radio-group {
+                gap: 6px;
+                padding: 3px 0;
+                min-height: 28px;
+            }
+            
+            .radio-item label {
+                font-size: 0.7rem;
+            }
+            
+            .submit-btn {
+                margin-top: 12px;
+                padding: 8px 25px;
+                font-size: 0.85rem;
+            }
         }
         
-        /* 작은 태블릿 및 모바일 */
+        /* 모바일 화면 (768px 이하) */
         @media (max-width: 768px) {
             body {
                 font-size: 12px;
             }
             
             .register-container {
-                padding: 15px;
+                padding: 10px 15px;
+                margin: 10px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .page-header p {
+                font-size: 0.75rem;
             }
             
             .form-row {
-                gap: 10px;
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 6px;
+            }
+            
+            .form-control {
+                height: 26px;
+                font-size: 0.7rem;
             }
             
             .check-btn, .verify-btn {
-                width: 100%;
+                height: 26px;
+                font-size: 0.65rem;
+                padding: 3px 8px;
+            }
+            
+            .submit-btn {
+                margin-top: 10px;
+                padding: 6px 20px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -357,24 +450,24 @@
                                     <label for="position1">대표</label>
                                 </div>
                                 <div class="radio-item">
-                                    <input type="radio" id="position2" name="position" value="고문">
-                                    <label for="position2">고문</label>
+                                    <input type="radio" id="position2" name="position" value="이사">
+                                    <label for="position2">이사</label>
                                 </div>
                                 <div class="radio-item">
-                                    <input type="radio" id="position3" name="position" value="감사">
-                                    <label for="position3">감사</label>
+                                    <input type="radio" id="position3" name="position" value="부장">
+                                    <label for="position3">부장</label>
                                 </div>
                                 <div class="radio-item">
-                                    <input type="radio" id="position4" name="position" value="이사">
-                                    <label for="position4">이사</label>
+                                    <input type="radio" id="position4" name="position" value="과장">
+                                    <label for="position4">과장</label>
                                 </div>
                                 <div class="radio-item">
-                                    <input type="radio" id="position5" name="position" value="본부장">
-                                    <label for="position5">본부장</label>
+                                    <input type="radio" id="position5" name="position" value="대리">
+                                    <label for="position5">대리</label>
                                 </div>
                                 <div class="radio-item">
-                                    <input type="radio" id="position6" name="position" value="팀장">
-                                    <label for="position6">팀장</label>
+                                    <input type="radio" id="position6" name="position" value="주임">
+                                    <label for="position6">주임</label>
                                 </div>
                                 <div class="radio-item">
                                     <input type="radio" id="position7" name="position" value="팀원">
