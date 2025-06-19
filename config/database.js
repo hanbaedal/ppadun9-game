@@ -3,16 +3,17 @@ require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        const conn = await mongoose.connect('mongodb+srv://ppadun_uesr:ppadun8267@member-management.mongodb.net/member-management?retryWrites=true&w=majority', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
+        // 환경 변수에서 MongoDB URI를 가져오거나 기본값 사용
+        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_uesr:ppadun8267@cluster0.8jqgq.mongodb.net/ppadun9?retryWrites=true&w=majority';
+        
+        const conn = await mongoose.connect(mongoURI, {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
         });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
         console.error(`MongoDB 연결 오류: ${error.message}`);
-        console.error('연결 문자열:', 'mongodb+srv://ppadun_uesr:****@member-management.mongodb.net/member-management?retryWrites=true&w=majority');
+        console.error('연결 문자열:', process.env.MONGODB_URI ? '환경변수에서 로드됨' : '기본값 사용');
         process.exit(1);
     }
 };

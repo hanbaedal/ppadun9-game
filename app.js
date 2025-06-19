@@ -12,10 +12,9 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // MongoDB 연결
-mongoose.connect('mongodb+srv://haesoo:haesoo@cluster0.8jqgq.mongodb.net/member-management?retryWrites=true&w=majority', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://haesoo:haesoo@cluster0.8jqgq.mongodb.net/ppadun9?retryWrites=true&w=majority';
+
+mongoose.connect(mongoURI)
 .then(() => console.log('MongoDB 연결 성공'))
 .catch(err => console.error('MongoDB 연결 실패:', err));
 
