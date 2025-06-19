@@ -11,12 +11,12 @@
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f0d4 100%);
             min-height: 100vh;
         }
         
         .navbar {
-            background: rgba(255, 255, 255, 0.95) !important;
+            background: rgba(245, 241, 235, 0.95) !important;
             backdrop-filter: blur(10px);
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
         }
@@ -47,7 +47,7 @@
         }
         
         .menu-item {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(230, 240, 250, 0.95);
             border-radius: 15px;
             padding: 20px;
             text-decoration: none;
@@ -77,7 +77,7 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #87ceeb, #98d8e8);
         }
         
         .menu-icon {
@@ -145,7 +145,7 @@
         
         /* Footer 스타일 */
         .footer {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(245, 241, 235, 0.95);
             backdrop-filter: blur(10px);
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             padding: 20px 0;
@@ -172,6 +172,13 @@
             margin-right: 10px;
         }
         
+        .logo-image {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+        
         .game-info {
             text-align: center;
             flex: 1;
@@ -192,7 +199,7 @@
         }
         
         .game-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #87ceeb 0%, #98d8e8 100%);
             color: white;
             border: none;
             border-radius: 50px;
@@ -201,7 +208,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -209,7 +216,7 @@
         
         .game-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(135, 206, 235, 0.4);
             color: white;
             text-decoration: none;
         }
@@ -237,6 +244,11 @@
                 margin-bottom: 10px;
             }
             
+            .logo-image {
+                width: 50px;
+                height: 50px;
+            }
+            
             .game-info {
                 min-width: auto;
             }
@@ -252,7 +264,7 @@
             text-align: center;
             margin-top: 30px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(245, 241, 235, 0.8);
             border-radius: 15px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -391,7 +403,9 @@
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-game-section">
-                <div class="game-icon">📱</div>
+                <div class="game-icon">
+                    <img src="/img/logo.png" alt="빠던나인 로고" class="logo-image">
+                </div>
                 <div class="game-info">
                     <h4>빠던나인 게임</h4>
                     <p>즐거운 야구 예측 게임</p>
