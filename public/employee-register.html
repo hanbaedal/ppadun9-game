@@ -131,6 +131,11 @@
             width: 220px; /* 약 20자 크기 */
         }
         
+        /* 비밀번호 입력란 */
+        .form-row .form-group .form-control[type="password"] {
+            width: 220px; /* 이메일과 동일한 크기 */
+        }
+        
         /* 아이디, 비밀번호 입력란 */
         .form-row.three-columns .form-group .form-control {
             width: 180px; /* 약 16자 크기 */
@@ -422,6 +427,13 @@
             .password-group .form-text {
                 margin-bottom: 3px;
             }
+            
+            /* 노트북 크기에서 비밀번호 레이블 정렬 */
+            .password-group .form-label {
+                margin-left: 0;
+                text-align: left;
+                min-width: auto;
+            }
         }
         
         /* 모바일 화면 (768px 이하) */
@@ -599,22 +611,23 @@
                             </div>
                             <div id="idMessage" class="message"></div>
                         </div>
-                        <div class="form-group password-group">
-                            <div class="password-row">
-                                <label for="password" class="form-label">비밀번호 *</label>
-                                <div class="form-control-wrap">
-                                    <input type="password" class="form-control" id="password" name="password" 
-                                           pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$" required>
-                                    <small class="form-text text-muted">8자 이상 16자 이하, 영문, 숫자, 특수문자 포함</small>
-                                </div>
+                        <div class="form-group">
+                            <label for="password" class="form-label">비밀번호 *</label>
+                            <div class="form-control-wrap">
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$" required>
+                                <small class="form-text text-muted">8자 이상 16자 이하, 영문, 숫자, 특수문자 포함</small>
                             </div>
-                            
-                            <div class="password-row">
-                                <label for="confirmPassword" class="form-label">비밀번호 확인 *</label>
-                                <div class="form-control-wrap">
-                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-                                    <div id="passwordMessage" class="message"></div>
-                                </div>
+                        </div>
+                    </div>
+
+                    <!-- 비밀번호 확인 -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">비밀번호 확인 *</label>
+                            <div class="form-control-wrap">
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                <div id="passwordMessage" class="message"></div>
                             </div>
                         </div>
                     </div>
