@@ -246,6 +246,57 @@
                 font-size: 0.9rem;
             }
         }
+        
+        /* 프로젝트 설명 텍스트 스타일 */
+        .project-notice {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .notice-text {
+            color: #ff4444;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.6;
+            animation: blink 2s infinite;
+            text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+        }
+        
+        @keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0.7;
+            }
+        }
+        
+        /* 태블릿/노트북 반응형 */
+        @media (max-width: 1024px) {
+            .notice-text {
+                font-size: 1rem;
+                line-height: 1.5;
+            }
+        }
+        
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            .project-notice {
+                margin-top: 20px;
+                padding: 15px;
+            }
+            
+            .notice-text {
+                font-size: 0.9rem;
+                line-height: 1.4;
+            }
+        }
     </style>
 </head>
 <body>
@@ -325,6 +376,14 @@
                     </div>
                 </a>
             </div>
+            
+            <!-- 프로젝트 설명 텍스트 -->
+            <div class="project-notice">
+                <p class="notice-text">
+                    지금은 빠던나인 프로젝트를 설명하려고 한페이지에 다 만들었으며<br>
+                    정식으로 '빠던나인 게임'을 출시하면 '게임관리, 게임운영, 게임'은 독립해서 만들예정입니다.
+                </p>
+            </div>
         </div>
     </div>
 
@@ -332,7 +391,7 @@
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-game-section">
-                <div class="game-icon">🎮</div>
+                <div class="game-icon">📱</div>
                 <div class="game-info">
                     <h4>빠던나인 게임</h4>
                     <p>즐거운 야구 예측 게임</p>
