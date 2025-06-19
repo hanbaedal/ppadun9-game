@@ -142,6 +142,110 @@
                 font-size: 1.1rem;
             }
         }
+        
+        /* Footer 스타일 */
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px 0;
+            margin-top: 40px;
+            box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .footer-game-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .game-icon {
+            font-size: 3rem;
+            margin-right: 10px;
+        }
+        
+        .game-info {
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .game-info h4 {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.3rem;
+        }
+        
+        .game-info p {
+            color: #666;
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        .game-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .game-button i {
+            font-size: 0.9rem;
+        }
+        
+        /* Footer 반응형 */
+        @media (max-width: 768px) {
+            .footer {
+                padding: 15px 0;
+                margin-top: 20px;
+            }
+            
+            .footer-game-section {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .game-icon {
+                font-size: 2.5rem;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .game-info {
+                min-width: auto;
+            }
+            
+            .game-button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -212,21 +316,62 @@
                     </div>
                 </a>
 
-                <!-- 6. 시스템 관리 -->
-                <a href="/system-management.html" class="menu-item">
-                    <div class="menu-icon">⚙️</div>
+                <!-- 6. 빠던나인 카페 -->
+                <a href="https://cafe.naver.com/ppadun9" class="menu-item">
+                    <div class="menu-icon">☕</div>
                     <div class="menu-text">
-                        <h3>시스템 관리</h3>
-                        <p>시스템 설정 및 모니터링</p>
+                        <h3>빠던나인 카페</h3>
+                        <p>네이버 카페 커뮤니티</p>
                     </div>
                 </a>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-game-section">
+                <div class="game-icon">🎮</div>
+                <div class="game-info">
+                    <h4>빠던나인 게임</h4>
+                    <p>즐거운 야구 예측 게임</p>
+                </div>
+                <button class="game-button" onclick="openGame()">
+                    <i class="fas fa-play"></i>
+                    게임 시작
+                </button>
+            </div>
+        </div>
+    </footer>
+
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="/js/main.js"></script>
+    <script>
+        // 게임 시작 함수
+        function openGame() {
+            // 게임 페이지로 이동
+            window.location.href = '/game-play.html';
+        }
+        
+        // 페이지 로드 시 추가 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('빠던나인 프로젝트 관리 시스템이 로드되었습니다.');
+            
+            // 게임 버튼 호버 효과
+            const gameButton = document.querySelector('.game-button');
+            if (gameButton) {
+                gameButton.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                gameButton.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            }
+        });
+    </script>
 </body>
 </html> 
