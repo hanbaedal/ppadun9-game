@@ -28,9 +28,9 @@
         }
         
         .main-content {
-            padding-top: 100px;
-            padding-bottom: 40px;
-            min-height: 100vh;
+            padding-top: 70px;
+            padding-bottom: 20px;
+            min-height: calc(100vh - 90px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -38,44 +38,44 @@
         
         .page-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 25px;
             color: white;
         }
         
         .page-header h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         .page-header p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             opacity: 0.9;
         }
         
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            padding: 20px;
-            max-width: 800px;
+            gap: 15px;
+            padding: 15px;
+            max-width: 700px;
             margin: 0 auto;
             width: 100%;
         }
         
         .menu-item {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
+            border-radius: 12px;
+            padding: 20px;
             text-decoration: none;
             color: #333;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
             overflow: hidden;
-            height: 260px;
+            height: 180px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -101,38 +101,39 @@
         }
         
         .menu-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
         }
         
         .menu-text h3 {
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #333;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
         }
         
         .menu-text p {
             color: #666;
             margin: 0;
-            line-height: 1.5;
-            font-size: 1rem;
+            line-height: 1.4;
+            font-size: 0.9rem;
         }
         
         .back-button {
             position: fixed;
-            top: 20px;
-            left: 20px;
+            top: 15px;
+            left: 15px;
             background: rgba(255, 255, 255, 0.9);
             border: none;
             border-radius: 50px;
-            padding: 12px 20px;
+            padding: 10px 16px;
             color: #333;
             text-decoration: none;
             font-weight: 500;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             z-index: 1000;
+            font-size: 0.9rem;
         }
         
         .back-button:hover {
@@ -144,31 +145,105 @@
         }
         
         /* 태블릿 */
-        @media (max-width: 768px) {
-            .menu-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                padding: 15px;
+        @media (max-width: 1024px) {
+            .main-content {
+                padding-top: 60px;
+                padding-bottom: 15px;
+                min-height: calc(100vh - 75px);
             }
             
-            .menu-item {
-                padding: 25px;
-                height: 234px;
-            }
-            
-            .menu-icon {
-                font-size: 2.5rem;
+            .page-header {
+                margin-bottom: 20px;
             }
             
             .page-header h1 {
+                font-size: 1.8rem;
+                margin-bottom: 6px;
+            }
+            
+            .page-header p {
+                font-size: 0.9rem;
+            }
+            
+            .menu-grid {
+                gap: 12px;
+                padding: 12px;
+                max-width: 600px;
+            }
+            
+            .menu-item {
+                padding: 16px;
+                height: 150px;
+            }
+            
+            .menu-icon {
+                font-size: 2.2rem;
+                margin-bottom: 12px;
+            }
+            
+            .menu-text h3 {
+                font-size: 1rem;
+                margin-bottom: 6px;
+            }
+            
+            .menu-text p {
+                font-size: 0.8rem;
+                line-height: 1.3;
+            }
+        }
+        
+        /* 모바일 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding-top: 50px;
+                padding-bottom: 10px;
+                min-height: calc(100vh - 60px);
+            }
+            
+            .page-header {
+                margin-bottom: 15px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.6rem;
+                margin-bottom: 5px;
+            }
+            
+            .page-header p {
+                font-size: 0.85rem;
+            }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding: 10px;
+            }
+            
+            .menu-item {
+                padding: 18px;
+                height: 140px;
+            }
+            
+            .menu-icon {
                 font-size: 2rem;
+                margin-bottom: 10px;
+            }
+            
+            .menu-text h3 {
+                font-size: 0.95rem;
+                margin-bottom: 5px;
+            }
+            
+            .menu-text p {
+                font-size: 0.75rem;
+                line-height: 1.2;
             }
             
             .back-button {
-                top: 15px;
-                left: 15px;
-                padding: 10px 16px;
-                font-size: 0.9rem;
+                top: 12px;
+                left: 12px;
+                padding: 8px 14px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -226,7 +301,16 @@
                     </div>
                 </a>
 
-                <!-- 3. 비밀번호 찾기 -->
+                <!-- 3. 직원 리스트 -->
+                <a href="/employee-list.html" class="menu-item">
+                    <div class="menu-icon">📋</div>
+                    <div class="menu-text">
+                        <h3>직원 리스트</h3>
+                        <p>등록된 직원 목록</p>
+                    </div>
+                </a>
+
+                <!-- 4. 비밀번호 찾기 -->
                 <a href="/employee-password.html" class="menu-item">
                     <div class="menu-icon">🔑</div>
                     <div class="menu-text">
@@ -235,7 +319,7 @@
                     </div>
                 </a>
 
-                <!-- 4. 아이디 찾기 -->
+                <!-- 5. 아이디 찾기 -->
                 <a href="/employee-id.html" class="menu-item">
                     <div class="menu-icon">🆔</div>
                     <div class="menu-text">
