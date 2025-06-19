@@ -60,7 +60,17 @@ app.use((req, res, next) => {
             path: req.path
         });
     } else {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+        // 실제 파일이 존재하는지 확인
+        const filePath = path.join(__dirname, 'public', req.path);
+        const indexPath = path.join(__dirname, 'public', 'index.html');
+        
+        // 파일이 존재하면 해당 파일 제공
+        if (require('fs').existsSync(filePath) && require('fs').statSync(filePath).isFile()) {
+            res.sendFile(filePath);
+        } else {
+            // 파일이 존재하지 않으면 index.html 제공 (SPA 라우팅)
+            res.sendFile(indexPath);
+        }
     }
 });
 
