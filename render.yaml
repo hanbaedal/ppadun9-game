@@ -2,7 +2,7 @@ services:
   - type: web
     name: ppadun9-project-management
     env: node
-    buildCommand: npm ci --only=production --legacy-peer-deps
+    buildCommand: npm ci --only=production
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
