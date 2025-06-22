@@ -2,12 +2,26 @@ services:
   - type: web
     name: ppadun9-project-management
     env: node
-    buildCommand: npm install
+    buildCommand: npm ci --only=production --no-optional
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
         sync: false
+      - key: DB_NAME
+        value: member-management
+      - key: SESSION_SECRET
+        generateValue: true
     healthCheckPath: /
-    autoDeploy: true 
+    autoDeploy: true
+    plan: free
+    buildFilter:
+      paths:
+        - package.json
+        - package-lock.json
+        - server.js
+        - public/**
+        - routes/**
+        - models/**
+        - config/** 

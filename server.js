@@ -8,7 +8,24 @@ const session = require('express-session');
 // 환경 변수 설정
 dotenv.config();
 
-// 환경 변수 검증 (개발 환경에서만)
+// Render 배포 환경 최적화
+if (process.env.NODE_ENV === 'production') {
+    // Production 환경에서는 환경변수가 Render에서 설정됨
+    console.log('[Config] Production 환경 감지');
+} else {
+    // 개발 환경용 기본값 설정
+    if (!process.env.MONGODB_URI || process.env.MONGODB_URI.trim() === '') {
+        process.env.MONGODB_URI = 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+    }
+    if (!process.env.DB_NAME || process.env.DB_NAME.trim() === '') {
+        process.env.DB_NAME = 'member-management';
+    }
+    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.trim() === '') {
+        process.env.SESSION_SECRET = 'ppadun9-secret-key-2024';
+    }
+}
+
+// 환경 변수 검증
 if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
     console.error('[Config] Production 환경에서 MONGODB_URI가 설정되지 않았습니다.');
     process.exit(1);
@@ -22,9 +39,7 @@ console.log('- DB_NAME:', process.env.DB_NAME || '기본값 사용');
 const app = express();
 
 // MongoDB 연결 설정
-const MONGODB_URI = (process.env.MONGODB_URI && process.env.MONGODB_URI.trim() !== '') 
-    ? process.env.MONGODB_URI 
-    : 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
 const DB_NAME = process.env.DB_NAME || 'member-management';
 const COLLECTION_NAME = 'employee-member';
 const DAILYGAMES_COLLECTION = 'dailygames';
@@ -79,7 +94,7 @@ app.use('/api', require('./routes/game'));
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 정적 파일 제공
+// 메인 페이지
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -570,326 +585,32 @@ app.post('/api/employee/reset-password', async (req, res) => {
 function checkDepartmentPermission(requiredDepartment) {
     return (req, res, next) => {
         if (!req.session.user) {
-            return res.status(401).json({ error: '로그인이 필요합니다.' });
+            return res.redirect('/employee-login.html');
         }
         
         if (req.session.user.department !== requiredDepartment) {
-            return res.status(403).json({ 
-                error: `${requiredDepartment} 부서만 접근할 수 있습니다.` 
-            });
+            return res.status(403).send(`
+                <html>
+                <head>
+                    <title>접근 권한 없음</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                        .error { color: red; }
+                    </style>
+                </head>
+                <body>
+                    <h1 class="error">접근 권한이 없습니다</h1>
+                    <p>${requiredDepartment} 부서만 접근할 수 있습니다.</p>
+                    <p>현재 부서: ${req.session.user.department}</p>
+                    <a href="/">메인 페이지로 돌아가기</a>
+                </body>
+                </html>
+            `);
         }
         
         next();
     };
 }
-
-// 404 에러 처리
-app.use((req, res, next) => {
-    if (req.path.startsWith('/api/')) {
-        res.status(404).json({ 
-            success: false, 
-            msg: 'API 엔드포인트를 찾을 수 없습니다.',
-            path: req.path
-        });
-    } else {
-        // 실제 파일이 존재하는지 확인
-        const filePath = path.join(__dirname, 'public', req.path);
-        const indexPath = path.join(__dirname, 'public', 'index.html');
-        
-        // 파일이 존재하면 해당 파일 제공
-        if (require('fs').existsSync(filePath) && require('fs').statSync(filePath).isFile()) {
-            res.sendFile(filePath);
-        } else {
-            // 파일이 존재하지 않으면 index.html 제공 (SPA 라우팅)
-            res.sendFile(indexPath);
-        }
-    }
-});
-
-// 권한 에러 처리 미들웨어
-app.use((err, req, res, next) => {
-    if (err.status === 401) {
-        // 로그인 필요
-        if (req.path.startsWith('/api/')) {
-            res.status(401).json({ error: '로그인이 필요합니다.' });
-        } else {
-            res.redirect('/employee-login.html?message=로그인이 필요한 서비스입니다.&type=warning');
-        }
-    } else if (err.status === 403) {
-        // 권한 부족
-        if (req.path.startsWith('/api/')) {
-            res.status(403).json({ error: '접근 권한이 없습니다.' });
-        } else {
-            res.redirect('/?message=접근 권한이 없습니다.&type=danger');
-        }
-    } else {
-        next(err);
-    }
-});
-
-// 에러 핸들러
-app.use((err, req, res, next) => {
-    console.error('서버 에러 발생:', err);
-    res.status(500).json({ 
-        success: false, 
-        msg: '서버 오류가 발생했습니다.',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
-
-// ===== DAILYGAMES 컬렉션 API =====
-
-// 오늘의 경기 목록 조회 API
-app.get('/api/dailygames', async (req, res) => {
-    try {
-        if (!db) {
-            console.error('MongoDB 연결이 설정되지 않았습니다.');
-            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-        }
-
-        const collection = db.collection(DAILYGAMES_COLLECTION);
-        const games = await collection.find({}).sort({ gameNumber: 1 }).toArray();
-        
-        res.json(games);
-    } catch (error) {
-        console.error('경기 목록 조회 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
-
-// 오늘의 경기 등록 API
-app.post('/api/dailygames', async (req, res) => {
-    try {
-        if (!db) {
-            console.error('MongoDB 연결이 설정되지 않았습니다.');
-            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-        }
-
-        const {
-            gameNumber,
-            homeTeam,
-            awayTeam,
-            startTime,
-            date
-        } = req.body;
-
-        const collection = db.collection(DAILYGAMES_COLLECTION);
-        
-        // 같은 날짜에 같은 경기 번호가 있는지 확인
-        const existingGame = await collection.findOne({ 
-            date: date, 
-            gameNumber: gameNumber 
-        });
-        
-        if (existingGame) {
-            return res.status(400).json({ error: '같은 날짜에 이미 등록된 경기 번호입니다.' });
-        }
-
-        // 새 경기 데이터 생성
-        const newGame = {
-            gameNumber,
-            homeTeam,
-            awayTeam,
-            startTime,
-            date,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
-
-        const result = await collection.insertOne(newGame);
-        
-        res.json({ 
-            success: true, 
-            message: '경기가 성공적으로 등록되었습니다.',
-            gameId: result.insertedId 
-        });
-    } catch (error) {
-        console.error('경기 등록 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
-
-// 오늘의 경기 수정 API
-app.put('/api/dailygames/:id', async (req, res) => {
-    try {
-        if (!db) {
-            console.error('MongoDB 연결이 설정되지 않았습니다.');
-            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-        }
-
-        const { id } = req.params;
-        const updateData = req.body;
-        const collection = db.collection(DAILYGAMES_COLLECTION);
-        
-        // 업데이트 시간 추가
-        updateData.updatedAt = new Date();
-        
-        const result = await collection.updateOne(
-            { _id: new ObjectId(id) },
-            { $set: updateData }
-        );
-        
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ error: '경기를 찾을 수 없습니다.' });
-        }
-        
-        res.json({ success: true, message: '경기 정보가 성공적으로 수정되었습니다.' });
-    } catch (error) {
-        console.error('경기 수정 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
-
-// 오늘의 경기 삭제 API
-app.delete('/api/dailygames/:id', async (req, res) => {
-    try {
-        if (!db) {
-            console.error('MongoDB 연결이 설정되지 않았습니다.');
-            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-        }
-
-        const { id } = req.params;
-        const collection = db.collection(DAILYGAMES_COLLECTION);
-        
-        const result = await collection.deleteOne({ _id: new ObjectId(id) });
-        
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ error: '경기를 찾을 수 없습니다.' });
-        }
-        
-        res.json({ success: true, message: '경기가 성공적으로 삭제되었습니다.' });
-    } catch (error) {
-        console.error('경기 삭제 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
-
-// 특정 날짜의 경기 조회 API
-app.get('/api/dailygames/date/:date', async (req, res) => {
-    try {
-        if (!db) {
-            console.error('MongoDB 연결이 설정되지 않았습니다.');
-            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-        }
-
-        const { date } = req.params;
-        const collection = db.collection(DAILYGAMES_COLLECTION);
-        
-        const games = await collection.find({ date: date }).sort({ gameNumber: 1 }).toArray();
-        
-        res.json(games);
-    } catch (error) {
-        console.error('특정 날짜 경기 조회 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
-
-// 경기 상황 업데이트 API (경기 진행 상황, 스코어 등)
-app.patch('/api/dailygames/:id/status', async (req, res) => {
-    try {
-        if (!db) {
-            console.error('MongoDB 연결이 설정되지 않았습니다.');
-            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-        }
-
-        const { id } = req.params;
-        const { 
-            status,           // 경기 상태 (예: '예정', '진행중', '종료')
-            homeScore,        // 홈팀 스코어
-            awayScore,        // 원정팀 스코어
-            currentInning,    // 현재 이닝
-            isTopInning,      // 상/하 이닝 여부
-            gameNotes         // 경기 메모
-        } = req.body;
-
-        const collection = db.collection(DAILYGAMES_COLLECTION);
-        
-        const updateData = {
-            status,
-            homeScore,
-            awayScore,
-            currentInning,
-            isTopInning,
-            gameNotes,
-            updatedAt: new Date()
-        };
-
-        // undefined 값 제거
-        Object.keys(updateData).forEach(key => {
-            if (updateData[key] === undefined) {
-                delete updateData[key];
-            }
-        });
-        
-        const result = await collection.updateOne(
-            { _id: new ObjectId(id) },
-            { $set: updateData }
-        );
-        
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ error: '경기를 찾을 수 없습니다.' });
-        }
-        
-        res.json({ success: true, message: '경기 상황이 성공적으로 업데이트되었습니다.' });
-    } catch (error) {
-        console.error('경기 상황 업데이트 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
-
-// 경기 종료 처리 API
-app.patch('/api/dailygames/:id/finish', async (req, res) => {
-    try {
-        if (!db) {
-            console.error('MongoDB 연결이 설정되지 않았습니다.');
-            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-        }
-
-        const { id } = req.params;
-        const { 
-            finalHomeScore,   // 최종 홈팀 스코어
-            finalAwayScore,   // 최종 원정팀 스코어
-            winner,           // 승리팀
-            gameDuration,     // 경기 시간
-            endTime,          // 종료 시간
-            gameSummary       // 경기 요약
-        } = req.body;
-
-        const collection = db.collection(DAILYGAMES_COLLECTION);
-        
-        const updateData = {
-            status: '종료',
-            finalHomeScore,
-            finalAwayScore,
-            winner,
-            gameDuration,
-            endTime,
-            gameSummary,
-            updatedAt: new Date()
-        };
-
-        // undefined 값 제거
-        Object.keys(updateData).forEach(key => {
-            if (updateData[key] === undefined) {
-                delete updateData[key];
-            }
-        });
-        
-        const result = await collection.updateOne(
-            { _id: new ObjectId(id) },
-            { $set: updateData }
-        );
-        
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ error: '경기를 찾을 수 없습니다.' });
-        }
-        
-        res.json({ success: true, message: '경기가 성공적으로 종료 처리되었습니다.' });
-    } catch (error) {
-        console.error('경기 종료 처리 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
 
 // 서버 시작
 async function startServer() {
