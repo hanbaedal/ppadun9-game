@@ -68,13 +68,13 @@ router.post('/today-game', async (req, res) => {
         const result = await collection.findOneAndUpdate(
             { date },
             { date, games },
-            { upsert: true, returnDocument: 'after' }
+            { upsert: true, returnOriginal: false }
         );
 
         res.json({
             success: true,
             message: '게임 정보가 저장되었습니다.',
-            data: result.value
+            data: result
         });
     } catch (error) {
         console.error('게임 정보 저장 오류:', error);

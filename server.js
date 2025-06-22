@@ -47,13 +47,13 @@ async function connectToMongoDB() {
     try {
         console.log('MongoDB 연결 시도:', MONGODB_URI);
         const client = new MongoClient(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
             serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,
             connectTimeoutMS: 10000,
             maxPoolSize: 10,
             minPoolSize: 1,
+            ssl: true,
+            sslValidate: false
         });
         await client.connect();
         db = client.db(DB_NAME);
@@ -399,7 +399,7 @@ app.get('/api/employee/current-user', (req, res) => {
             });
         }
     } catch (error) {
-        console.error('사용자 정보 조회 오류:', error);
+        console.error('현재 사용자 정보 조회 오류:', error);
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
@@ -412,7 +412,10 @@ app.post('/api/employee/logout', (req, res) => {
                 console.error('세션 삭제 오류:', err);
                 return res.status(500).json({ error: '로그아웃 중 오류가 발생했습니다.' });
             }
-            res.json({ success: true, message: '로그아웃되었습니다.' });
+            res.json({ 
+                success: true, 
+                message: '로그아웃되었습니다.' 
+            });
         });
     } catch (error) {
         console.error('로그아웃 오류:', error);
@@ -609,6 +612,37 @@ function checkDepartmentPermission(requiredDepartment) {
         next();
     };
 }
+
+// 시스템 통계 API
+app.get('/api/system/stats', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 전체 직원 수
+        const totalEmployees = await collection.countDocuments();
+        
+        // 부서별 직원 수
+        const departmentStats = await collection.aggregate([
+            { $group: { _id: '$department', count: { $sum: 1 } } }
+        ]).toArray();
+        
+        res.json({
+            success: true,
+            stats: {
+                totalEmployees,
+                departmentStats,
+                serverTime: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        console.error('시스템 통계 조회 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
 
 // 서버 시작
 async function startServer() {
