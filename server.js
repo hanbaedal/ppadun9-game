@@ -38,7 +38,7 @@ const app = express();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
 const DB_NAME = process.env.DB_NAME || 'member-management';
 const COLLECTION_NAME = 'employee-member';
-const DAILYGAMES_COLLECTION = 'dailygames';
+const TODAYGAMES_COLLECTION = 'todaygames';
 
 let db;
 
@@ -54,9 +54,7 @@ async function connectToMongoDB() {
             minPoolSize: 1,
             maxIdleTimeMS: 30000,
             retryWrites: true,
-            w: 'majority',
-            useNewUrlParser: true,
-            useUnifiedTopology: true
+            w: 'majority'
         });
         await client.connect();
         db = client.db(DB_NAME);

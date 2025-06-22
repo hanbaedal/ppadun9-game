@@ -287,17 +287,11 @@
                     <td>
                         <select class="team-select" id="homeTeam1" onchange="updateStadium(1, true)">
                             <option value="">홈팀 선택</option>
-                            ${kboTeams.map(team => `
-                                <option value="${team.name}">${team.name}</option>
-                            `).join('')}
                         </select>
                     </td>
                     <td>
                         <select class="team-select" id="awayTeam1">
                             <option value="">원정팀 선택</option>
-                            ${kboTeams.map(team => `
-                                <option value="${team.name}">${team.name}</option>
-                            `).join('')}
                         </select>
                     </td>
                     <td><input type="text" id="stadium1" readonly></td>
@@ -429,21 +423,11 @@
                     <td>
                         <select class="team-select" id="homeTeam${i}" onchange="updateStadium(${i}, true)">
                             <option value="">홈팀 선택</option>
-                            ${kboTeams.map(team => `
-                                <option value="${team.name}" ${game.homeTeam === team.name ? 'selected' : ''}>
-                                    ${team.name}
-                                </option>
-                            `).join('')}
                         </select>
                     </td>
                     <td>
                         <select class="team-select" id="awayTeam${i}">
                             <option value="">원정팀 선택</option>
-                            ${kboTeams.map(team => `
-                                <option value="${team.name}" ${game.awayTeam === team.name ? 'selected' : ''}>
-                                    ${team.name}
-                                </option>
-                            `).join('')}
                         </select>
                     </td>
                     <td><input type="text" id="stadium${i}" value="${game.stadium || ''}" readonly></td>
@@ -476,11 +460,47 @@
                 `;
                 tbody.appendChild(tr);
 
+                // 팀 옵션 추가
+                populateTeamOptions(i, game.homeTeam, game.awayTeam);
+
                 if (startHour && startMinute) {
                     document.getElementById(`startHour${i}`).value = displayStartHour;
                     document.getElementById(`startMinute${i}`).value = startMinute;
                 }
             }
+        }
+
+        // 팀 옵션을 동적으로 생성하는 함수
+        function populateTeamOptions(gameNumber, selectedHomeTeam, selectedAwayTeam) {
+            const homeSelect = document.getElementById(`homeTeam${gameNumber}`);
+            const awaySelect = document.getElementById(`awayTeam${gameNumber}`);
+            
+            // 기존 옵션 제거 (첫 번째 "선택" 옵션 제외)
+            while (homeSelect.children.length > 1) {
+                homeSelect.removeChild(homeSelect.lastChild);
+            }
+            while (awaySelect.children.length > 1) {
+                awaySelect.removeChild(awaySelect.lastChild);
+            }
+            
+            // 팀 옵션 추가
+            kboTeams.forEach(team => {
+                const homeOption = document.createElement('option');
+                homeOption.value = team.name;
+                homeOption.textContent = team.name;
+                if (selectedHomeTeam === team.name) {
+                    homeOption.selected = true;
+                }
+                homeSelect.appendChild(homeOption);
+                
+                const awayOption = document.createElement('option');
+                awayOption.value = team.name;
+                awayOption.textContent = team.name;
+                if (selectedAwayTeam === team.name) {
+                    awayOption.selected = true;
+                }
+                awaySelect.appendChild(awayOption);
+            });
         }
 
         // 게임 데이터 저장

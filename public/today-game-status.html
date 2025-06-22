@@ -288,14 +288,29 @@
                     <td><input type="text" value="${game.endTime || ''}" readonly></td>
                     <td>
                         <select class="status-select" id="gameStatus${i}">
-                            ${gameStatusOptions.map(option => 
-                                `<option value="${option}" ${option === game.noGame ? 'selected' : ''}>${option}</option>`
-                            ).join('')}
                         </select>
                     </td>
                 `;
                 tbody.appendChild(tr);
+
+                // 경기상황 옵션 추가
+                populateStatusOptions(i, game.noGame);
             }
+        }
+
+        // 경기상황 옵션을 동적으로 생성하는 함수
+        function populateStatusOptions(gameNumber, selectedStatus) {
+            const statusSelect = document.getElementById(`gameStatus${gameNumber}`);
+            
+            gameStatusOptions.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                if (option === selectedStatus) {
+                    optionElement.selected = true;
+                }
+                statusSelect.appendChild(optionElement);
+            });
         }
 
         // 게임 데이터 저장

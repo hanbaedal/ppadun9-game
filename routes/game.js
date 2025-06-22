@@ -27,7 +27,7 @@ router.get('/today-game', async (req, res) => {
             });
         }
 
-        const collection = db.collection('dailygames');
+        const collection = db.collection('todaygames');
         const dailyGame = await collection.findOne({ date });
         
         res.json({
@@ -62,7 +62,7 @@ router.post('/today-game', async (req, res) => {
             });
         }
 
-        const collection = db.collection('dailygames');
+        const collection = db.collection('todaygames');
         
         // upsert 옵션을 사용하여 존재하면 업데이트, 없으면 생성
         const result = await collection.findOneAndUpdate(
