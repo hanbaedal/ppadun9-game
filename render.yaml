@@ -2,7 +2,11 @@ services:
   - type: web
     name: ppadun9-project-management
     env: node
+<<<<<<< HEAD
     buildCommand: npm ci --only=production
+=======
+    buildCommand: npm ci --only=production --no-optional
+>>>>>>> 1d7e7b3bde0ca246146915ac966f47bdafb22c1b
     startCommand: node server.js
     envVars:
       - key: NODE_ENV

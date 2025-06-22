@@ -8,21 +8,17 @@ const session = require('express-session');
 // 환경 변수 설정
 dotenv.config();
 
+// 환경 변수 강제 설정
+process.env.MONGODB_URI = 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+process.env.DB_NAME = 'member-management';
+process.env.SESSION_SECRET = 'ppadun9-secret-key-2024';
+
 // Render 배포 환경 최적화
 if (process.env.NODE_ENV === 'production') {
     // Production 환경에서는 환경변수가 Render에서 설정됨
     console.log('[Config] Production 환경 감지');
 } else {
-    // 개발 환경용 기본값 설정
-    if (!process.env.MONGODB_URI || process.env.MONGODB_URI.trim() === '') {
-        process.env.MONGODB_URI = 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
-    }
-    if (!process.env.DB_NAME || process.env.DB_NAME.trim() === '') {
-        process.env.DB_NAME = 'member-management';
-    }
-    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.trim() === '') {
-        process.env.SESSION_SECRET = 'ppadun9-secret-key-2024';
-    }
+    console.log('[Config] 개발 환경 감지');
 }
 
 // 환경 변수 검증
