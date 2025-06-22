@@ -30,6 +30,38 @@
             transform: translateX(-50%);
         }
         
+        /* 사용자 정보 스타일 */
+        .navbar-nav .nav-link {
+            color: #333 !important;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #667eea !important;
+        }
+        
+        #userInfo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        
+        #userName {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        #logoutBtn {
+            color: #dc3545 !important;
+            font-weight: 500;
+        }
+        
+        #logoutBtn:hover {
+            color: #c82333 !important;
+        }
+        
         .main-content {
             padding-top: 60px;
             padding-bottom: 10px;
@@ -368,9 +400,14 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#" id="userInfo">
+                        <span class="nav-link" id="userInfo">
                             <i class="fas fa-user-circle"></i> 
-                            <span id="userName">로그인</span>
+                            <span id="userName">사용자</span>
+                        </span>
+                    </li>
+                    <li class="nav-item" id="logoutItem" style="display: none;">
+                        <a class="nav-link" href="#" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i> 로그아웃
                         </a>
                     </li>
                 </ul>
@@ -398,7 +435,7 @@
                     <div class="menu-icon">👥</div>
                     <div class="menu-text">
                         <h3>직원 관리</h3>
-                        <p>직원 등록 및 관리 시스템</p>
+                        <p>직원 등록 및 관리 시스템</p> 
                     </div>
                 </a>
 
@@ -408,6 +445,7 @@
                     <div class="menu-text">
                         <h3>오늘의 경기 등록</h3>
                         <p>KBO 야구 경기 일정 관리</p>
+                        <p>빠던나인 관리부서 전용</p>
                     </div>
                 </a>
 
@@ -417,6 +455,7 @@
                     <div class="menu-text">
                         <h3>게임 설정</h3>
                         <p>빠던나인 예측게임 관리</p>
+                        <p>빠던나인 운영부서 전용</p>
                     </div>
                 </a>
 
@@ -426,6 +465,7 @@
                     <div class="menu-text">
                         <h3>회원 관리</h3>
                         <p>회원 정보 및 포인트 관리</p>
+                        <p>빠던나인 기획부서 전용</p>
                     </div>
                 </a>
 
@@ -535,6 +575,8 @@
                 
                 const userNameElement = document.getElementById('userName');
                 const userInfoElement = document.getElementById('userInfo');
+                const logoutItem = document.getElementById('logoutItem');
+                const logoutBtn = document.getElementById('logoutBtn');
                 
                 if (data.success && data.user) {
                     console.log('로그인된 사용자 발견:', data.user);
@@ -542,11 +584,14 @@
                     userNameElement.textContent = data.user.name || data.user.username;
                     console.log('사용자 이름 표시:', data.user.name || data.user.username);
                     
-                    // 사용자 정보 클릭 시 로그아웃 옵션 추가
-                    userInfoElement.onclick = function(e) {
+                    // 로그아웃 버튼 표시
+                    logoutItem.style.display = 'block';
+                    
+                    // 로그아웃 버튼 이벤트 리스너
+                    logoutBtn.addEventListener('click', function(e) {
                         e.preventDefault();
                         showLogoutConfirm();
-                    };
+                    });
                     
                     // 툴팁 추가 (이름과 직책 표시)
                     userInfoElement.title = `${data.user.name} (${data.user.position})`;
@@ -554,23 +599,17 @@
                     // 부서별 권한 체크
                     checkDepartmentPermissions(data.user.department);
                 } else {
-                    console.log('로그인되지 않은 상태');
-                    // 로그인되지 않은 경우 - '로그인' 표시
-                    userNameElement.textContent = '로그인';
-                    userInfoElement.href = '/employee-login.html';
-                    userInfoElement.title = '로그인하기';
-                    
-                    // 로그인되지 않은 경우 모든 권한 제한 메뉴 비활성화
-                    disableRestrictedMenus();
+                    console.log('로그인되지 않은 상태 - 로그인 페이지로 이동');
+                    // 로그인되지 않은 경우 로그인 페이지로 자동 이동
+                    alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+                    window.location.href = '/employee-login.html';
+                    return;
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                // 오류 발생 시 기본값으로 '로그인' 표시
-                const userNameElement = document.getElementById('userName');
-                const userInfoElement = document.getElementById('userInfo');
-                userNameElement.textContent = '로그인';
-                userInfoElement.href = '/employee-login.html';
-                userInfoElement.title = '로그인하기';
+                // 오류 발생 시 로그인 페이지로 이동
+                alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+                window.location.href = '/employee-login.html';
             }
         }
         
@@ -630,42 +669,6 @@
             }
         }
         
-        // 로그인되지 않은 경우 권한 제한 메뉴 비활성화
-        function disableRestrictedMenus() {
-            const todayGameMenu = document.getElementById('todayGameMenu');
-            const gameSettingMenu = document.getElementById('gameSettingMenu');
-            const employeeMemberMenu = document.querySelector('a[href="/employee-member.html"]');
-            
-            // 오늘의 경기 등록 비활성화
-            todayGameMenu.style.opacity = '0.5';
-            todayGameMenu.style.pointerEvents = 'none';
-            todayGameMenu.title = '로그인이 필요합니다.';
-            todayGameMenu.onclick = function(e) {
-                e.preventDefault();
-                alert('로그인이 필요한 서비스입니다.');
-            };
-            
-            // 게임 설정 비활성화
-            gameSettingMenu.style.opacity = '0.5';
-            gameSettingMenu.style.pointerEvents = 'none';
-            gameSettingMenu.title = '로그인이 필요합니다.';
-            gameSettingMenu.onclick = function(e) {
-                e.preventDefault();
-                alert('로그인이 필요한 서비스입니다.');
-            };
-            
-            // 회원 관리 비활성화
-            if (employeeMemberMenu) {
-                employeeMemberMenu.style.opacity = '0.5';
-                employeeMemberMenu.style.pointerEvents = 'none';
-                employeeMemberMenu.title = '로그인이 필요합니다.';
-                employeeMemberMenu.onclick = function(e) {
-                    e.preventDefault();
-                    alert('로그인이 필요한 서비스입니다.');
-                };
-            }
-        }
-        
         // 로그아웃 확인 다이얼로그
         function showLogoutConfirm() {
             if (confirm('로그아웃하시겠습니까?')) {
@@ -687,8 +690,8 @@
                 
                 if (data.success) {
                     alert('로그아웃되었습니다.');
-                    // 페이지 새로고침하여 사용자 정보 업데이트
-                    window.location.reload();
+                    // 로그인 페이지로 이동
+                    window.location.href = '/employee-login.html';
                 } else {
                     alert('로그아웃 중 오류가 발생했습니다.');
                 }
