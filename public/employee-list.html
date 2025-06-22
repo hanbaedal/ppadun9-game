@@ -544,12 +544,14 @@
                 if (data.success && data.user) {
                     userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name || data.user.username}`;
                 } else {
-                    // 로그인되지 않은 경우 메인 페이지로 리다이렉트
-                    window.location.href = '/';
+                    // 로그인되지 않은 경우 기본값 표시
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> 사용자`;
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                window.location.href = '/';
+                // 오류 발생 시 기본값 표시
+                const userNameElement = document.getElementById('userName');
+                userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> 사용자`;
             }
         }
 
