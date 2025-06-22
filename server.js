@@ -106,7 +106,7 @@ app.get('/employee-register.html', (req, res) => {
 });
 
 // 직원목록 페이지
-app.get('/employee-list.html', checkDepartmentPermission('기획'), (req, res) => {
+app.get('/employee-list.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'employee-list.html'));
 });
 
@@ -125,38 +125,38 @@ app.get('/employee-password.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'employee-password.html'));
 });
 
-// 오늘의 경기 등록 페이지 (관리 부서만 접근 가능)
-app.get('/today-game.html', checkDepartmentPermission('관리'), (req, res) => {
+// 오늘의 경기 등록 페이지
+app.get('/today-game.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'today-game.html'));
 });
 
-// 게임 설정 페이지 (운영 부서만 접근 가능)
-app.get('/team-game.html', checkDepartmentPermission('운영'), (req, res) => {
+// 게임 설정 페이지
+app.get('/team-game.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'team-game.html'));
 });
 
-// 오늘의 경기 시작 페이지 (관리 부서만 접근 가능)
-app.get('/today-game-start.html', checkDepartmentPermission('관리'), (req, res) => {
+// 오늘의 경기 시작 페이지
+app.get('/today-game-start.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'today-game-start.html'));
 });
 
-// 오늘의 경기 종료 페이지 (관리 부서만 접근 가능)
-app.get('/today-game-end.html', checkDepartmentPermission('관리'), (req, res) => {
+// 오늘의 경기 종료 페이지
+app.get('/today-game-end.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'today-game-end.html'));
 });
 
-// 오늘의 경기 상황 페이지 (관리 부서만 접근 가능)
-app.get('/today-game-status.html', checkDepartmentPermission('관리'), (req, res) => {
+// 오늘의 경기 상황 페이지
+app.get('/today-game-status.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'today-game-status.html'));
 });
 
-// 오늘의 경기 확인 페이지 (관리 부서만 접근 가능)
-app.get('/today-game-display.html', checkDepartmentPermission('관리'), (req, res) => {
+// 오늘의 경기 확인 페이지
+app.get('/today-game-display.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'today-game-display.html'));
 });
 
-// 회원 관리 페이지 (기획, 관리 부서만 접근 가능)
-app.get('/employee-member.html', checkDepartmentPermission('기획', '관리'), (req, res) => {
+// 회원 관리 페이지
+app.get('/employee-member.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'employee-member.html'));
 });
 
@@ -596,37 +596,6 @@ app.post('/api/employee/reset-password', async (req, res) => {
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
-
-// 권한 체크 미들웨어
-function checkDepartmentPermission(...allowedDepartments) {
-    return (req, res, next) => {
-        if (!req.session.user) {
-            return res.redirect('/employee-login.html');
-        }
-        
-        if (!allowedDepartments.includes(req.session.user.department)) {
-            return res.status(403).send(`
-                <html>
-                <head>
-                    <title>접근 권한 없음</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                        .error { color: red; }
-                    </style>
-                </head>
-                <body>
-                    <h1 class="error">접근 권한이 없습니다</h1>
-                    <p>${allowedDepartments.join(', ')} 부서만 접근할 수 있습니다.</p>
-                    <p>현재 부서: ${req.session.user.department}</p>
-                    <a href="/">메인 페이지로 돌아가기</a>
-                </body>
-                </html>
-            `);
-        }
-        
-        next();
-    };
-}
 
 // 시스템 통계 API
 app.get('/api/system/stats', async (req, res) => {

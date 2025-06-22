@@ -445,7 +445,6 @@
                     <div class="menu-text">
                         <h3>오늘의 경기 등록</h3>
                         <p>KBO 야구 경기 일정 관리</p>
-                        <p>빠던나인 관리부서 전용</p>
                     </div>
                 </a>
 
@@ -455,7 +454,6 @@
                     <div class="menu-text">
                         <h3>게임 설정</h3>
                         <p>빠던나인 예측게임 관리</p>
-                        <p>빠던나인 운영부서 전용</p>
                     </div>
                 </a>
 
@@ -465,7 +463,6 @@
                     <div class="menu-text">
                         <h3>회원 관리</h3>
                         <p>회원 정보 및 포인트 관리</p>
-                        <p>빠던나인 기획부서 전용</p>
                     </div>
                 </a>
 
@@ -596,8 +593,8 @@
                     // 툴팁 추가 (이름과 직책 표시)
                     userInfoElement.title = `${data.user.name} (${data.user.position})`;
                     
-                    // 부서별 권한 체크
-                    checkDepartmentPermissions(data.user.department);
+                    // 모든 메뉴 활성화 (부서별 제한 해제)
+                    enableAllMenus();
                 } else {
                     console.log('로그인되지 않은 상태 - 로그인 페이지로 이동');
                     // 로그인되지 않은 경우 로그인 페이지로 자동 이동
@@ -613,59 +610,32 @@
             }
         }
         
-        // 부서별 권한 체크
-        function checkDepartmentPermissions(department) {
+        // 모든 메뉴 활성화 (부서별 제한 해제)
+        function enableAllMenus() {
             const todayGameMenu = document.getElementById('todayGameMenu');
             const gameSettingMenu = document.getElementById('gameSettingMenu');
             const employeeMemberMenu = document.querySelector('a[href="/employee-member.html"]');
             
-            // 오늘의 경기 등록: '관리' 부서만 접근 가능
-            if (department === '관리') {
+            // 모든 메뉴 활성화
+            if (todayGameMenu) {
                 todayGameMenu.style.opacity = '1';
                 todayGameMenu.style.pointerEvents = 'auto';
                 todayGameMenu.title = '오늘의 경기 등록';
-            } else {
-                todayGameMenu.style.opacity = '0.5';
-                todayGameMenu.style.pointerEvents = 'none';
-                todayGameMenu.title = '관리 부서만 접근 가능합니다.';
-                todayGameMenu.onclick = function(e) {
-                    e.preventDefault();
-                    alert('오늘의 경기 등록은 관리 부서만 접근할 수 있습니다.');
-                };
+                todayGameMenu.onclick = null; // 기존 클릭 이벤트 제거
             }
             
-            // 게임 설정: '운영' 부서만 접근 가능
-            if (department === '운영') {
+            if (gameSettingMenu) {
                 gameSettingMenu.style.opacity = '1';
                 gameSettingMenu.style.pointerEvents = 'auto';
                 gameSettingMenu.title = '게임 설정';
-            } else {
-                gameSettingMenu.style.opacity = '0.5';
-                gameSettingMenu.style.pointerEvents = 'none';
-                gameSettingMenu.title = '운영 부서만 접근 가능합니다.';
-                gameSettingMenu.onclick = function(e) {
-                    e.preventDefault();
-                    alert('게임 설정은 운영 부서만 접근할 수 있습니다.');
-                };
+                gameSettingMenu.onclick = null; // 기존 클릭 이벤트 제거
             }
             
-            // 회원 관리: '기획', '관리' 부서만 접근 가능
-            if (department === '기획' || department === '관리') {
-                if (employeeMemberMenu) {
-                    employeeMemberMenu.style.opacity = '1';
-                    employeeMemberMenu.style.pointerEvents = 'auto';
-                    employeeMemberMenu.title = '회원 관리';
-                }
-            } else {
-                if (employeeMemberMenu) {
-                    employeeMemberMenu.style.opacity = '0.5';
-                    employeeMemberMenu.style.pointerEvents = 'none';
-                    employeeMemberMenu.title = '기획, 관리 부서만 접근 가능합니다.';
-                    employeeMemberMenu.onclick = function(e) {
-                        e.preventDefault();
-                        alert('회원 관리는 기획, 관리 부서만 접근할 수 있습니다.');
-                    };
-                }
+            if (employeeMemberMenu) {
+                employeeMemberMenu.style.opacity = '1';
+                employeeMemberMenu.style.pointerEvents = 'auto';
+                employeeMemberMenu.title = '회원 관리';
+                employeeMemberMenu.onclick = null; // 기존 클릭 이벤트 제거
             }
         }
         
