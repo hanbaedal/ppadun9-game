@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const DailyGame = require('../models/Game');
+
+// MongoDB 연결을 server.js에서 가져오기
+let db;
+
+// db 객체를 설정하는 함수
+function setDatabase(database) {
+    db = database;
+}
 
 // 오늘의 게임 정보 조회
 router.get('/today-game', async (req, res) => {
@@ -13,7 +20,15 @@ router.get('/today-game', async (req, res) => {
             });
         }
 
-        const dailyGame = await DailyGame.findOne({ date });
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+
+        const collection = db.collection('dailygames');
+        const dailyGame = await collection.findOne({ date });
         
         res.json({
             success: true,
@@ -40,17 +55,26 @@ router.post('/today-game', async (req, res) => {
             });
         }
 
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+
+        const collection = db.collection('dailygames');
+        
         // upsert 옵션을 사용하여 존재하면 업데이트, 없으면 생성
-        const result = await DailyGame.findOneAndUpdate(
+        const result = await collection.findOneAndUpdate(
             { date },
             { date, games },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
 
         res.json({
             success: true,
             message: '게임 정보가 저장되었습니다.',
-            data: result
+            data: result.value
         });
     } catch (error) {
         console.error('게임 정보 저장 오류:', error);
@@ -66,4 +90,4 @@ router.get('/', (req, res) => {
     res.json({ message: 'Game API is working' });
 });
 
-module.exports = router; 
+module.exports = { router, setDatabase }; 

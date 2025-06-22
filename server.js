@@ -87,7 +87,7 @@ app.use(session({
 }));
 
 // API 라우트 설정
-app.use('/api', require('./routes/game'));
+const gameRoutes = require('./routes/game');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -614,6 +614,11 @@ function checkDepartmentPermission(requiredDepartment) {
 async function startServer() {
     try {
         await connectToMongoDB();
+        
+        // MongoDB 연결 후 라우터 설정
+        gameRoutes.setDatabase(db);
+        app.use('/api', gameRoutes.router);
+        
         app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
             console.log(`서버가 포트 ${process.env.PORT || 3000}에서 실행 중입니다.`);
         });
