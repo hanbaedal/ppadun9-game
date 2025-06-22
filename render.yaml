@@ -2,7 +2,7 @@ services:
   - type: web
     name: ppadun9-project-management
     env: node
-    buildCommand: npm ci --only=production
+    buildCommand: npm install --production --no-optional
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
@@ -19,7 +19,6 @@ services:
     buildFilter:
       paths:
         - package.json
-        - package-lock.json
         - server.js
         - public/**
         - routes/**

@@ -47,13 +47,14 @@ async function connectToMongoDB() {
     try {
         console.log('MongoDB 연결 시도:', MONGODB_URI);
         const client = new MongoClient(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 10000,
+            serverSelectionTimeoutMS: 30000,
             socketTimeoutMS: 45000,
-            connectTimeoutMS: 10000,
-            maxPoolSize: 10,
-            minPoolSize: 1
+            connectTimeoutMS: 30000,
+            maxPoolSize: 5,
+            minPoolSize: 1,
+            maxIdleTimeMS: 30000,
+            retryWrites: true,
+            w: 'majority'
         });
         await client.connect();
         db = client.db(DB_NAME);
