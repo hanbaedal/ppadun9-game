@@ -10,11 +10,16 @@ const { ObjectId } = require('mongodb');
 // 환경 변수 설정
 dotenv.config();
 
-// 환경 변수 검증
-if (!process.env.MONGODB_URI) {
-    console.error('[Config] MONGODB_URI가 설정되지 않았습니다.');
+// 환경 변수 검증 (개발 환경에서만)
+if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
+    console.error('[Config] Production 환경에서 MONGODB_URI가 설정되지 않았습니다.');
     process.exit(1);
 }
+
+console.log('[Config] 환경변수 확인:');
+console.log('- NODE_ENV:', process.env.NODE_ENV);
+console.log('- MONGODB_URI:', process.env.MONGODB_URI ? '설정됨' : '설정되지 않음');
+console.log('- DB_NAME:', process.env.DB_NAME || '기본값 사용');
 
 const app = express();
 
@@ -22,8 +27,8 @@ const app = express();
 connectDB();
 
 // MongoDB 연결 설정
-const MONGODB_URI = 'mongodb://localhost:27017';
-const DB_NAME = 'member-management';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+const DB_NAME = process.env.DB_NAME || 'member-management';
 const COLLECTION_NAME = 'employee-member';
 
 let db;
@@ -31,12 +36,17 @@ let db;
 // MongoDB 연결
 async function connectToMongoDB() {
     try {
-        const client = new MongoClient(MONGODB_URI);
+        console.log('MongoDB 연결 시도:', MONGODB_URI);
+        const client = new MongoClient(MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
         await client.connect();
         db = client.db(DB_NAME);
-        console.log('MongoDB에 성공적으로 연결되었습니다.');
+        console.log(`MongoDB에 성공적으로 연결되었습니다. (DB: ${DB_NAME})`);
     } catch (error) {
         console.error('MongoDB 연결 오류:', error);
+        throw error;
     }
 }
 
@@ -76,9 +86,18 @@ app.get('/employee-list.html', (req, res) => {
 app.post('/api/employee/check-id', async (req, res) => {
     try {
         const { username } = req.body;
+        console.log('아이디 중복 확인 요청:', username);
+        
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+        
         const collection = db.collection(COLLECTION_NAME);
+        console.log('컬렉션 접근:', COLLECTION_NAME);
         
         const existingEmployee = await collection.findOne({ username });
+        console.log('기존 직원 검색 결과:', existingEmployee ? '존재함' : '없음');
         
         res.json({ available: !existingEmployee });
     } catch (error) {
@@ -90,6 +109,11 @@ app.post('/api/employee/check-id', async (req, res) => {
 // 직원 등록 API
 app.post('/api/employee/register', async (req, res) => {
     try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
         const {
             name,
             email,
@@ -143,6 +167,11 @@ app.post('/api/employee/register', async (req, res) => {
 // 직원 목록 조회 API
 app.get('/api/employee/list', async (req, res) => {
     try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
         const collection = db.collection(COLLECTION_NAME);
         const employees = await collection.find({}).toArray();
         
@@ -162,6 +191,11 @@ app.get('/api/employee/list', async (req, res) => {
 // 직원 상세 조회 API
 app.get('/api/employee/:id', async (req, res) => {
     try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
         const { id } = req.params;
         const collection = db.collection(COLLECTION_NAME);
         
@@ -182,6 +216,11 @@ app.get('/api/employee/:id', async (req, res) => {
 // 직원 정보 수정 API
 app.put('/api/employee/:id', async (req, res) => {
     try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
         const { id } = req.params;
         const updateData = req.body;
         const collection = db.collection(COLLECTION_NAME);
@@ -208,6 +247,11 @@ app.put('/api/employee/:id', async (req, res) => {
 // 직원 삭제 API
 app.delete('/api/employee/:id', async (req, res) => {
     try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
         const { id } = req.params;
         const collection = db.collection(COLLECTION_NAME);
         
@@ -259,10 +303,15 @@ app.use((err, req, res, next) => {
 
 // 서버 시작
 async function startServer() {
-    await connectToMongoDB();
-    app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
-        console.log(`서버가 포트 ${process.env.PORT || 3000}에서 실행 중입니다.`);
-    });
+    try {
+        await connectToMongoDB();
+        app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
+            console.log(`서버가 포트 ${process.env.PORT || 3000}에서 실행 중입니다.`);
+        });
+    } catch (error) {
+        console.error('서버 시작 오류:', error);
+        process.exit(1);
+    }
 }
 
 startServer();
