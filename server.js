@@ -1,11 +1,8 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-const connectDB = require('./config/database');
-const { MongoClient } = require('mongodb');
-const { ObjectId } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
 // 환경 변수 설정
 dotenv.config();
@@ -23,11 +20,8 @@ console.log('- DB_NAME:', process.env.DB_NAME || '기본값 사용');
 
 const app = express();
 
-// 데이터베이스 연결
-connectDB();
-
 // MongoDB 연결 설정
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/member-management';
 const DB_NAME = process.env.DB_NAME || 'member-management';
 const COLLECTION_NAME = 'employee-member';
 
@@ -40,6 +34,9 @@ async function connectToMongoDB() {
         const client = new MongoClient(MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 10000,
         });
         await client.connect();
         db = client.db(DB_NAME);
@@ -314,13 +311,4 @@ async function startServer() {
     }
 }
 
-startServer();
-
-// MongoDB 연결 상태 모니터링
-mongoose.connection.on('error', err => {
-    console.error('MongoDB 연결 오류:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB 연결이 끊어졌습니다.');
-}); 
+startServer(); 
