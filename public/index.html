@@ -370,7 +370,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#" id="userInfo">
                             <i class="fas fa-user-circle"></i> 
-                            <span id="userName">관리자</span>
+                            <span id="userName">로그인</span>
                         </a>
                     </li>
                 </ul>
@@ -535,7 +535,7 @@
                 const userInfoElement = document.getElementById('userInfo');
                 
                 if (data.success && data.user) {
-                    // 로그인된 사용자가 있는 경우
+                    // 로그인된 사용자가 있는 경우 - 실제 이름 표시
                     userNameElement.textContent = data.user.name || data.user.username;
                     
                     // 사용자 정보 클릭 시 로그아웃 옵션 추가
@@ -544,13 +544,13 @@
                         showLogoutConfirm();
                     };
                     
-                    // 툴팁 추가
+                    // 툴팁 추가 (이름과 직책 표시)
                     userInfoElement.title = `${data.user.name} (${data.user.position})`;
                     
                     // 부서별 권한 체크
                     checkDepartmentPermissions(data.user.department);
                 } else {
-                    // 로그인되지 않은 경우
+                    // 로그인되지 않은 경우 - '로그인' 표시
                     userNameElement.textContent = '로그인';
                     userInfoElement.href = '/employee-login.html';
                     userInfoElement.title = '로그인하기';
@@ -560,7 +560,12 @@
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                // 오류 발생 시 기본값 유지
+                // 오류 발생 시 기본값으로 '로그인' 표시
+                const userNameElement = document.getElementById('userName');
+                const userInfoElement = document.getElementById('userInfo');
+                userNameElement.textContent = '로그인';
+                userInfoElement.href = '/employee-login.html';
+                userInfoElement.title = '로그인하기';
             }
         }
         
