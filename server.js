@@ -79,6 +79,11 @@ app.get('/employee-list.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'employee-list.html'));
 });
 
+// 직원 로그인 페이지
+app.get('/employee-login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'employee-login.html'));
+});
+
 // 아이디 중복 확인 API
 app.post('/api/employee/check-id', async (req, res) => {
     try {
@@ -261,6 +266,49 @@ app.delete('/api/employee/:id', async (req, res) => {
         res.json({ success: true, message: '직원이 성공적으로 삭제되었습니다.' });
     } catch (error) {
         console.error('직원 삭제 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 직원 로그인 API
+app.post('/api/employee/login', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const { username, password } = req.body;
+        
+        // 필수 필드 검증
+        if (!username || !password) {
+            return res.status(400).json({ error: '아이디와 비밀번호를 모두 입력해주세요.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 사용자 검색
+        const employee = await collection.findOne({ username });
+        
+        if (!employee) {
+            return res.status(401).json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
+        }
+        
+        // 비밀번호 확인 (실제로는 해시화된 비밀번호와 비교해야 함)
+        if (employee.password !== password) {
+            return res.status(401).json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
+        }
+        
+        // 로그인 성공 - 비밀번호는 제외하고 사용자 정보 반환
+        const { password: _, ...userInfo } = employee;
+        
+        res.json({ 
+            success: true, 
+            message: '로그인이 성공했습니다.',
+            user: userInfo
+        });
+    } catch (error) {
+        console.error('직원 로그인 오류:', error);
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });

@@ -851,20 +851,8 @@
                 
                 if (response.ok) {
                     alert(data.message);
-                    // 성공 시 폼 초기화
-                    document.getElementById('employeeRegisterForm').reset();
-                    // 상태 초기화
-                    isIdAvailable = false;
-                    isPasswordMatch = false;
-                    isPhoneVerified = false;
-                    updateSubmitButton();
-                    // 메시지 초기화
-                    document.getElementById('idMessage').textContent = '';
-                    document.getElementById('passwordMessage').textContent = '';
-                    document.getElementById('phoneMessage').textContent = '';
-                    document.getElementById('verificationSection').style.display = 'none';
-                    document.getElementById('phoneVerifyBtn').disabled = false;
-                    document.getElementById('phoneVerifyBtn').textContent = '인증번호 발송';
+                    // 성공 시 로그인 페이지로 이동
+                    window.location.href = '/employee-login.html?message=회원가입이 완료되었습니다. 로그인해주세요.&type=success';
                 } else {
                     alert(data.error || '등록에 실패했습니다.');
                 }
