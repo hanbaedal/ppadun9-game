@@ -81,7 +81,7 @@ router.post('/today-game', async (req, res) => {
         // upsert 옵션을 사용하여 존재하면 업데이트, 없으면 생성
         const result = await collection.findOneAndUpdate(
             { date },
-            { date, games },
+            { $set: { date, games } },
             { upsert: true, returnDocument: 'after' }
         );
 
