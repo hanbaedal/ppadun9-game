@@ -173,7 +173,12 @@
             <i class="fas fa-home"></i>
         </a>
         <h1 class="page-title">오늘의 KBO 야구 경기 설정</h1>
-        <div style="width: 40px;"></div> <!-- 헤더 균형을 위한 빈 공간 -->
+        <div class="user-info">
+            <span id="userName">사용자</span>
+            <a href="#" id="logoutBtn" style="margin-left: 10px; color: #666; text-decoration: none;">
+                <i class="fas fa-sign-out-alt"></i> 로그아웃
+            </a>
+        </div>
     </div>
 
     <div class="date-display" id="dateDisplay"></div>
@@ -211,9 +216,62 @@
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
+        // 현재 로그인한 사용자 정보 가져오기
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/employee/current-user');
+                const data = await response.json();
+                
+                const userNameElement = document.getElementById('userName');
+                
+                if (data.success && data.user) {
+                    userNameElement.textContent = data.user.name || data.user.username;
+                } else {
+                    // 로그인되지 않은 경우 메인 페이지로 리다이렉트
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('사용자 정보 로드 오류:', error);
+                window.location.href = '/';
+            }
+        }
+
+        // 로그아웃 처리
+        async function logout() {
+            try {
+                const response = await fetch('/api/employee/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('로그아웃되었습니다.');
+                    window.location.href = '/';
+                } else {
+                    alert('로그아웃 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
+            }
+        }
+
         // 페이지 로드 시 실행
         window.onload = function() {
             updateDate();
+            loadCurrentUser();
+            
+            // 로그아웃 버튼 이벤트 리스너
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃하시겠습니까?')) {
+                    logout();
+                }
+            });
         };
     </script>
 </body>

@@ -197,6 +197,730 @@
             margin-top: 2px;
         }
         
+        /* 비밀번호 보기/숨기기 아이콘 스타일 */
+        .password-input-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 14px;
+            padding: 2px;
+            border-radius: 3px;
+            transition: color 0.3s ease;
+        }
+        
+        .password-toggle:hover {
+            color: #333;
+        }
+        
+        .password-input-container .form-control {
+            padding-right: 35px;
+        }
+        
+        /* 직책/부서 라디오 그룹 */
+        .form-row .form-group.radio-field {
+            align-items: flex-start;
+        }
+        
+        .radio-group {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 4px 0;
+            min-height: 30px;
+            align-items: center;
+        }
+        
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+        }
+        
+        .radio-item label {
+            margin: 0;
+            font-weight: 500;
+            color: #555;
+            font-size: 0.75rem;
+        }
+        
+        /* 전화번호/인증번호 */
+        .id-check-container {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .id-check-container .form-control {
+            width: 180px;
+        }
+        
+        .form-text {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        
+        .check-btn, .verify-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 30px;
+            white-space: nowrap;
+        }
+        
+        .check-btn:hover, .verify-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+        
+        .check-btn:disabled, .verify-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            font-size: 0.7rem;
+            margin-top: 2px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .message.success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50px;
+            padding: 8px 15px;
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            font-size: 0.85rem;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+            color: #333;
+        }
+        
+        /* 태블릿 화면 (1024x768) */
+        @media (max-width: 1024px) {
+            body {
+                justify-content: flex-start;
+                padding-top: 60px;
+            }
+            
+            .main-content {
+                justify-content: flex-start;
+                padding-top: 20px;
+            }
+            
+            .register-container {
+                padding: 12px 20px;
+            }
+            
+            .page-header {
+                margin-bottom: 12px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .form-row {
+                margin-bottom: 8px;
+            }
+            
+            .form-row .form-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .form-row .form-group .form-label {
+                text-align: left;
+                margin-bottom: 3px;
+                min-width: auto;
+            }
+            
+            .form-control-wrap {
+                width: 100%;
+            }
+            
+            .form-control {
+                width: 100% !important;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+            
+            .form-row.three-columns {
+                flex-direction: column;
+            }
+            
+            .id-check-container {
+                width: 100%;
+            }
+            
+            .id-check-container .form-control {
+                width: 100%;
+            }
+            
+            .check-btn, .verify-btn {
+                height: 28px;
+                font-size: 0.7rem;
+                padding: 4px 10px;
+            }
+            
+            .radio-group {
+                gap: 6px;
+                padding: 3px 0;
+                min-height: 28px;
+            }
+            
+            .radio-item label {
+                font-size: 0.7rem;
+            }
+            
+            .submit-btn {
+                margin-top: 12px;
+                padding: 8px 25px;
+                font-size: 0.85rem;
+            }
+            
+            /* 비밀번호 그룹 태블릿 조정 */
+            .password-group {
+                gap: 3px;
+            }
+            
+            .password-group .form-text {
+                margin-bottom: 3px;
+            }
+            
+            /* 노트북 크기에서 비밀번호 레이블 정렬 */
+            .password-group .form-label {
+                margin-left: 0;
+                text-align: left;
+                min-width: auto;
+            }
+        }
+        
+        /* 모바일 화면 (768px 이하) */
+        @media (max-width: 768px) {
+            body {
+                font-size: 12px;
+                justify-content: flex-start;
+                padding-top: 60px;
+            }
+            
+            .main-content {
+                justify-content: flex-start;
+                padding-top: 10px;
+            }
+            
+            .register-container {
+                padding: 10px 15px;
+                margin: 10px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .page-header p {
+                font-size: 0.75rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 6px;
+            }
+            
+            .form-control {
+                height: 26px;
+                font-size: 0.7rem;
+            }
+            
+            .check-btn, .verify-btn {
+                height: 26px;
+                font-size: 0.65rem;
+                padding: 3px 8px;
+            }
+            
+            .submit-btn {
+                margin-top: 10px;
+                padding: 6px 20px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 뒤로가기 버튼 -->
+    <a href="/employee-member.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> 뒤로가기
+    </a>
+
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cogs me-2"></i>
+                빠던나인 프로젝트 관리
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-user-circle"></i> 관리자</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container-fluid px-0">
+            <div class="register-container">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h1>직원 등록</h1>
+                    <p>새로운 직원 정보를 입력해주세요</p>
+                </div>
+                
+                <!-- 등록 폼 -->
+                <form id="employeeRegisterForm">
+                    <!-- 이름과 이메일 -->
+                    <div class="form-row">
+                        <div class="form-group name-field">
+                            <label for="name" class="form-label">이름 *</label>
+                            <div class="form-control-wrap">
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                        </div>
+                        <div class="form-group email-field">
+                            <label for="email" class="form-label">이메일 *</label>
+                            <div class="form-control-wrap">
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 직책과 부서 -->
+                    <div class="form-row">
+                        <div class="form-group radio-field">
+                            <label class="form-label">직책 *</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="position1" name="position" value="대표" required>
+                                    <label for="position1">대표</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="position2" name="position" value="이사">
+                                    <label for="position2">이사</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="position3" name="position" value="부장">
+                                    <label for="position3">부장</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="position4" name="position" value="과장">
+                                    <label for="position4">과장</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="position5" name="position" value="대리">
+                                    <label for="position5">대리</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="position6" name="position" value="주임">
+                                    <label for="position6">주임</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="position7" name="position" value="팀원">
+                                    <label for="position7">팀원</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group radio-field">
+                            <label class="form-label">부서 *</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="department1" name="department" value="경영" required>
+                                    <label for="department1">경영</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="department2" name="department" value="기획">
+                                    <label for="department2">기획</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="department3" name="department" value="재무">
+                                    <label for="department3">재무</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="department4" name="department" value="관리">
+                                    <label for="department4">관리</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="department5" name="department" value="운영">
+                                    <label for="department5">운영</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 아이디와 비밀번호 -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username" class="form-label">아이디 *</label>
+                            <div class="id-check-container">
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <button type="button" class="check-btn" id="idCheckBtn">중복확인</button>
+                            </div>
+                            <div id="idMessage" class="message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="password" class="form-label">비밀번호 *</label>
+                            <div class="form-control-wrap">
+                                <div class="password-input-container">
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$" required>
+                                    <button type="button" class="password-toggle">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">8자 이상 16자 이하, 영문, 숫자, 특수문자 포함</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 비밀번호 확인 -->
+                    <div class="form-row">
+                        <div class="form-group">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">비밀번호 확인 *</label>
+                            <div class="form-control-wrap">
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                <div id="passwordMessage" class="message"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 전화번호와 인증번호 -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone" class="form-label">전화번호 *</label>
+                            <div class="id-check-container">
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       placeholder="010-1234-5678" required>
+                                <button type="button" class="verify-btn" id="phoneVerifyBtn">인증번호 발송</button>
+                            </div>
+                            <div id="phoneMessage" class="message"></div>
+                        </div>
+                        <div class="form-group" id="verificationSection" style="display: none;">
+                            <label for="verificationCode" class="form-label">인증번호 *</label>
+                            <div class="id-check-container">
+                                <input type="text" class="form-control" id="verificationCode" 
+                                       placeholder="인증번호 6자리" maxlength="6">
+                                <button type="button" class="verify-btn" id="verifyCodeBtn">인증확인</button>
+                            </div>
+                            <div id="verificationMessage" class="message"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 제출 버튼 -->
+                    <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                        직원 등록
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // 전역 변수
+        let isIdAvailable = false;
+        let isPasswordMatch = false;
+        let isPhoneVerified = false;
+        let verificationCode = '';
+
+        // 아이디 중복 확인
+        document.getElementById('idCheckBtn').addEventListener('click', async function() {
+            const username = document.getElementById('username').value.trim();
+            const messageDiv = document.getElementById('idMessage');
+            
+            if (!username) {
+                messageDiv.textContent = '아이디를 입력해주세요.';
+                messageDiv.className = 'message error';
+                return;
+            }
+            
+            // 버튼 비활성화
+            this.disabled = true;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>직원 등록 - 빠던나인 프로젝트 관리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            max-width: 1920px;
+            margin: 0 auto;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            max-width: 1920px;
+            margin: 0 auto;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            z-index: 1000;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .main-content {
+            padding-top: 60px;
+            padding-bottom: 20px;
+            min-height: calc(100vh - 80px);
+            max-width: 1920px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .register-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .page-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+        
+        .page-header p {
+            font-size: 0.8rem;
+            color: #666;
+            margin: 0 0 15px 0;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            align-items: flex-start;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-row .form-group .form-label {
+            min-width: 90px;
+            margin-bottom: 0;
+            text-align: right;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.8rem;
+        }
+        
+        .form-control-wrap {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+        }
+        
+        .form-control {
+            border-radius: 6px;
+            border: 2px solid #e9ecef;
+            padding: 5px 8px;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            height: 30px;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* 이름, 이메일 입력란 */
+        .form-row .form-group.name-field .form-control,
+        .form-row .form-group.email-field .form-control {
+            width: 220px; /* 약 20자 크기 */
+        }
+        
+        /* 비밀번호 입력란 */
+        .form-row .form-group .form-control[type="password"] {
+            width: 220px; /* 이메일과 동일한 크기 */
+        }
+        
+        /* 아이디, 비밀번호 입력란 */
+        .form-row.three-columns .form-group .form-control {
+            width: 180px; /* 약 16자 크기 */
+        }
+        
+        .form-row.three-columns {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-start;
+        }
+        
+        .form-row.three-columns .form-group {
+            flex: 0 0 auto;
+        }
+        
+        /* 비밀번호 그룹 스타일 */
+        .password-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+        
+        .password-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .password-group .form-label {
+            min-width: 90px;
+            text-align: right;
+            margin-bottom: 0;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.8rem;
+            margin-left: -10px;
+        }
+        
+        .password-group .form-control-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .password-group .form-control {
+            width: 180px; /* 약 16자 크기 */
+        }
+        
+        .password-group .form-text {
+            margin-top: 1px;
+            margin-bottom: 0;
+            font-size: 0.7rem;
+        }
+        
+        .password-group .message {
+            margin-top: 2px;
+        }
+        
         /* 직책/부서 라디오 그룹 */
         .form-row .form-group.radio-field {
             align-items: flex-start;
@@ -754,6 +1478,28 @@
             updateSubmitButton();
         });
 
+        // 비밀번호 입력 시에도 확인
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const messageDiv = document.getElementById('passwordMessage');
+            
+            if (confirmPassword === '') {
+                messageDiv.textContent = '';
+                isPasswordMatch = false;
+            } else if (password === confirmPassword) {
+                messageDiv.textContent = '비밀번호가 맞습니다.';
+                messageDiv.className = 'message success';
+                isPasswordMatch = true;
+            } else {
+                messageDiv.textContent = '비밀번호가 다릅니다.';
+                messageDiv.className = 'message error';
+                isPasswordMatch = false;
+            }
+            
+            updateSubmitButton();
+        });
+
         // 전화번호 인증번호 발송
         document.getElementById('phoneVerifyBtn').addEventListener('click', function() {
             const phone = document.getElementById('phone').value.trim();
@@ -799,44 +1545,101 @@
         // 제출 버튼 상태 업데이트
         function updateSubmitButton() {
             const submitBtn = document.getElementById('submitBtn');
-            const isFormValid = isIdAvailable && isPasswordMatch && isPhoneVerified;
+            
+            // 기본 필수 필드 확인
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const position = document.querySelector('input[name="position"]:checked')?.value;
+            const department = document.querySelector('input[name="department"]:checked')?.value;
+            const phone = document.getElementById('phone').value.trim();
+            
+            // 기본 필수 필드 검증
+            const hasBasicFields = name && email && username && password && confirmPassword && position && department && phone;
+            
+            // 비밀번호 일치 확인 (실시간)
+            const passwordMatch = password && confirmPassword && password === confirmPassword;
+            
+            // 최종 유효성 검사 (아이디 중복 확인은 선택사항으로 변경)
+            const isFormValid = hasBasicFields && passwordMatch;
+            
+            // 진행 상황 표시
+            const progressText = [];
+            if (!name) progressText.push('이름 입력 필요');
+            if (!email) progressText.push('이메일 입력 필요');
+            if (!username) progressText.push('아이디 입력 필요');
+            if (!password) progressText.push('비밀번호 입력 필요');
+            if (!confirmPassword) progressText.push('비밀번호 확인 입력 필요');
+            if (!passwordMatch && password && confirmPassword) progressText.push('비밀번호 불일치');
+            if (!position) progressText.push('직책 선택 필요');
+            if (!department) progressText.push('부서 선택 필요');
+            if (!phone) progressText.push('전화번호 입력 필요');
             
             submitBtn.disabled = !isFormValid;
             
             if (isFormValid) {
                 submitBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                submitBtn.textContent = '직원 등록';
             } else {
                 submitBtn.style.background = '#6c757d';
+                submitBtn.textContent = `직원 등록 (${progressText.join(', ')})`;
             }
+            
+            // 진행 상황을 콘솔에 출력 (디버깅용)
+            console.log('폼 유효성 상태:', {
+                hasBasicFields,
+                passwordMatch,
+                isFormValid,
+                progressText
+            });
         }
 
         // 폼 제출 처리
         document.getElementById('employeeRegisterForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // 모든 필수 조건 확인
-            if (!isIdAvailable || !isPasswordMatch || !isPhoneVerified) {
-                alert('모든 필수 항목을 확인해주세요.');
+            // 기본 필수 필드 확인
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const position = document.querySelector('input[name="position"]:checked')?.value;
+            const department = document.querySelector('input[name="department"]:checked')?.value;
+            const phone = document.getElementById('phone').value.trim();
+            
+            // 필수 필드 검증
+            if (!name || !email || !username || !password || !confirmPassword || !position || !department || !phone) {
+                alert('모든 필수 항목을 입력해주세요.');
                 return;
+            }
+            
+            // 비밀번호 일치 확인
+            if (password !== confirmPassword) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+            
+            // 아이디 중복 확인 경고 (선택사항)
+            if (!isIdAvailable) {
+                const proceed = confirm('아이디 중복 확인을 하지 않았습니다. 계속 진행하시겠습니까?');
+                if (!proceed) {
+                    return;
+                }
             }
             
             // 폼 데이터 수집
             const formData = {
-                name: document.getElementById('name').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                username: document.getElementById('username').value.trim(),
-                password: document.getElementById('password').value,
-                position: document.querySelector('input[name="position"]:checked')?.value,
-                department: document.querySelector('input[name="department"]:checked')?.value,
-                phone: document.getElementById('phone').value.trim()
+                name,
+                email,
+                username,
+                password,
+                position,
+                department,
+                phone
             };
-            
-            // 필수 필드 검증
-            if (!formData.name || !formData.email || !formData.username || !formData.password || 
-                !formData.position || !formData.department || !formData.phone) {
-                alert('모든 필수 항목을 입력해주세요.');
-                return;
-            }
             
             try {
                 const response = await fetch('/api/employee/register', {
@@ -865,6 +1668,33 @@
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
             console.log('직원 등록 페이지가 로드되었습니다.');
+            
+            // 초기 버튼 상태 설정
+            updateSubmitButton();
+            
+            // 전화번호 인증 섹션 초기 숨김
+            const verificationSection = document.getElementById('verificationSection');
+            if (verificationSection) {
+                verificationSection.style.display = 'none';
+            }
+            
+            // 모든 입력 필드에 실시간 업데이트 이벤트 리스너 추가
+            const inputFields = [
+                'name', 'email', 'username', 'password', 'confirmPassword', 'phone'
+            ];
+            
+            inputFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', updateSubmitButton);
+                }
+            });
+            
+            // 라디오 버튼에 이벤트 리스너 추가
+            const radioButtons = document.querySelectorAll('input[name="position"], input[name="department"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', updateSubmitButton);
+            });
         });
     </script>
 </body>

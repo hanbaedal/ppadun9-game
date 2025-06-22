@@ -357,7 +357,14 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-user-circle"></i> 관리자</a>
+                        <span class="nav-link" id="userName">
+                            <i class="fas fa-user-circle"></i> 사용자
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i> 로그아웃
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -485,6 +492,15 @@
         // 페이지 로드 시 직원 목록 불러오기
         document.addEventListener('DOMContentLoaded', function() {
             loadEmployees();
+            loadCurrentUser();
+            
+            // 로그아웃 버튼 이벤트 리스너
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃하시겠습니까?')) {
+                    logout();
+                }
+            });
             
             // 검색 기능
             document.getElementById('searchBtn').addEventListener('click', filterEmployees);
@@ -514,6 +530,50 @@
             } catch (error) {
                 console.error('직원 목록 로드 오류:', error);
                 showError('서버 오류가 발생했습니다.');
+            }
+        }
+
+        // 현재 로그인한 사용자 정보 가져오기
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/employee/current-user');
+                const data = await response.json();
+                
+                const userNameElement = document.getElementById('userName');
+                
+                if (data.success && data.user) {
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name || data.user.username}`;
+                } else {
+                    // 로그인되지 않은 경우 메인 페이지로 리다이렉트
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('사용자 정보 로드 오류:', error);
+                window.location.href = '/';
+            }
+        }
+
+        // 로그아웃 처리
+        async function logout() {
+            try {
+                const response = await fetch('/api/employee/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('로그아웃되었습니다.');
+                    window.location.href = '/';
+                } else {
+                    alert('로그아웃 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
             }
         }
 

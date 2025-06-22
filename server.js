@@ -81,8 +81,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000 // 24시간
+        secure: false, // 개발 환경에서는 false로 설정
+        maxAge: 24 * 60 * 60 * 1000, // 24시간
+        httpOnly: true,
+        sameSite: 'lax'
     }
 }));
 
@@ -103,7 +105,7 @@ app.get('/employee-register.html', (req, res) => {
 });
 
 // 직원목록 페이지
-app.get('/employee-list.html', (req, res) => {
+app.get('/employee-list.html', checkDepartmentPermission('기획'), (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'employee-list.html'));
 });
 
@@ -150,6 +152,11 @@ app.get('/today-game-status.html', checkDepartmentPermission('관리'), (req, re
 // 오늘의 경기 확인 페이지 (관리 부서만 접근 가능)
 app.get('/today-game-display.html', checkDepartmentPermission('관리'), (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'today-game-display.html'));
+});
+
+// 회원 관리 페이지 (기획, 관리 부서만 접근 가능)
+app.get('/employee-member.html', checkDepartmentPermission('기획', '관리'), (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'employee-member.html'));
 });
 
 // 아이디 중복 확인 API
@@ -590,13 +597,13 @@ app.post('/api/employee/reset-password', async (req, res) => {
 });
 
 // 권한 체크 미들웨어
-function checkDepartmentPermission(requiredDepartment) {
+function checkDepartmentPermission(...allowedDepartments) {
     return (req, res, next) => {
         if (!req.session.user) {
             return res.redirect('/employee-login.html');
         }
         
-        if (req.session.user.department !== requiredDepartment) {
+        if (!allowedDepartments.includes(req.session.user.department)) {
             return res.status(403).send(`
                 <html>
                 <head>
@@ -608,7 +615,7 @@ function checkDepartmentPermission(requiredDepartment) {
                 </head>
                 <body>
                     <h1 class="error">접근 권한이 없습니다</h1>
-                    <p>${requiredDepartment} 부서만 접근할 수 있습니다.</p>
+                    <p>${allowedDepartments.join(', ')} 부서만 접근할 수 있습니다.</p>
                     <p>현재 부서: ${req.session.user.department}</p>
                     <a href="/">메인 페이지로 돌아가기</a>
                 </body>
