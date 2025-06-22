@@ -52,6 +52,8 @@ async function connectToMongoDB() {
             connectTimeoutMS: 10000,
             maxPoolSize: 10,
             minPoolSize: 1,
+            retryWrites: true,
+            w: 'majority'
         });
         await client.connect();
         db = client.db(DB_NAME);
