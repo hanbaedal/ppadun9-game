@@ -22,7 +22,9 @@ console.log('- DB_NAME:', process.env.DB_NAME || '기본값 사용');
 const app = express();
 
 // MongoDB 연결 설정
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+const MONGODB_URI = (process.env.MONGODB_URI && process.env.MONGODB_URI.trim() !== '') 
+    ? process.env.MONGODB_URI 
+    : 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
 const DB_NAME = process.env.DB_NAME || 'member-management';
 const COLLECTION_NAME = 'employee-member';
 
