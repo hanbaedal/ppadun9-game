@@ -368,7 +368,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-user-circle"></i> 관리자</a>
+                        <a class="nav-link" href="#" id="userInfo">
+                            <i class="fas fa-user-circle"></i> 
+                            <span id="userName">관리자</span>
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -377,6 +380,9 @@
 
     <div class="main-content">
         <div class="container-fluid px-0">
+            <!-- 알림 메시지 영역 -->
+            <div id="alertMessage" class="alert" style="display: none; margin: 10px 20px;"></div>
+            
             <div class="menu-grid">
                 <!-- 1. 홈페이지 -->
                 <a href="https://ppadun9-home.netlify.app/" class="menu-item">
@@ -397,7 +403,7 @@
                 </a>
 
                 <!-- 3. 오늘의 경기 등록 -->
-                <a href="/today-game.html" class="menu-item">
+                <a href="/today-game.html" class="menu-item" id="todayGameMenu">
                     <div class="menu-icon">⚾</div>
                     <div class="menu-text">
                         <h3>오늘의 경기 등록</h3>
@@ -406,7 +412,7 @@
                 </a>
 
                 <!-- 4. 게임 설정 -->
-                <a href="/team-game.html" class="menu-item">
+                <a href="/team-game.html" class="menu-item" id="gameSettingMenu">
                     <div class="menu-icon">📱</div>
                     <div class="menu-text">
                         <h3>게임 설정</h3>
@@ -477,6 +483,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('빠던나인 프로젝트 관리 시스템이 로드되었습니다.');
             
+            // URL 파라미터에서 메시지 확인
+            checkUrlMessage();
+            
+            // 현재 로그인한 사용자 정보 가져오기
+            loadCurrentUser();
+            
             // 게임 버튼 호버 효과
             const gameButton = document.querySelector('.game-button');
             if (gameButton) {
@@ -489,6 +501,160 @@
                 });
             }
         });
+        
+        // URL 파라미터에서 메시지 확인 및 표시
+        function checkUrlMessage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const message = urlParams.get('message');
+            const type = urlParams.get('type');
+            
+            if (message) {
+                const alertDiv = document.getElementById('alertMessage');
+                alertDiv.textContent = message;
+                alertDiv.className = `alert alert-${type || 'info'}`;
+                alertDiv.style.display = 'block';
+                
+                // 5초 후 메시지 숨기기
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 5000);
+                
+                // URL에서 메시지 파라미터 제거
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+        
+        // 현재 로그인한 사용자 정보 가져오기
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/employee/current-user');
+                const data = await response.json();
+                
+                const userNameElement = document.getElementById('userName');
+                const userInfoElement = document.getElementById('userInfo');
+                
+                if (data.success && data.user) {
+                    // 로그인된 사용자가 있는 경우
+                    userNameElement.textContent = data.user.name || data.user.username;
+                    
+                    // 사용자 정보 클릭 시 로그아웃 옵션 추가
+                    userInfoElement.onclick = function(e) {
+                        e.preventDefault();
+                        showLogoutConfirm();
+                    };
+                    
+                    // 툴팁 추가
+                    userInfoElement.title = `${data.user.name} (${data.user.position})`;
+                    
+                    // 부서별 권한 체크
+                    checkDepartmentPermissions(data.user.department);
+                } else {
+                    // 로그인되지 않은 경우
+                    userNameElement.textContent = '로그인';
+                    userInfoElement.href = '/employee-login.html';
+                    userInfoElement.title = '로그인하기';
+                    
+                    // 로그인되지 않은 경우 모든 권한 제한 메뉴 비활성화
+                    disableRestrictedMenus();
+                }
+            } catch (error) {
+                console.error('사용자 정보 로드 오류:', error);
+                // 오류 발생 시 기본값 유지
+            }
+        }
+        
+        // 부서별 권한 체크
+        function checkDepartmentPermissions(department) {
+            const todayGameMenu = document.getElementById('todayGameMenu');
+            const gameSettingMenu = document.getElementById('gameSettingMenu');
+            
+            // 오늘의 경기 등록: '관리' 부서만 접근 가능
+            if (department === '관리') {
+                todayGameMenu.style.opacity = '1';
+                todayGameMenu.style.pointerEvents = 'auto';
+                todayGameMenu.title = '오늘의 경기 등록';
+            } else {
+                todayGameMenu.style.opacity = '0.5';
+                todayGameMenu.style.pointerEvents = 'none';
+                todayGameMenu.title = '관리 부서만 접근 가능합니다.';
+                todayGameMenu.onclick = function(e) {
+                    e.preventDefault();
+                    alert('오늘의 경기 등록은 관리 부서만 접근할 수 있습니다.');
+                };
+            }
+            
+            // 게임 설정: '운영' 부서만 접근 가능
+            if (department === '운영') {
+                gameSettingMenu.style.opacity = '1';
+                gameSettingMenu.style.pointerEvents = 'auto';
+                gameSettingMenu.title = '게임 설정';
+            } else {
+                gameSettingMenu.style.opacity = '0.5';
+                gameSettingMenu.style.pointerEvents = 'none';
+                gameSettingMenu.title = '운영 부서만 접근 가능합니다.';
+                gameSettingMenu.onclick = function(e) {
+                    e.preventDefault();
+                    alert('게임 설정은 운영 부서만 접근할 수 있습니다.');
+                };
+            }
+        }
+        
+        // 로그인되지 않은 경우 권한 제한 메뉴 비활성화
+        function disableRestrictedMenus() {
+            const todayGameMenu = document.getElementById('todayGameMenu');
+            const gameSettingMenu = document.getElementById('gameSettingMenu');
+            
+            // 오늘의 경기 등록 비활성화
+            todayGameMenu.style.opacity = '0.5';
+            todayGameMenu.style.pointerEvents = 'none';
+            todayGameMenu.title = '로그인이 필요합니다.';
+            todayGameMenu.onclick = function(e) {
+                e.preventDefault();
+                alert('로그인이 필요한 서비스입니다.');
+            };
+            
+            // 게임 설정 비활성화
+            gameSettingMenu.style.opacity = '0.5';
+            gameSettingMenu.style.pointerEvents = 'none';
+            gameSettingMenu.title = '로그인이 필요합니다.';
+            gameSettingMenu.onclick = function(e) {
+                e.preventDefault();
+                alert('로그인이 필요한 서비스입니다.');
+            };
+        }
+        
+        // 로그아웃 확인 다이얼로그
+        function showLogoutConfirm() {
+            if (confirm('로그아웃하시겠습니까?')) {
+                logout();
+            }
+        }
+        
+        // 로그아웃 처리
+        async function logout() {
+            try {
+                const response = await fetch('/api/employee/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('로그아웃되었습니다.');
+                    // 페이지 새로고침하여 사용자 정보 업데이트
+                    window.location.reload();
+                } else {
+                    alert('로그아웃 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
+            }
+        }
     </script>
 </body>
 </html> 

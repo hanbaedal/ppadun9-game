@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
+const session = require('express-session');
 
 // 환경 변수 설정
 dotenv.config();
@@ -58,6 +59,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 세션 설정
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24시간
+    }
+}));
+
 // API 라우트 설정
 app.use('/api', require('./routes/game'));
 
@@ -82,6 +94,16 @@ app.get('/employee-list.html', (req, res) => {
 // 직원 로그인 페이지
 app.get('/employee-login.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'employee-login.html'));
+});
+
+// 오늘의 경기 등록 페이지 (관리 부서만 접근 가능)
+app.get('/today-game.html', checkDepartmentPermission('관리'), (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'today-game.html'));
+});
+
+// 게임 설정 페이지 (운영 부서만 접근 가능)
+app.get('/team-game.html', checkDepartmentPermission('운영'), (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'team-game.html'));
 });
 
 // 아이디 중복 확인 API
@@ -302,6 +324,9 @@ app.post('/api/employee/login', async (req, res) => {
         // 로그인 성공 - 비밀번호는 제외하고 사용자 정보 반환
         const { password: _, ...userInfo } = employee;
         
+        // 세션에 사용자 정보 저장
+        req.session.user = userInfo;
+        
         res.json({ 
             success: true, 
             message: '로그인이 성공했습니다.',
@@ -312,6 +337,59 @@ app.post('/api/employee/login', async (req, res) => {
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
+
+// 현재 로그인한 사용자 정보 가져오기 API
+app.get('/api/employee/current-user', (req, res) => {
+    try {
+        if (req.session.user) {
+            res.json({ 
+                success: true, 
+                user: req.session.user 
+            });
+        } else {
+            res.json({ 
+                success: false, 
+                message: '로그인되지 않았습니다.' 
+            });
+        }
+    } catch (error) {
+        console.error('사용자 정보 조회 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 로그아웃 API
+app.post('/api/employee/logout', (req, res) => {
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('세션 삭제 오류:', err);
+                return res.status(500).json({ error: '로그아웃 중 오류가 발생했습니다.' });
+            }
+            res.json({ success: true, message: '로그아웃되었습니다.' });
+        });
+    } catch (error) {
+        console.error('로그아웃 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 권한 체크 미들웨어
+function checkDepartmentPermission(requiredDepartment) {
+    return (req, res, next) => {
+        if (!req.session.user) {
+            return res.status(401).json({ error: '로그인이 필요합니다.' });
+        }
+        
+        if (req.session.user.department !== requiredDepartment) {
+            return res.status(403).json({ 
+                error: `${requiredDepartment} 부서만 접근할 수 있습니다.` 
+            });
+        }
+        
+        next();
+    };
+}
 
 // 404 에러 처리
 app.use((req, res, next) => {
@@ -333,6 +411,27 @@ app.use((req, res, next) => {
             // 파일이 존재하지 않으면 index.html 제공 (SPA 라우팅)
             res.sendFile(indexPath);
         }
+    }
+});
+
+// 권한 에러 처리 미들웨어
+app.use((err, req, res, next) => {
+    if (err.status === 401) {
+        // 로그인 필요
+        if (req.path.startsWith('/api/')) {
+            res.status(401).json({ error: '로그인이 필요합니다.' });
+        } else {
+            res.redirect('/employee-login.html?message=로그인이 필요한 서비스입니다.&type=warning');
+        }
+    } else if (err.status === 403) {
+        // 권한 부족
+        if (req.path.startsWith('/api/')) {
+            res.status(403).json({ error: '접근 권한이 없습니다.' });
+        } else {
+            res.redirect('/?message=접근 권한이 없습니다.&type=danger');
+        }
+    } else {
+        next(err);
     }
 });
 
