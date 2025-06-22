@@ -528,15 +528,19 @@
         // 현재 로그인한 사용자 정보 가져오기
         async function loadCurrentUser() {
             try {
+                console.log('사용자 정보 로드 시작');
                 const response = await fetch('/api/employee/current-user');
                 const data = await response.json();
+                console.log('사용자 정보 응답:', data);
                 
                 const userNameElement = document.getElementById('userName');
                 const userInfoElement = document.getElementById('userInfo');
                 
                 if (data.success && data.user) {
+                    console.log('로그인된 사용자 발견:', data.user);
                     // 로그인된 사용자가 있는 경우 - 실제 이름 표시
                     userNameElement.textContent = data.user.name || data.user.username;
+                    console.log('사용자 이름 표시:', data.user.name || data.user.username);
                     
                     // 사용자 정보 클릭 시 로그아웃 옵션 추가
                     userInfoElement.onclick = function(e) {
@@ -550,6 +554,7 @@
                     // 부서별 권한 체크
                     checkDepartmentPermissions(data.user.department);
                 } else {
+                    console.log('로그인되지 않은 상태');
                     // 로그인되지 않은 경우 - '로그인' 표시
                     userNameElement.textContent = '로그인';
                     userInfoElement.href = '/employee-login.html';

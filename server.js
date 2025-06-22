@@ -347,6 +347,7 @@ app.post('/api/employee/login', async (req, res) => {
         }
 
         const { username, password } = req.body;
+        console.log('로그인 시도:', { username, password: '***' });
         
         // 필수 필드 검증
         if (!username || !password) {
@@ -357,6 +358,7 @@ app.post('/api/employee/login', async (req, res) => {
         
         // 사용자 검색
         const employee = await collection.findOne({ username });
+        console.log('사용자 검색 결과:', employee ? '찾음' : '없음');
         
         if (!employee) {
             return res.status(401).json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
@@ -369,9 +371,11 @@ app.post('/api/employee/login', async (req, res) => {
         
         // 로그인 성공 - 비밀번호는 제외하고 사용자 정보 반환
         const { password: _, ...userInfo } = employee;
+        console.log('로그인 성공, 세션에 저장할 사용자 정보:', userInfo);
         
         // 세션에 사용자 정보 저장
         req.session.user = userInfo;
+        console.log('세션 저장 완료:', req.session.user);
         
         res.json({ 
             success: true, 
@@ -387,6 +391,9 @@ app.post('/api/employee/login', async (req, res) => {
 // 현재 로그인한 사용자 정보 가져오기 API
 app.get('/api/employee/current-user', (req, res) => {
     try {
+        console.log('현재 사용자 정보 요청, 세션:', req.session);
+        console.log('세션 사용자 정보:', req.session.user);
+        
         if (req.session.user) {
             res.json({ 
                 success: true, 
