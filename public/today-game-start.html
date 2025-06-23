@@ -338,7 +338,7 @@
                     awayTeam: null,
                     startTime: null,
                     endTime: null,
-                    status: '정상게임'
+                    noGame: '정상게임'
                 };
 
                 const [startHour, startMinute] = game.startTime ? game.startTime.split(':') : ['', ''];
@@ -384,7 +384,7 @@
                         </div>
                     </td>
                     <td>
-                        <select id="status${i}">
+                        <select id="noGame${i}">
                             <option value="정상게임">정상게임</option>
                             <option value="우천취소">우천취소</option>
                             <option value="기타">기타</option>
@@ -403,7 +403,7 @@
                 }
 
                 // 상태 설정
-                document.getElementById(`status${i}`).value = game.status || '정상게임';
+                document.getElementById(`noGame${i}`).value = game.noGame || '정상게임';
             }
         }
 
@@ -468,7 +468,7 @@
                         awayTeam: document.getElementById(`awayTeam${i}`).value || null,
                         startTime: startTime,
                         endTime: null,
-                        status: document.getElementById(`status${i}`).value
+                        noGame: document.getElementById(`noGame${i}`).value
                     };
 
                     games.push(gameData);

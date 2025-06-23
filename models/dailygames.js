@@ -25,7 +25,7 @@ class DailyGamesModel {
                     awayTeam: null,
                     startTime: null,
                     endTime: null,
-                    status: '정상게임'
+                    noGame: '정상게임'
                 };
                 gameData.push(game);
             }
@@ -82,23 +82,27 @@ class DailyGamesModel {
                     awayTeam: null,
                     startTime: null,
                     endTime: null,
-                    status: '정상게임'
+                    noGame: '정상게임'
                 };
                 gameData.push(game);
             }
 
-            const result = await this.collection.findOneAndUpdate(
+            const result = await this.collection.updateOne(
                 { date },
                 { 
                     $set: { 
                         games: gameData,
                         updatedAt: new Date()
                     } 
-                },
-                { returnDocument: 'after' }
+                }
             );
 
-            return result.value;
+            if (result.matchedCount === 0) {
+                throw new Error('업데이트할 데이터를 찾을 수 없습니다.');
+            }
+
+            // 업데이트된 데이터 반환
+            return await this.collection.findOne({ date });
         } catch (error) {
             throw error;
         }
