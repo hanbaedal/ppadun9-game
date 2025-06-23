@@ -1,52 +1,42 @@
 const express = require('express');
 const router = express.Router();
-const DailyGames = require('../models/dailygames');
+
+// MongoDB 연결을 server.js에서 가져오기
+let db;
+let DailyGamesModel;
+
+// db 객체를 설정하는 함수
+function setDatabase(database) {
+    db = database;
+    const DailyGamesModelClass = require('../models/dailygames');
+    DailyGamesModel = new DailyGamesModelClass(db);
+    console.log('[DailyGames Routes] 데이터베이스 연결 설정 완료');
+}
 
 // CREATE - 새로운 일일 경기 데이터 생성
 router.post('/', async (req, res) => {
     try {
         const { date, games } = req.body;
         
-        // 기존 데이터가 있는지 확인
-        const existingData = await DailyGames.findOne({ date });
-        if (existingData) {
-            return res.status(400).json({ 
-                success: false, 
-                message: '해당 날짜의 데이터가 이미 존재합니다.' 
+        if (!DailyGamesModel) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
             });
         }
 
-        // 5개 경기 데이터 생성
-        const gameData = [];
-        for (let i = 1; i <= 5; i++) {
-            const game = games.find(g => g.number === i) || {
-                number: i,
-                homeTeam: null,
-                awayTeam: null,
-                startTime: null,
-                endTime: null,
-                status: '정상게임'
-            };
-            gameData.push(game);
-        }
-
-        const dailyGames = new DailyGames({
-            date,
-            games: gameData
-        });
-
-        await dailyGames.save();
+        const result = await DailyGamesModel.create(date, games);
         
         res.status(201).json({
             success: true,
             message: '일일 경기 데이터가 성공적으로 생성되었습니다.',
-            data: dailyGames
+            data: result
         });
     } catch (error) {
         console.error('CREATE 오류:', error);
         res.status(500).json({
             success: false,
-            message: '서버 오류가 발생했습니다.',
+            message: error.message || '서버 오류가 발생했습니다.',
             error: error.message
         });
     }
@@ -57,7 +47,14 @@ router.get('/:date', async (req, res) => {
     try {
         const { date } = req.params;
         
-        const dailyGames = await DailyGames.findOne({ date });
+        if (!DailyGamesModel) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+
+        const dailyGames = await DailyGamesModel.findByDate(date);
         
         if (!dailyGames) {
             return res.status(404).json({
@@ -83,7 +80,14 @@ router.get('/:date', async (req, res) => {
 // READ ALL - 모든 일일 경기 데이터 조회
 router.get('/', async (req, res) => {
     try {
-        const dailyGames = await DailyGames.find().sort({ date: -1 });
+        if (!DailyGamesModel) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+
+        const dailyGames = await DailyGamesModel.findAll();
         
         res.json({
             success: true,
@@ -105,44 +109,25 @@ router.put('/:date', async (req, res) => {
         const { date } = req.params;
         const { games } = req.body;
 
-        // 기존 데이터 확인
-        const existingData = await DailyGames.findOne({ date });
-        if (!existingData) {
-            return res.status(404).json({
+        if (!DailyGamesModel) {
+            return res.status(503).json({
                 success: false,
-                message: '업데이트할 데이터를 찾을 수 없습니다.'
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
             });
         }
 
-        // 5개 경기 데이터 업데이트
-        const gameData = [];
-        for (let i = 1; i <= 5; i++) {
-            const game = games.find(g => g.number === i) || {
-                number: i,
-                homeTeam: null,
-                awayTeam: null,
-                startTime: null,
-                endTime: null,
-                status: '정상게임'
-            };
-            gameData.push(game);
-        }
-
-        existingData.games = gameData;
-        existingData.updatedAt = new Date();
-        
-        await existingData.save();
+        const result = await DailyGamesModel.update(date, games);
 
         res.json({
             success: true,
             message: '일일 경기 데이터가 성공적으로 업데이트되었습니다.',
-            data: existingData
+            data: result
         });
     } catch (error) {
         console.error('UPDATE 오류:', error);
         res.status(500).json({
             success: false,
-            message: '서버 오류가 발생했습니다.',
+            message: error.message || '서버 오류가 발생했습니다.',
             error: error.message
         });
     }
@@ -153,7 +138,14 @@ router.delete('/:date', async (req, res) => {
     try {
         const { date } = req.params;
         
-        const deletedData = await DailyGames.findOneAndDelete({ date });
+        if (!DailyGamesModel) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+
+        const deletedData = await DailyGamesModel.delete(date);
         
         if (!deletedData) {
             return res.status(404).json({
@@ -177,4 +169,4 @@ router.delete('/:date', async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = { router, setDatabase }; 

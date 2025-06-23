@@ -98,7 +98,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API 라우트 사용
 app.use('/api/game', gameRoutes.router);
-app.use('/api/dailygames', dailygamesRoutes);
+app.use('/api/dailygames', dailygamesRoutes.router);
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -640,7 +640,7 @@ async function startServer() {
         
         // MongoDB 연결 후 라우터 설정
         gameRoutes.setDatabase(db);
-        app.use('/api', gameRoutes.router);
+        dailygamesRoutes.setDatabase(db);
         
         app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
             console.log(`서버가 포트 ${process.env.PORT || 3000}에서 실행 중입니다.`);
