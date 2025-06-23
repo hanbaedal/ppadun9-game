@@ -21,7 +21,17 @@
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
         }
         
-        .navbar-brand {
+        .navbar .container-fluid {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+        
+        .navbar .navbar-brand {
+            flex: 0 0 auto !important;
+            margin-right: 0 !important;
+            order: 1 !important;
             font-weight: 700;
             font-size: 1.3rem;
             color: #333 !important;
@@ -30,15 +40,24 @@
             transform: translateX(-50%);
         }
         
-        /* 헤더 정렬 스타일 */
         .navbar .navbar-nav.mx-auto {
+            flex: 1 !important;
+            display: flex !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            order: 2 !important;
+        }
+        
+        .navbar .navbar-nav:last-child {
+            flex: 0 0 auto !important;
             margin-left: auto !important;
-            margin-right: auto !important;
+            order: 3 !important;
         }
         
         .navbar .navbar-text {
             color: #333 !important;
             font-weight: 500;
+            margin: 0 !important;
         }
         
         .navbar .nav-link {
@@ -55,6 +74,8 @@
             padding: 8px 12px;
             border-radius: 4px;
             transition: background-color 0.2s;
+            display: flex !important;
+            align-items: center !important;
         }
         
         #userInfo:hover {
@@ -70,6 +91,11 @@
         #logoutBtn:hover {
             color: #c82333 !important;
             text-decoration: none;
+        }
+        
+        /* 모바일 토글 버튼 */
+        .navbar-toggler {
+            order: 4 !important;
         }
         
         .main-content {
@@ -410,7 +436,7 @@
             <div class="navbar-nav mx-auto">
                 <span class="navbar-text" id="userInfo">
                     <i class="fas fa-user-circle me-2"></i> 
-                    <span id="userName">사용자</span>
+                    <span id="userName">관리자</span>
                 </span>
             </div>
             
