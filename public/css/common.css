@@ -185,11 +185,6 @@ body {
     color: var(--text-color);
 }
 
-.stadium-name {
-    color: var(--pastel-pink-focus);
-    font-weight: 500;
-}
-
 .time-info {
     display: flex;
     flex-direction: column;

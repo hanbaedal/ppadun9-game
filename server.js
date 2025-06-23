@@ -91,9 +91,14 @@ app.use(session({
 
 // API 라우트 설정
 const gameRoutes = require('./routes/game');
+const dailygamesRoutes = require('./routes/dailygames');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
+
+// API 라우트 사용
+app.use('/api/game', gameRoutes.router);
+app.use('/api/dailygames', dailygamesRoutes);
 
 // 메인 페이지
 app.get('/', (req, res) => {

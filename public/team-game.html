@@ -179,11 +179,6 @@
             font-size: 13px;
         }
 
-        .stadium-name {
-            color: #666;
-            font-size: 13px;
-        }
-
         .game-time {
             font-weight: 500;
             color: #333;
@@ -657,7 +652,6 @@
                     number: i,
                     homeTeam: null,
                     awayTeam: null,
-                    stadium: null,
                     startTime: null,
                     endTime: null
                 };
@@ -676,7 +670,6 @@
                             <span class="team-name">${game.homeTeam || '-'}</span>
                             <span class="vs">vs</span>
                             <span class="team-name">${game.awayTeam || '-'}</span>
-                            <span class="stadium-name">(${game.stadium || '-'})</span>
                         </div>
                     </td>
                     <td>
@@ -710,7 +703,7 @@
                             (currentDate.getMonth() + 1).toString().padStart(2, '0') +
                             currentDate.getDate().toString().padStart(2, '0');
 
-                const response = await fetch(`/api/today-game?date=${date}`);
+                const response = await fetch(`/api/dailygames/${date}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -718,7 +711,7 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    displayGames(result.games || []);
+                    displayGames(result.data.games || []);
                 } else {
                     throw new Error(result.message || '데이터를 불러오는 중 오류가 발생했습니다.');
                 }

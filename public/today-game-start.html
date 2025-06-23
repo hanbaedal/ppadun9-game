@@ -86,6 +86,22 @@
             background-color: #0056b3;
         }
 
+        .save-btn {
+            padding: 12px 30px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .save-btn:hover {
+            background-color: #218838;
+        }
+
         table {
             width: 100%;
             border-collapse: separate;
@@ -118,7 +134,7 @@
         tr:nth-child(2) td { background-color: #E5FFE5; }  /* 2경기: 연한 초록색 */
         tr:nth-child(3) td { background-color: #E5E5FF; }  /* 3경기: 연한 파란색 */
         tr:nth-child(4) td { background-color: #FFE5FF; }  /* 4경기: 연한 보라색 */
-        tr:nth-child(5) td { background-color: #E5FFE5; }  /* 5경기: 연한 초록색 */
+        tr:nth-child(5) td { background-color: #FFFFE5; }  /* 5경기: 연한 노란색 */
 
         .game-number {
             font-weight: 600;
@@ -232,14 +248,13 @@
             color: #666;
         }
 
-        /* 컬럼 너비 조정 */
+        /* 컬럼 너비 조정 - 6열 구조 */
         th:nth-child(1), td:nth-child(1) { width: 100px; }  /* 경기번호 */
-        th:nth-child(2), td:nth-child(2) { width: 200px; } /* 홈팀 */
-        th:nth-child(3), td:nth-child(3) { width: 200px; } /* 원정팀 */
-        th:nth-child(4), td:nth-child(4) { width: 250px; } /* 구장 */
-        th:nth-child(5), td:nth-child(5) { width: 250px; } /* 시작시간 */
-        th:nth-child(6), td:nth-child(6) { width: 250px; } /* 종료시간 */
-        th:nth-child(7), td:nth-child(7) { width: 150px; } /* 경기상황 */
+        th:nth-child(2), td:nth-child(2) { width: 250px; } /* 홈팀 */
+        th:nth-child(3), td:nth-child(3) { width: 250px; } /* 원정팀 */
+        th:nth-child(4), td:nth-child(4) { width: 250px; } /* 시작시간 */
+        th:nth-child(5), td:nth-child(5) { width: 250px; } /* 종료시간 */
+        th:nth-child(6), td:nth-child(6) { width: 200px; } /* 경기상황 */
 
         /* 호버 효과 */
         tr:hover td {
@@ -275,88 +290,13 @@
                     <th>경기</th>
                     <th>홈팀</th>
                     <th>원정팀</th>
-                    <th>구장</th>
                     <th>시작시간</th>
                     <th>종료시간</th>
                     <th>경기상황</th>
                 </tr>
             </thead>
             <tbody id="gameTableBody">
-                <tr>
-                    <td class="game-number game-number-1">1 경기</td>
-                    <td>
-                        <select class="team-select" id="homeTeam1" onchange="updateStadium(1, true)">
-                            <option value="">홈팀 선택</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select class="team-select" id="awayTeam1">
-                            <option value="">원정팀 선택</option>
-                        </select>
-                    </td>
-                    <td><input type="text" id="stadium1" readonly></td>
-                    <td>
-                        <div class="time-input-group">
-                            <button class="am-pm-btn" id="startAmPm1" onclick="toggleAmPm(1, true)">AM</button>
-                            <select id="startHour1">
-                                ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
-                            </select>
-                            <span>:</span>
-                            <select id="startMinute1">
-                                ${Array.from({length: 60}, (_, i) => `<option value="${i.toString().padStart(2, '0')}">${i.toString().padStart(2, '0')}</option>`).join('')}
-                            </select>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="time-input-group">
-                            <button class="am-pm-btn" id="endAmPm1" disabled>AM</button>
-                            <select id="endHour1" disabled>
-                                ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
-                            </select>
-                            <span>:</span>
-                            <select id="endMinute1" disabled>
-                                ${Array.from({length: 60}, (_, i) => `<option value="${i.toString().padStart(2, '0')}">${i.toString().padStart(2, '0')}</option>`).join('')}
-                            </select>
-                        </div>
-                    </td>
-                    <td>정상게임</td>
-                </tr>
-                <tr>
-                    <td class="game-number game-number-2">2 경기</td>
-                    <td><input type="text" id="homeTeam2" placeholder="홈팀"></td>
-                    <td><input type="text" id="awayTeam2" placeholder="원정팀"></td>
-                    <td><input type="text" id="stadium2" placeholder="구장"></td>
-                    <td><input type="time" id="startTime2"></td>
-                    <td><input type="time" id="endTime2" readonly></td>
-                    <td>정상게임</td>
-                </tr>
-                <tr>
-                    <td class="game-number game-number-3">3 경기</td>
-                    <td><input type="text" id="homeTeam3" placeholder="홈팀"></td>
-                    <td><input type="text" id="awayTeam3" placeholder="원정팀"></td>
-                    <td><input type="text" id="stadium3" placeholder="구장"></td>
-                    <td><input type="time" id="startTime3"></td>
-                    <td><input type="time" id="endTime3" readonly></td>
-                    <td>정상게임</td>
-                </tr>
-                <tr>
-                    <td class="game-number game-number-4">4 경기</td>
-                    <td><input type="text" id="homeTeam4" placeholder="홈팀"></td>
-                    <td><input type="text" id="awayTeam4" placeholder="원정팀"></td>
-                    <td><input type="text" id="stadium4" placeholder="구장"></td>
-                    <td><input type="time" id="startTime4"></td>
-                    <td><input type="time" id="endTime4" readonly></td>
-                    <td>정상게임</td>
-                </tr>
-                <tr>
-                    <td class="game-number game-number-5">5 경기</td>
-                    <td><input type="text" id="homeTeam5" placeholder="홈팀"></td>
-                    <td><input type="text" id="awayTeam5" placeholder="원정팀"></td>
-                    <td><input type="text" id="stadium5" placeholder="구장"></td>
-                    <td><input type="time" id="startTime5"></td>
-                    <td><input type="time" id="endTime5" readonly></td>
-                    <td>정상게임</td>
-                </tr>
+                <!-- 동적으로 생성됨 -->
             </tbody>
         </table>
         <div style="text-align: center; margin: 20px;">
@@ -367,28 +307,17 @@
     <script>
         // KBO 팀 정보
         const kboTeams = [
-            { name: '두산 베어스', stadium: '잠실야구장' },
-            { name: 'LG 트윈스', stadium: '잠실야구장' },
-            { name: 'SSG 랜더스', stadium: '인천SSG랜더스필드' },
-            { name: '키움 히어로즈', stadium: '고척스카이돔' },
-            { name: 'KT 위즈', stadium: '수원KT위즈파크' },
-            { name: 'KIA 타이거즈', stadium: '광주기아챔피언스필드' },
-            { name: 'NC 다이노스', stadium: '창원NC파크' },
-            { name: '롯데 자이언츠', stadium: '사직야구장' },
-            { name: '삼성 라이온즈', stadium: '대구삼성라이온즈파크' },
-            { name: '한화 이글스', stadium: '대전한화생명이글스파크' }
+            '두산',
+            'LG',
+            'SSG',
+            '키움',
+            'KT',
+            'KIA',
+            'NC',
+            '롯데',
+            '삼성',
+            '한화'
         ];
-
-        // 팀 선택 시 구장 자동 설정
-        function updateStadium(gameNumber, isHomeTeam) {
-            const teamSelect = document.getElementById(isHomeTeam ? `homeTeam${gameNumber}` : `awayTeam${gameNumber}`);
-            const stadiumInput = document.getElementById(`stadium${gameNumber}`);
-            const selectedTeam = kboTeams.find(team => team.name === teamSelect.value);
-            
-            if (selectedTeam && isHomeTeam) {
-                stadiumInput.value = selectedTeam.stadium;
-            }
-        }
 
         // AM/PM 토글
         function toggleAmPm(gameNumber, isStartTime) {
@@ -407,10 +336,9 @@
                     number: i,
                     homeTeam: null,
                     awayTeam: null,
-                    stadium: null,
                     startTime: null,
                     endTime: null,
-                    noGame: '정상게임'
+                    status: '정상게임'
                 };
 
                 const [startHour, startMinute] = game.startTime ? game.startTime.split(':') : ['', ''];
@@ -421,7 +349,7 @@
                 tr.innerHTML = `
                     <td class="game-number game-number-${i}">${i} 경기</td>
                     <td>
-                        <select class="team-select" id="homeTeam${i}" onchange="updateStadium(${i}, true)">
+                        <select class="team-select" id="homeTeam${i}">
                             <option value="">홈팀 선택</option>
                         </select>
                     </td>
@@ -430,7 +358,6 @@
                             <option value="">원정팀 선택</option>
                         </select>
                     </td>
-                    <td><input type="text" id="stadium${i}" value="${game.stadium || ''}" readonly></td>
                     <td>
                         <div class="time-input-group">
                             <button class="am-pm-btn ${isStartPM ? 'active' : ''}" id="startAmPm${i}" 
@@ -456,17 +383,27 @@
                             </select>
                         </div>
                     </td>
-                    <td>정상게임</td>
+                    <td>
+                        <select id="status${i}">
+                            <option value="정상게임">정상게임</option>
+                            <option value="우천취소">우천취소</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </td>
                 `;
                 tbody.appendChild(tr);
 
                 // 팀 옵션 추가
                 populateTeamOptions(i, game.homeTeam, game.awayTeam);
 
+                // 시간 설정
                 if (startHour && startMinute) {
                     document.getElementById(`startHour${i}`).value = displayStartHour;
                     document.getElementById(`startMinute${i}`).value = startMinute;
                 }
+
+                // 상태 설정
+                document.getElementById(`status${i}`).value = game.status || '정상게임';
             }
         }
 
@@ -486,17 +423,17 @@
             // 팀 옵션 추가
             kboTeams.forEach(team => {
                 const homeOption = document.createElement('option');
-                homeOption.value = team.name;
-                homeOption.textContent = team.name;
-                if (selectedHomeTeam === team.name) {
+                homeOption.value = team;
+                homeOption.textContent = team;
+                if (selectedHomeTeam === team) {
                     homeOption.selected = true;
                 }
                 homeSelect.appendChild(homeOption);
                 
                 const awayOption = document.createElement('option');
-                awayOption.value = team.name;
-                awayOption.textContent = team.name;
-                if (selectedAwayTeam === team.name) {
+                awayOption.value = team;
+                awayOption.textContent = team;
+                if (selectedAwayTeam === team) {
                     awayOption.selected = true;
                 }
                 awaySelect.appendChild(awayOption);
@@ -529,28 +466,41 @@
                         number: i,
                         homeTeam: document.getElementById(`homeTeam${i}`).value || null,
                         awayTeam: document.getElementById(`awayTeam${i}`).value || null,
-                        stadium: document.getElementById(`stadium${i}`).value || null,
                         startTime: startTime,
                         endTime: null,
-                        noGame: '정상게임'
+                        status: document.getElementById(`status${i}`).value
                     };
 
-                    // null 값이 아닌 경우에만 추가
-                    if (gameData.homeTeam || gameData.awayTeam || gameData.stadium || gameData.startTime) {
-                        games.push(gameData);
-                    }
+                    games.push(gameData);
                 }
 
-                const response = await fetch('/api/today-game', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        date: date,
-                        games: games
-                    })
-                });
+                // 기존 데이터 확인
+                const existingResponse = await fetch(`/api/dailygames/${date}`);
+                const existingData = await existingResponse.json();
+
+                let response;
+                if (existingData.success) {
+                    // 기존 데이터가 있으면 업데이트
+                    response = await fetch(`/api/dailygames/${date}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ games })
+                    });
+                } else {
+                    // 새 데이터 생성
+                    response = await fetch('/api/dailygames', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            date: date,
+                            games: games
+                        })
+                    });
+                }
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -578,7 +528,7 @@
                             (today.getMonth() + 1).toString().padStart(2, '0') +
                             today.getDate().toString().padStart(2, '0');
 
-                const response = await fetch(`/api/today-game?date=${date}`);
+                const response = await fetch(`/api/dailygames/${date}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -586,9 +536,10 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    displayGames(result.games || []);
+                    displayGames(result.data.games || []);
                 } else {
-                    throw new Error(result.message || '데이터를 불러오는 중 오류가 발생했습니다.');
+                    // 데이터가 없으면 빈 테이블 표시
+                    displayGames([]);
                 }
             } catch (error) {
                 console.error('Error:', error);
