@@ -30,29 +30,38 @@
             transform: translateX(-50%);
         }
         
-        /* 사용자 정보 스타일 */
-        .navbar-nav .nav-link {
+        /* 헤더 정렬 스타일 */
+        .navbar .navbar-nav.mx-auto {
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        
+        .navbar .navbar-text {
             color: #333 !important;
             font-weight: 500;
-            transition: color 0.3s ease;
         }
         
-        .navbar-nav .nav-link:hover {
-            color: #667eea !important;
+        .navbar .nav-link {
+            color: #333 !important;
         }
         
+        .navbar .nav-link:hover {
+            color: #007bff !important;
+        }
+        
+        /* 사용자 정보 스타일 */
         #userInfo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
         }
         
-        #userName {
-            font-weight: 600;
-            color: #333;
+        #userInfo:hover {
+            background-color: rgba(0, 123, 255, 0.1);
         }
         
+        /* 로그아웃 버튼 스타일 */
         #logoutBtn {
             color: #dc3545 !important;
             font-weight: 500;
@@ -60,6 +69,7 @@
         
         #logoutBtn:hover {
             color: #c82333 !important;
+            text-decoration: none;
         }
         
         .main-content {
