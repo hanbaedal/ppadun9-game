@@ -10,7 +10,23 @@
         body {
             font-family: 'Noto Sans KR', sans-serif;
             background: #f8f9fa;
-            padding: 20px;
+            padding-top: 60px;
+        }
+        .navbar {
+            background: rgba(245, 241, 235, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #333 !important;
+        }
+        .nav-link {
+            color: #333 !important;
+        }
+        .nav-link:hover {
+            color: #007bff !important;
         }
         .container {
             max-width: 1200px;
@@ -35,6 +51,16 @@
     </style>
 </head>
 <body>
+    <!-- 네비게이션 바 -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">빠던나인 프로젝트 관리</a>
+            <div class="navbar-nav ml-auto">
+                <a class="nav-link" href="/">메인으로 돌아가기</a>
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
         <div class="header">
             <h2>회원 관리</h2>
@@ -104,7 +130,7 @@
                 const createdAt = member.createdAt ? new Date(member.createdAt).toLocaleDateString() : '-';
                 const row = `
                     <tr>
-                        <td>${member._id || '-'}</td>
+                        <td>${member.userid || member._id || '-'}</td>
                         <td>${member.name || '-'}</td>
                         <td>${member.email || '-'}</td>
                         <td>${member.points || 0}</td>
