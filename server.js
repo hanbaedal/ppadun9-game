@@ -92,6 +92,7 @@ app.use(session({
 // API 라우트 설정
 const gameRoutes = require('./routes/game');
 const dailygamesRoutes = require('./routes/dailygames');
+const membersRoutes = require('./routes/members');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -99,6 +100,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API 라우트 사용
 app.use('/api/game', gameRoutes.router);
 app.use('/api/dailygames', dailygamesRoutes.router);
+app.use('/', membersRoutes);
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -163,6 +165,11 @@ app.get('/today-game-display.html', (req, res) => {
 // 회원 관리 페이지
 app.get('/employee-member.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'employee-member.html'));
+});
+
+// 회원 관리 페이지 (새로운)
+app.get('/member-management.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'member-management.html'));
 });
 
 // 아이디 중복 확인 API
