@@ -69,35 +69,46 @@
 
         // 회원 목록 로드
         function loadMembers() {
+            console.log('회원 목록 로드 시작');
             $.ajax({
                 url: '/api/members',
                 method: 'GET',
                 success: function(data) {
+                    console.log('서버 응답:', data);
                     if (data.success) {
                         displayMembers(data.members);
                     } else {
-                        alert('회원 목록을 불러오는데 실패했습니다.');
+                        alert('회원 목록을 불러오는데 실패했습니다: ' + (data.message || '알 수 없는 오류'));
                     }
                 },
-                error: function() {
-                    alert('서버 오류가 발생했습니다.');
+                error: function(xhr, status, error) {
+                    console.error('AJAX 오류:', xhr, status, error);
+                    alert('서버 오류가 발생했습니다. 콘솔을 확인해주세요.');
                 }
             });
         }
 
         // 회원 목록 표시
         function displayMembers(members) {
+            console.log('표시할 회원 수:', members.length);
             const tbody = $('#memberList');
             tbody.empty();
             
-            members.forEach(function(member) {
+            if (members.length === 0) {
+                tbody.append('<tr><td colspan="6" class="text-center">회원이 없습니다.</td></tr>');
+                return;
+            }
+            
+            members.forEach(function(member, index) {
+                console.log('회원 데이터:', member);
+                const createdAt = member.createdAt ? new Date(member.createdAt).toLocaleDateString() : '-';
                 const row = `
                     <tr>
-                        <td>${member._id}</td>
+                        <td>${member._id || '-'}</td>
                         <td>${member.name || '-'}</td>
                         <td>${member.email || '-'}</td>
                         <td>${member.points || 0}</td>
-                        <td>${new Date(member.createdAt).toLocaleDateString()}</td>
+                        <td>${createdAt}</td>
                         <td>
                             <button class="btn btn-sm btn-primary btn-action" onclick="editMember('${member._id}')">수정</button>
                             <button class="btn btn-sm btn-danger btn-action" onclick="deleteMember('${member._id}')">삭제</button>

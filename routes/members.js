@@ -11,7 +11,7 @@ router.get('/api/members', async (req, res) => {
     try {
         await client.connect();
         const database = client.db('test');
-        const collection = database.collection('game-memberr');
+        const collection = database.collection('game-member');
         
         const members = await collection.find({}).toArray();
         
@@ -36,7 +36,7 @@ router.put('/api/members/:id', async (req, res) => {
         
         await client.connect();
         const database = client.db('test');
-        const collection = database.collection('game-memberr');
+        const collection = database.collection('game-member');
         
         const updateData = {};
         if (name) updateData.name = name;
@@ -75,7 +75,7 @@ router.delete('/api/members/:id', async (req, res) => {
         
         await client.connect();
         const database = client.db('test');
-        const collection = database.collection('game-memberr');
+        const collection = database.collection('game-member');
         
         const result = await collection.deleteOne({ _id: id });
         
