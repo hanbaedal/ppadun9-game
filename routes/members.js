@@ -10,8 +10,13 @@ const client = new MongoClient(uri);
 router.get('/api/members', async (req, res) => {
     try {
         await client.connect();
+<<<<<<< HEAD
         const database = client.db('test');
         const collection = database.collection('game-memberr');
+=======
+        const database = client.db('member-management');
+        const collection = database.collection('game-member');
+>>>>>>> 84a36d2931e0fbcb9b50d9c9ba27bf4ca1c986de
         
         const members = await collection.find({}).toArray();
         
@@ -35,8 +40,13 @@ router.put('/api/members/:id', async (req, res) => {
         const { name, email, points } = req.body;
         
         await client.connect();
+<<<<<<< HEAD
         const database = client.db('test');
         const collection = database.collection('game-memberr');
+=======
+        const database = client.db('member-management');
+        const collection = database.collection('game-member');
+>>>>>>> 84a36d2931e0fbcb9b50d9c9ba27bf4ca1c986de
         
         const updateData = {};
         if (name) updateData.name = name;
@@ -74,8 +84,13 @@ router.delete('/api/members/:id', async (req, res) => {
         const { id } = req.params;
         
         await client.connect();
+<<<<<<< HEAD
         const database = client.db('test');
         const collection = database.collection('game-memberr');
+=======
+        const database = client.db('member-management');
+        const collection = database.collection('game-member');
+>>>>>>> 84a36d2931e0fbcb9b50d9c9ba27bf4ca1c986de
         
         const result = await collection.deleteOne({ _id: id });
         
