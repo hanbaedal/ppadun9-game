@@ -463,20 +463,28 @@
         // 친구초대 리스트 로드
         async function loadInviteList() {
             try {
+                console.log('친구초대 리스트 로드 시작');
                 const response = await fetch('/api/friend-invite');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('API 응답 데이터:', data);
                 
                 if (data.success) {
-                    allInvites = data.inviteStats; // inviteStats 배열 사용
+                    allInvites = data.inviteStats || [];
                     currentPage = 1;
                     displayInvites();
                     updateStats(data);
+                    console.log('친구초대 리스트 로드 완료:', allInvites.length, '개');
                 } else {
                     showAlert('친구초대 내역을 불러오는데 실패했습니다.', 'danger');
                 }
             } catch (error) {
                 console.error('친구초대 리스트 로드 오류:', error);
-                showAlert('서버 오류가 발생했습니다.', 'danger');
+                showAlert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'danger');
             }
         }
 
@@ -484,7 +492,7 @@
         function displayInvites() {
             const inviteList = document.getElementById('inviteList');
             
-            if (allInvites.length === 0) {
+            if (!allInvites || allInvites.length === 0) {
                 inviteList.innerHTML = '<p class="text-center text-muted">등록된 친구초대 내역이 없습니다.</p>';
                 updatePagination();
                 return;
@@ -501,7 +509,7 @@
                 const rankText = rank <= 3 ? `${rank}위` : `${rank}위`;
                 
                 // 초대한 전화번호들의 하위 리스트 생성
-                const invitedPhonesHtml = invite.invites.map(inviteDetail => `
+                const invitedPhonesHtml = (invite.invites || []).map(inviteDetail => `
                     <div class="invited-phone-item">
                         <div class="invited-phone-details">
                             <span class="invited-phone">${inviteDetail.phoneNumber || '미지정'}</span>
@@ -515,7 +523,7 @@
                     <div class="invite-item">
                         <div class="invite-header">
                             <div class="invite-title">
-                                ${invite.memberName || '회원명 미지정'} - ${invite.inviteCount}회 초대
+                                ${invite.memberName || '회원명 미지정'} - ${invite.inviteCount || 0}회 초대
                             </div>
                             <span class="${rankClass}">${rankText}</span>
                         </div>
@@ -530,7 +538,7 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">총 초대자 수</span>
-                                <span class="detail-value invite-count">${invite.totalInvited.toLocaleString()}명</span>
+                                <span class="detail-value invite-count">${(invite.totalInvited || 0).toLocaleString()}명</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">최근 초대일</span>
@@ -539,7 +547,7 @@
                         </div>
                         <div class="invited-phones-section">
                             <h5 class="invited-phones-title">
-                                <i class="fas fa-list"></i> 초대한 전화번호 목록 (${invite.invites.length}개)
+                                <i class="fas fa-list"></i> 초대한 전화번호 목록 (${invite.invites ? invite.invites.length : 0}개)
                             </h5>
                             <div class="invited-phones-list">
                                 ${invitedPhonesHtml}
@@ -566,7 +574,7 @@
             const totalInvites = data.uniqueInviters || 0;
             const totalInviteCount = data.totalInviteCount || 0;
             const avgInviteCount = totalInvites > 0 ? Math.round(totalInviteCount / totalInvites) : 0;
-            const topInviteCount = data.inviteStats.length > 0 ? data.inviteStats[0].inviteCount : 0;
+            const topInviteCount = data.inviteStats.length > 0 ? (data.inviteStats[0].inviteCount || 0) : 0;
 
             document.getElementById('totalInvites').textContent = totalInvites.toLocaleString();
             document.getElementById('totalInviteCount').textContent = totalInviteCount.toLocaleString();

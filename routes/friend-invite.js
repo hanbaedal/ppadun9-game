@@ -76,8 +76,8 @@ router.get('/', async (req, res) => {
             inviteStats[key].inviteCount++;
             inviteStats[key].invites.push(invite);
             
-            // 초대한 전화번호 목록에 추가 (중복 제거)
-            if (!inviteStats[key].invitedPhones.includes(invite.phoneNumber)) {
+            // 초대한 전화번호 목록에 추가 (중복 제거, 자기 자신 제외)
+            if (!inviteStats[key].invitedPhones.includes(invite.phoneNumber) && invite.phoneNumber !== key) {
                 inviteStats[key].invitedPhones.push(invite.phoneNumber);
                 inviteStats[key].totalInvited++;
             }
@@ -90,6 +90,8 @@ router.get('/', async (req, res) => {
         
         // 통계를 배열로 변환하고 초대 횟수 순으로 정렬
         const inviteStatsArray = Object.values(inviteStats).sort((a, b) => b.inviteCount - a.inviteCount);
+        
+        console.log('처리된 통계 데이터:', inviteStatsArray.length, '개 회원');
         
         res.json({ 
             success: true, 
