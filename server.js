@@ -99,6 +99,7 @@ const noticesRoutes = require('./routes/notices');
 const gameProgressRoutes = require('./routes/game-progress');
 const pointChargingRoutes = require('./routes/point-charging');
 const friendInviteRoutes = require('./routes/friend-invite');
+const customerInquiriesRoutes = require('./routes/customer-inquiries');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -111,6 +112,7 @@ app.use('/api/notices', noticesRoutes);
 app.use('/api/game-progress', gameProgressRoutes);
 app.use('/api/point-charging', pointChargingRoutes);
 app.use('/api/friend-invite', friendInviteRoutes);
+app.use('/api/customer-inquiries', customerInquiriesRoutes);
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -658,6 +660,11 @@ app.get('/api/system/stats', async (req, res) => {
         console.error('시스템 통계 조회 오류:', error);
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
+});
+
+// 고객센터 페이지
+app.get('/customer-center.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'customer-center.html'));
 });
 
 // 서버 시작
