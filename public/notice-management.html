@@ -307,18 +307,33 @@
 
     <div class="main-content">
         <div class="container">
-            <!-- 페이지 헤더 -->
-            <div class="page-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h1 class="page-title">
-                        <i class="fas fa-bullhorn"></i>
-                        공지사항 관리
-                    </h1>
-                </div>
-            </div>
-
             <!-- 알림 메시지 -->
             <div id="alertMessage" class="alert" style="display: none;"></div>
+
+            <!-- 공지사항 목록 -->
+            <div class="notice-card">
+                <h3 class="mb-3">
+                    <i class="fas fa-list"></i> 공지사항 목록
+                </h3>
+                <div id="noticeList" class="notice-list">
+                    <!-- 공지사항들이 여기에 동적으로 로드됩니다 -->
+                </div>
+                <!-- 페이지네이션 -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="pagination-info">
+                        <span id="paginationInfo">전체 0개</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn btn-outline-primary btn-sm" onclick="previousPage()" id="prevBtn" disabled>
+                            <i class="fas fa-chevron-left"></i> 이전
+                        </button>
+                        <span class="mx-2" id="pageInfo">1 / 1</span>
+                        <button class="btn btn-outline-primary btn-sm" onclick="nextPage()" id="nextBtn" disabled>
+                            다음 <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 공지사항 등록 폼 -->
             <div class="notice-card">
@@ -359,16 +374,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-
-            <!-- 공지사항 목록 -->
-            <div class="notice-card">
-                <h3 class="mb-3">
-                    <i class="fas fa-list"></i> 공지사항 목록
-                </h3>
-                <div id="noticeList" class="notice-list">
-                    <!-- 공지사항들이 여기에 동적으로 로드됩니다 -->
-                </div>
             </div>
         </div>
     </div>
@@ -431,6 +436,11 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     
     <script>
+        // 페이지네이션 변수
+        let allNotices = [];
+        let currentPage = 1;
+        const itemsPerPage = 5;
+
         // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', function() {
             loadNotices();
@@ -453,7 +463,9 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    displayNotices(data.notices);
+                    allNotices = data.notices;
+                    currentPage = 1;
+                    displayNotices();
                 } else {
                     showAlert('공지사항을 불러오는데 실패했습니다.', 'danger');
                 }
@@ -463,16 +475,22 @@
             }
         }
 
-        // 공지사항 목록 표시
-        function displayNotices(notices) {
+        // 공지사항 목록 표시 (페이지네이션 적용)
+        function displayNotices() {
             const noticeList = document.getElementById('noticeList');
             
-            if (notices.length === 0) {
+            if (allNotices.length === 0) {
                 noticeList.innerHTML = '<p class="text-center text-muted">등록된 공지사항이 없습니다.</p>';
+                updatePagination();
                 return;
             }
 
-            const noticesHtml = notices.map(notice => {
+            // 현재 페이지에 해당하는 공지사항들만 추출
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentNotices = allNotices.slice(startIndex, endIndex);
+
+            const noticesHtml = currentNotices.map(notice => {
                 const priorityClass = getPriorityClass(notice.priority);
                 const priorityText = getPriorityText(notice.priority);
                 const statusText = notice.isActive ? '활성' : '비활성';
@@ -504,6 +522,39 @@
             }).join('');
 
             noticeList.innerHTML = noticesHtml;
+            updatePagination();
+        }
+
+        // 페이지네이션 업데이트
+        function updatePagination() {
+            const totalPages = Math.ceil(allNotices.length / itemsPerPage);
+            const startItem = (currentPage - 1) * itemsPerPage + 1;
+            const endItem = Math.min(currentPage * itemsPerPage, allNotices.length);
+            
+            // 페이지 정보 업데이트
+            document.getElementById('paginationInfo').textContent = `전체 ${allNotices.length}개 (${startItem}-${endItem})`;
+            document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+            
+            // 버튼 상태 업데이트
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        // 이전 페이지
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayNotices();
+            }
+        }
+
+        // 다음 페이지
+        function nextPage() {
+            const totalPages = Math.ceil(allNotices.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayNotices();
+            }
         }
 
         // 우선순위 클래스 반환
