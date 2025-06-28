@@ -82,6 +82,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
     resave: false,
     saveUninitialized: false,
+    store: new session.MemoryStore(),
     cookie: {
         secure: false, // 개발 환경에서는 false로 설정
         maxAge: 24 * 60 * 60 * 1000, // 24시간
@@ -96,6 +97,7 @@ const dailygamesRoutes = require('./routes/dailygames');
 const membersRoutes = require('./routes/members');
 const noticesRoutes = require('./routes/notices');
 const gameProgressRoutes = require('./routes/game-progress');
+const pointChargingRoutes = require('./routes/point-charging');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -106,6 +108,7 @@ app.use('/api/dailygames', dailygamesRoutes.router);
 app.use('/', membersRoutes);
 app.use('/api/notices', noticesRoutes);
 app.use('/api/game-progress', gameProgressRoutes);
+app.use('/api/point-charging', pointChargingRoutes);
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -175,6 +178,11 @@ app.get('/employee-member.html', (req, res) => {
 // 회원 관리 페이지 (새로운)
 app.get('/member-management.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'member-management.html'));
+});
+
+// 포인트 충전 리스트 페이지
+app.get('/point-charging-list.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'point-charging-list.html'));
 });
 
 // 아이디 중복 확인 API

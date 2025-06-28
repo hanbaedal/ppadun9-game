@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>포인트 충전 리스트 - 빠던나인 프로젝트</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f0d4 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(245, 241, 235, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 20px;
+            min-height: calc(100vh - 100px);
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        .page-header {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .page-title {
+            color: #333;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-back {
+            background: linear-gradient(135deg, #87ceeb 0%, #98d8e8 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 8px 20px;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
+        }
+        
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(135, 206, 235, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .charging-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .charging-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .charging-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .charging-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .charging-title {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .charging-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .charging-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .charging-amount {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #28a745;
+        }
+        
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .pagination-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-outline-primary {
+            border-radius: 50px;
+            padding: 6px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .page-info {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding-top: 70px;
+                padding-bottom: 15px;
+            }
+            
+            .page-header {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .page-title {
+                font-size: 1.3rem;
+            }
+            
+            .charging-card {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .charging-details {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .charging-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .pagination-controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cogs me-2"></i>
+                빠던나인 프로젝트 관리
+            </a>
+            
+            <div class="navbar-nav mx-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-coins me-2"></i> 
+                    포인트 충전 리스트
+                </span>
+            </div>
+            
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-home"></i> 메인으로
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+
+
+            <!-- 알림 메시지 -->
+            <div id="alertMessage" class="alert" style="display: none;"></div>
+
+            <!-- 포인트 충전 리스트 -->
+            <div class="charging-card">
+                <h3 class="mb-3">
+                    <i class="fas fa-list"></i> 충전 내역
+                </h3>
+                <div id="chargingList">
+                    <!-- 충전 내역들이 여기에 동적으로 로드됩니다 -->
+                </div>
+                <!-- 페이지네이션 -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="pagination-info">
+                        <span id="paginationInfo">전체 0개</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn btn-outline-primary btn-sm" onclick="previousPage()" id="prevBtn" disabled>
+                            <i class="fas fa-chevron-left"></i> 이전
+                        </button>
+                        <span class="mx-2 page-info" id="pageInfo">1 / 1</span>
+                        <button class="btn btn-outline-primary btn-sm" onclick="nextPage()" id="nextBtn" disabled>
+                            다음 <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+        // 페이지네이션 변수
+        let allChargings = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            loadChargingList();
+        });
+
+        // 포인트 충전 리스트 로드
+        async function loadChargingList() {
+            try {
+                const response = await fetch('/api/point-charging');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allChargings = data.chargings;
+                    currentPage = 1;
+                    displayChargings();
+                } else {
+                    showAlert('포인트 충전 내역을 불러오는데 실패했습니다.', 'danger');
+                }
+            } catch (error) {
+                console.error('포인트 충전 리스트 로드 오류:', error);
+                showAlert('서버 오류가 발생했습니다.', 'danger');
+            }
+        }
+
+        // 포인트 충전 내역 표시 (페이지네이션 적용)
+        function displayChargings() {
+            const chargingList = document.getElementById('chargingList');
+            
+            if (allChargings.length === 0) {
+                chargingList.innerHTML = '<p class="text-center text-muted">등록된 포인트 충전 내역이 없습니다.</p>';
+                updatePagination();
+                return;
+            }
+
+            // 현재 페이지에 해당하는 충전 내역들만 추출
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentChargings = allChargings.slice(startIndex, endIndex);
+
+            const chargingsHtml = currentChargings.map(charging => {
+                const statusClass = getStatusClass(charging.status);
+                const statusText = getStatusText(charging.status);
+                
+                return `
+                    <div class="charging-item">
+                        <div class="charging-header">
+                            <div class="charging-title">
+                                ${charging.userName || '사용자'} - ${charging.amount.toLocaleString()}P 충전
+                            </div>
+                            <span class="charging-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="charging-details">
+                            <div class="detail-item">
+                                <span class="detail-label">충전 금액</span>
+                                <span class="detail-value charging-amount">${charging.amount.toLocaleString()}P</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">결제 금액</span>
+                                <span class="detail-value">${charging.paymentAmount.toLocaleString()}원</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">결제 방법</span>
+                                <span class="detail-value">${charging.paymentMethod || '미지정'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">충전 일시</span>
+                                <span class="detail-value">${new Date(charging.createdAt).toLocaleString()}</span>
+                            </div>
+                            ${charging.completedAt ? `
+                            <div class="detail-item">
+                                <span class="detail-label">완료 일시</span>
+                                <span class="detail-value">${new Date(charging.completedAt).toLocaleString()}</span>
+                            </div>
+                            ` : ''}
+                            ${charging.note ? `
+                            <div class="detail-item">
+                                <span class="detail-label">비고</span>
+                                <span class="detail-value">${charging.note}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            chargingList.innerHTML = chargingsHtml;
+            updatePagination();
+        }
+
+        // 상태 클래스 반환
+        function getStatusClass(status) {
+            switch(status) {
+                case 'pending': return 'status-pending';
+                case 'completed': return 'status-completed';
+                case 'cancelled': return 'status-cancelled';
+                default: return 'status-pending';
+            }
+        }
+
+        // 상태 텍스트 반환
+        function getStatusText(status) {
+            switch(status) {
+                case 'pending': return '대기중';
+                case 'completed': return '완료';
+                case 'cancelled': return '취소';
+                default: return '대기중';
+            }
+        }
+
+        // 페이지네이션 업데이트
+        function updatePagination() {
+            const totalPages = Math.ceil(allChargings.length / itemsPerPage);
+            const startItem = (currentPage - 1) * itemsPerPage + 1;
+            const endItem = Math.min(currentPage * itemsPerPage, allChargings.length);
+            
+            // 페이지 정보 업데이트
+            document.getElementById('paginationInfo').textContent = `전체 ${allChargings.length}개 (${startItem}-${endItem})`;
+            document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+            
+            // 버튼 상태 업데이트
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        // 이전 페이지
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayChargings();
+            }
+        }
+
+        // 다음 페이지
+        function nextPage() {
+            const totalPages = Math.ceil(allChargings.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayChargings();
+            }
+        }
+
+        // 알림 메시지 표시
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.display = 'block';
+
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 
