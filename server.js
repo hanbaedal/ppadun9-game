@@ -98,6 +98,7 @@ const membersRoutes = require('./routes/members');
 const noticesRoutes = require('./routes/notices');
 const gameProgressRoutes = require('./routes/game-progress');
 const pointChargingRoutes = require('./routes/point-charging');
+const friendInviteRoutes = require('./routes/friend-invite');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -109,6 +110,7 @@ app.use('/', membersRoutes);
 app.use('/api/notices', noticesRoutes);
 app.use('/api/game-progress', gameProgressRoutes);
 app.use('/api/point-charging', pointChargingRoutes);
+app.use('/api/friend-invite', friendInviteRoutes);
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -183,6 +185,11 @@ app.get('/member-management.html', (req, res) => {
 // 포인트 충전 리스트 페이지
 app.get('/point-charging-list.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'point-charging-list.html'));
+});
+
+// 친구초대 리스트 페이지
+app.get('/friend-invite-list.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'friend-invite-list.html'));
 });
 
 // 아이디 중복 확인 API
