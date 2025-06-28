@@ -36,15 +36,59 @@ async function connectDB() {
 // 친구초대 리스트 조회
 router.get('/', async (req, res) => {
     try {
+        console.log('친구초대 리스트 조회 시작');
         await connectDB();
-        const collection = db.collection('game-invite');
+        console.log('데이터베이스 연결 완료');
         
-        // 모든 초대 내역 조회 (초대 횟수 내림차순, 최근 초대일 내림차순)
-        const invites = await collection.find({}).sort({ inviteCount: -1, lastInviteDate: -1 }).toArray();
+        const collection = db.collection('game-invite');
+        console.log('game-invite 컬렉션 접근');
+        
+        // 컬렉션의 문서 수 확인
+        const count = await collection.countDocuments();
+        console.log('game-invite 컬렉션 문서 수:', count);
+        
+        // 모든 초대 내역 조회 (초대 날짜 내림차순)
+        const invites = await collection.find({}).sort({ inviteDate: -1 }).toArray();
+        console.log('조회된 초대 내역 수:', invites.length);
+        console.log('첫 번째 문서 샘플:', invites[0]);
+        
+        // 아이디별로 그룹화하여 초대 통계 계산
+        const inviteStats = {};
+        const totalInviteCount = invites.length;
+        
+        invites.forEach(invite => {
+            // 전화번호를 키로 사용 (아이디가 없는 경우)
+            const key = invite.phoneNumber || 'unknown';
+            
+            if (!inviteStats[key]) {
+                inviteStats[key] = {
+                    phoneNumber: invite.phoneNumber,
+                    inviteCount: 0,
+                    status: invite.status,
+                    lastInviteDate: invite.inviteDate,
+                    invites: []
+                };
+            }
+            
+            inviteStats[key].inviteCount++;
+            inviteStats[key].invites.push(invite);
+            
+            // 최신 날짜로 업데이트
+            if (new Date(invite.inviteDate) > new Date(inviteStats[key].lastInviteDate)) {
+                inviteStats[key].lastInviteDate = invite.inviteDate;
+            }
+        });
+        
+        // 통계를 배열로 변환하고 초대 횟수 순으로 정렬
+        const inviteStatsArray = Object.values(inviteStats).sort((a, b) => b.inviteCount - a.inviteCount);
         
         res.json({ 
             success: true, 
-            invites: invites 
+            invites: invites,
+            inviteStats: inviteStatsArray,
+            count: count,
+            totalInviteCount: totalInviteCount,
+            uniqueInviters: inviteStatsArray.length
         });
     } catch (error) {
         console.error('친구초대 리스트 조회 오류:', error);

@@ -294,19 +294,6 @@
 
     <div class="main-content">
         <div class="container">
-            <!-- 페이지 헤더 -->
-            <div class="page-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h1 class="page-title">
-                        <i class="fas fa-handshake"></i>
-                        친구초대 리스트
-                    </h1>
-                    <a href="/" class="btn-back">
-                        <i class="fas fa-arrow-left"></i> 메인으로
-                    </a>
-                </div>
-            </div>
-
             <!-- 알림 메시지 -->
             <div id="alertMessage" class="alert" style="display: none;"></div>
 
@@ -318,7 +305,7 @@
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-number" id="totalInvites">0</div>
-                        <div class="stat-label">총 초대 수</div>
+                        <div class="stat-label">총 초대자 수</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number" id="totalInviteCount">0</div>
@@ -384,10 +371,10 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    allInvites = data.invites;
+                    allInvites = data.inviteStats; // inviteStats 배열 사용
                     currentPage = 1;
                     displayInvites();
-                    updateStats();
+                    updateStats(data);
                 } else {
                     showAlert('친구초대 내역을 불러오는데 실패했습니다.', 'danger');
                 }
@@ -421,7 +408,7 @@
                     <div class="invite-item">
                         <div class="invite-header">
                             <div class="invite-title">
-                                ${invite.userName || '사용자'} - ${invite.inviteCount.toLocaleString()}회 초대
+                                ${invite.phoneNumber || '전화번호 미지정'} - ${invite.inviteCount}회 초대
                             </div>
                             <span class="${rankClass}">${rankText}</span>
                         </div>
@@ -431,35 +418,17 @@
                                 <span class="detail-value invite-count">${invite.inviteCount.toLocaleString()}회</span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">사용자 ID</span>
-                                <span class="detail-value">${invite.userId || '미지정'}</span>
+                                <span class="detail-label">전화번호</span>
+                                <span class="detail-value">${invite.phoneNumber || '미지정'}</span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">닉네임</span>
-                                <span class="detail-value">${invite.userName || '미지정'}</span>
+                                <span class="detail-label">상태</span>
+                                <span class="detail-value">${invite.status || '미지정'}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">최근 초대일</span>
-                                <span class="detail-value">${invite.lastInviteDate ? new Date(invite.lastInviteDate).toLocaleDateString() : '미지정'}</span>
+                                <span class="detail-value">${invite.lastInviteDate ? new Date(invite.lastInviteDate).toLocaleString() : '미지정'}</span>
                             </div>
-                            ${invite.email ? `
-                            <div class="detail-item">
-                                <span class="detail-label">이메일</span>
-                                <span class="detail-value">${invite.email}</span>
-                            </div>
-                            ` : ''}
-                            ${invite.phone ? `
-                            <div class="detail-item">
-                                <span class="detail-label">전화번호</span>
-                                <span class="detail-value">${invite.phone}</span>
-                            </div>
-                            ` : ''}
-                            ${invite.note ? `
-                            <div class="detail-item">
-                                <span class="detail-label">비고</span>
-                                <span class="detail-value">${invite.note}</span>
-                            </div>
-                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -470,8 +439,8 @@
         }
 
         // 통계 업데이트
-        function updateStats() {
-            if (allInvites.length === 0) {
+        function updateStats(data) {
+            if (!data || !data.inviteStats) {
                 document.getElementById('totalInvites').textContent = '0';
                 document.getElementById('totalInviteCount').textContent = '0';
                 document.getElementById('avgInviteCount').textContent = '0';
@@ -479,10 +448,10 @@
                 return;
             }
 
-            const totalInvites = allInvites.length;
-            const totalInviteCount = allInvites.reduce((sum, invite) => sum + (invite.inviteCount || 0), 0);
-            const avgInviteCount = Math.round(totalInviteCount / totalInvites);
-            const topInviteCount = Math.max(...allInvites.map(invite => invite.inviteCount || 0));
+            const totalInvites = data.uniqueInviters || 0;
+            const totalInviteCount = data.totalInviteCount || 0;
+            const avgInviteCount = totalInvites > 0 ? Math.round(totalInviteCount / totalInvites) : 0;
+            const topInviteCount = data.inviteStats.length > 0 ? data.inviteStats[0].inviteCount : 0;
 
             document.getElementById('totalInvites').textContent = totalInvites.toLocaleString();
             document.getElementById('totalInviteCount').textContent = totalInviteCount.toLocaleString();
