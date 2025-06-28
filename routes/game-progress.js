@@ -1,26 +1,37 @@
 const express = require('express');
 const router = express.Router();
-const GameProgress = require('../models/game-progress');
-const DailyGame = require('../models/Game');
-const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 
 // MongoDB Atlas 연결 설정
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+const DB_NAME = 'member-management';
+
+let client;
+let db;
 
 // 데이터베이스 연결 함수
 async function connectDB() {
     try {
-        if (mongoose.connection.readyState !== 1) {
+        if (!client || !client.topology || !client.topology.isConnected()) {
             console.log('MongoDB 연결 시도...');
             console.log('연결 문자열:', MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//****:****@'));
-            await mongoose.connect(MONGODB_URI, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true
+            
+            client = new MongoClient(MONGODB_URI, {
+                serverSelectionTimeoutMS: 60000,
+                socketTimeoutMS: 45000,
+                connectTimeoutMS: 60000,
+                maxPoolSize: 10,
+                minPoolSize: 1,
+                maxIdleTimeMS: 30000,
+                retryWrites: true,
+                w: 'majority'
             });
+            
+            await client.connect();
+            db = client.db(DB_NAME);
             console.log('MongoDB Atlas 연결 성공');
             
             // 연결 후 데이터베이스 정보 출력
-            const db = mongoose.connection.db;
             console.log('현재 데이터베이스:', db.databaseName);
             
             // 컬렉션 목록 조회
@@ -40,8 +51,8 @@ router.get('/test-connection', async (req, res) => {
         res.json({
             success: true,
             message: 'MongoDB Atlas 연결 성공',
-            database: mongoose.connection.db.databaseName,
-            collections: await mongoose.connection.db.listCollections().toArray()
+            database: db.databaseName,
+            collections: await db.listCollections().toArray()
         });
     } catch (error) {
         res.status(500).json({
@@ -69,8 +80,7 @@ router.get('/today-games', async (req, res) => {
         console.log('조회 날짜:', dateStr);
 
         // member-management 데이터베이스의 dailygames 컬렉션에서 데이터 조회
-        const db = mongoose.connection.useDb('member-management');
-        console.log('사용할 데이터베이스:', db.name);
+        console.log('사용할 데이터베이스:', db.databaseName);
 
         // 컬렉션 목록 조회
         const collections = await db.listCollections().toArray();
@@ -107,7 +117,6 @@ router.get('/today-games', async (req, res) => {
         const formattedGames = gameData.games.map(game => ({
             homeTeam: game.homeTeam || '',
             awayTeam: game.awayTeam || '',
-            stadium: game.stadium || '',
             startTime: game.startTime || null,
             endTime: game.endTime || null,
             noGame: game.noGame || '정상게임'
@@ -147,7 +156,7 @@ router.post('/create', async (req, res) => {
         const gameId = `${dateStr}-${gameSelection}`;
         
         // member-management 데이터베이스의 game-progress 컬렉션에 데이터 저장
-        const db = mongoose.connection.useDb('member-management');
+        await connectDB();
         const collection = db.collection('game-progress');
         
         // 중복 체크
@@ -195,7 +204,7 @@ router.put('/update/:gameId', async (req, res) => {
         const { teamType, inning, batter, bettingStartTime, bettingEndTime, bettingResult } = req.body;
 
         // member-management 데이터베이스의 game-progress 컬렉션에서 데이터 수정
-        const db = mongoose.connection.useDb('member-management');
+        await connectDB();
         const collection = db.collection('game-progress');
 
         const updateData = {
@@ -239,7 +248,7 @@ router.delete('/delete/:gameId', async (req, res) => {
         const { gameId } = req.params;
 
         // member-management 데이터베이스의 game-progress 컬렉션에서 데이터 삭제
-        const db = mongoose.connection.useDb('member-management');
+        await connectDB();
         const collection = db.collection('game-progress');
 
         const result = await collection.deleteOne({ gameId });
@@ -267,16 +276,24 @@ router.delete('/delete/:gameId', async (req, res) => {
 // 배팅 시작 시간 업데이트
 router.put('/update-betting-start/:gameId', async (req, res) => {
     try {
-        const gameProgress = await GameProgress.findOne({ gameId: req.params.gameId });
-        if (!gameProgress) {
+        await connectDB();
+        const collection = db.collection('game-progress');
+        
+        const result = await collection.updateOne(
+            { gameId: req.params.gameId },
+            { 
+                $set: { 
+                    bettingStartTime: new Date(),
+                    updatedAt: new Date()
+                }
+            }
+        );
+        
+        if (result.matchedCount === 0) {
             return res.status(404).json({ success: false, message: '게임을 찾을 수 없습니다.' });
         }
 
-        gameProgress.bettingStartTime = new Date();
-        gameProgress.updatedAt = new Date();
-        await gameProgress.save();
-
-        res.json({ success: true, gameProgress });
+        res.json({ success: true, message: '배팅 시작 시간이 업데이트되었습니다.' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -285,16 +302,24 @@ router.put('/update-betting-start/:gameId', async (req, res) => {
 // 배팅 중지 시간 업데이트
 router.put('/update-betting-end/:gameId', async (req, res) => {
     try {
-        const gameProgress = await GameProgress.findOne({ gameId: req.params.gameId });
-        if (!gameProgress) {
+        await connectDB();
+        const collection = db.collection('game-progress');
+        
+        const result = await collection.updateOne(
+            { gameId: req.params.gameId },
+            { 
+                $set: { 
+                    bettingEndTime: new Date(),
+                    updatedAt: new Date()
+                }
+            }
+        );
+        
+        if (result.matchedCount === 0) {
             return res.status(404).json({ success: false, message: '게임을 찾을 수 없습니다.' });
         }
 
-        gameProgress.bettingEndTime = new Date();
-        gameProgress.updatedAt = new Date();
-        await gameProgress.save();
-
-        res.json({ success: true, gameProgress });
+        res.json({ success: true, message: '배팅 종료 시간이 업데이트되었습니다.' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -304,16 +329,24 @@ router.put('/update-betting-end/:gameId', async (req, res) => {
 router.put('/update-betting-result/:gameId', async (req, res) => {
     try {
         const { bettingResult } = req.body;
-        const gameProgress = await GameProgress.findOne({ gameId: req.params.gameId });
-        if (!gameProgress) {
+        await connectDB();
+        const collection = db.collection('game-progress');
+        
+        const result = await collection.updateOne(
+            { gameId: req.params.gameId },
+            { 
+                $set: { 
+                    bettingResult,
+                    updatedAt: new Date()
+                }
+            }
+        );
+        
+        if (result.matchedCount === 0) {
             return res.status(404).json({ success: false, message: '게임을 찾을 수 없습니다.' });
         }
 
-        gameProgress.bettingResult = bettingResult;
-        gameProgress.updatedAt = new Date();
-        await gameProgress.save();
-
-        res.json({ success: true, gameProgress });
+        res.json({ success: true, message: '배팅 결과가 업데이트되었습니다.' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -322,7 +355,10 @@ router.put('/update-betting-result/:gameId', async (req, res) => {
 // 현재 게임 진행 상태 조회
 router.get('/current-status/:gameId', async (req, res) => {
     try {
-        const gameProgress = await GameProgress.findOne({ gameId: req.params.gameId });
+        await connectDB();
+        const collection = db.collection('game-progress');
+        
+        const gameProgress = await collection.findOne({ gameId: req.params.gameId });
         if (!gameProgress) {
             return res.status(404).json({ success: false, message: '게임을 찾을 수 없습니다.' });
         }

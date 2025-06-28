@@ -94,6 +94,7 @@ const gameRoutes = require('./routes/game');
 const dailygamesRoutes = require('./routes/dailygames');
 const membersRoutes = require('./routes/members');
 const noticesRoutes = require('./routes/notices');
+const gameProgressRoutes = require('./routes/game-progress');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -103,6 +104,7 @@ app.use('/api/game', gameRoutes.router);
 app.use('/api/dailygames', dailygamesRoutes.router);
 app.use('/', membersRoutes);
 app.use('/api/notices', noticesRoutes);
+app.use('/api/game-progress', gameProgressRoutes);
 
 // 메인 페이지
 app.get('/', (req, res) => {
