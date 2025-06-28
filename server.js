@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
+const { connectDB } = require('./config/db');
 
 // 환경 변수 설정
 dotenv.config();
@@ -648,6 +649,9 @@ app.get('/api/system/stats', async (req, res) => {
 async function startServer() {
     try {
         await connectToMongoDB();
+        
+        // config/db.js의 connectDB 함수 호출
+        await connectDB();
         
         // MongoDB 연결 후 라우터 설정
         gameRoutes.setDatabase(db);
