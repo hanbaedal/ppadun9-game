@@ -52,26 +52,35 @@ router.get('/', async (req, res) => {
         console.log('조회된 초대 내역 수:', invites.length);
         console.log('첫 번째 문서 샘플:', invites[0]);
         
-        // 아이디별로 그룹화하여 초대 통계 계산
+        // 회원별로 그룹화하여 초대 통계 계산
         const inviteStats = {};
         const totalInviteCount = invites.length;
         
         invites.forEach(invite => {
-            // 전화번호를 키로 사용 (아이디가 없는 경우)
+            // 전화번호를 키로 사용 (회원 아이디로 간주)
             const key = invite.phoneNumber || 'unknown';
             
             if (!inviteStats[key]) {
                 inviteStats[key] = {
-                    phoneNumber: invite.phoneNumber,
+                    memberId: invite.phoneNumber, // 회원 아이디 (전화번호)
+                    memberName: invite.phoneNumber, // 회원 이름 (전화번호로 표시)
                     inviteCount: 0,
-                    status: invite.status,
+                    totalInvited: 0, // 총 초대한 사람 수
+                    invitedPhones: [], // 초대한 전화번호 목록
                     lastInviteDate: invite.inviteDate,
+                    status: invite.status,
                     invites: []
                 };
             }
             
             inviteStats[key].inviteCount++;
             inviteStats[key].invites.push(invite);
+            
+            // 초대한 전화번호 목록에 추가 (중복 제거)
+            if (!inviteStats[key].invitedPhones.includes(invite.phoneNumber)) {
+                inviteStats[key].invitedPhones.push(invite.phoneNumber);
+                inviteStats[key].totalInvited++;
+            }
             
             // 최신 날짜로 업데이트
             if (new Date(invite.inviteDate) > new Date(inviteStats[key].lastInviteDate)) {

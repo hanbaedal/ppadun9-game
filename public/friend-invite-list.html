@@ -225,6 +225,73 @@
             color: #666;
         }
         
+        .charging-amount {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #28a745;
+        }
+        
+        .invited-phones-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .invited-phones-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .invited-phones-list {
+            background: rgba(248, 249, 250, 0.8);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .invited-phone-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .invited-phone-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .invited-phone-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .invited-phone {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .invited-date {
+            color: #666;
+            font-size: 0.75rem;
+        }
+        
+        .invited-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 50px;
+        }
+        
         /* 반응형 디자인 */
         @media (max-width: 768px) {
             .main-content {
@@ -265,6 +332,35 @@
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
+            }
+            
+            .charging-card {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .charging-details {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .charging-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .invited-phone-details {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            
+            .invited-phone-item {
+                padding: 10px;
+            }
+            
+            .invited-phones-list {
+                padding: 8px;
             }
         }
     </style>
@@ -404,30 +500,49 @@
                 const rankClass = rank <= 3 ? 'invite-rank' : 'invite-rank';
                 const rankText = rank <= 3 ? `${rank}위` : `${rank}위`;
                 
+                // 초대한 전화번호들의 하위 리스트 생성
+                const invitedPhonesHtml = invite.invites.map(inviteDetail => `
+                    <div class="invited-phone-item">
+                        <div class="invited-phone-details">
+                            <span class="invited-phone">${inviteDetail.phoneNumber || '미지정'}</span>
+                            <span class="invited-date">${inviteDetail.inviteDate ? new Date(inviteDetail.inviteDate).toLocaleString() : '미지정'}</span>
+                            <span class="invited-status ${getStatusClass(inviteDetail.status)}">${getStatusText(inviteDetail.status)}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
                 return `
                     <div class="invite-item">
                         <div class="invite-header">
                             <div class="invite-title">
-                                ${invite.phoneNumber || '전화번호 미지정'} - ${invite.inviteCount}회 초대
+                                ${invite.memberName || '회원명 미지정'} - ${invite.inviteCount}회 초대
                             </div>
                             <span class="${rankClass}">${rankText}</span>
                         </div>
                         <div class="invite-details">
                             <div class="detail-item">
-                                <span class="detail-label">초대 횟수</span>
-                                <span class="detail-value invite-count">${invite.inviteCount.toLocaleString()}회</span>
+                                <span class="detail-label">회원 이름</span>
+                                <span class="detail-value">${invite.memberName || '미지정'}</span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">전화번호</span>
-                                <span class="detail-value">${invite.phoneNumber || '미지정'}</span>
+                                <span class="detail-label">회원 아이디</span>
+                                <span class="detail-value">${invite.memberId || '미지정'}</span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">상태</span>
-                                <span class="detail-value">${invite.status || '미지정'}</span>
+                                <span class="detail-label">총 초대자 수</span>
+                                <span class="detail-value invite-count">${invite.totalInvited.toLocaleString()}명</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">최근 초대일</span>
                                 <span class="detail-value">${invite.lastInviteDate ? new Date(invite.lastInviteDate).toLocaleString() : '미지정'}</span>
+                            </div>
+                        </div>
+                        <div class="invited-phones-section">
+                            <h5 class="invited-phones-title">
+                                <i class="fas fa-list"></i> 초대한 전화번호 목록 (${invite.invites.length}개)
+                            </h5>
+                            <div class="invited-phones-list">
+                                ${invitedPhonesHtml}
                             </div>
                         </div>
                     </div>
