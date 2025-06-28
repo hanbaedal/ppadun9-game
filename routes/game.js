@@ -1,13 +1,36 @@
 const express = require('express');
 const router = express.Router();
+const { MongoClient } = require('mongodb');
 
-// MongoDB 연결을 server.js에서 가져오기
+// MongoDB 연결 설정
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+
+let client;
 let db;
 
-// db 객체를 설정하는 함수
-function setDatabase(database) {
-    db = database;
-    console.log('[Game Routes] 데이터베이스 연결 설정 완료');
+// 데이터베이스 연결 함수
+async function connectDB() {
+    try {
+        if (!client || !client.topology || !client.topology.isConnected()) {
+            client = new MongoClient(MONGODB_URI, {
+                serverSelectionTimeoutMS: 60000,
+                socketTimeoutMS: 45000,
+                connectTimeoutMS: 60000,
+                maxPoolSize: 10,
+                minPoolSize: 1,
+                maxIdleTimeMS: 30000,
+                retryWrites: true,
+                w: 'majority'
+            });
+            
+            await client.connect();
+            db = client.db('member-management');
+            console.log('MongoDB 연결 성공:', db.databaseName);
+        }
+    } catch (error) {
+        console.error('MongoDB 연결 실패:', error);
+        throw error;
+    }
 }
 
 // 오늘의 게임 정보 조회
@@ -25,14 +48,7 @@ router.get('/today-game', async (req, res) => {
             });
         }
 
-        if (!db) {
-            console.log('[Game Routes] 데이터베이스 연결 없음');
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-
+        await connectDB();
         console.log('[Game Routes] todaygames 컬렉션 접근');
         const collection = db.collection('todaygames');
         const dailyGame = await collection.findOne({ date });
@@ -67,14 +83,7 @@ router.post('/today-game', async (req, res) => {
             });
         }
 
-        if (!db) {
-            console.log('[Game Routes] 데이터베이스 연결 없음');
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-
+        await connectDB();
         console.log('[Game Routes] todaygames 컬렉션에 저장 시도');
         const collection = db.collection('todaygames');
         
@@ -106,4 +115,4 @@ router.get('/', (req, res) => {
     res.json({ message: 'Game API is working' });
 });
 
-module.exports = { router, setDatabase }; 
+module.exports = router; 

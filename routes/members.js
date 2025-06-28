@@ -10,7 +10,7 @@ const client = new MongoClient(uri);
 router.get('/api/members', async (req, res) => {
     try {
         await client.connect();
-        const database = client.db('test');
+        const database = client.db('member-management');
         const collection = database.collection('game-member');
         
         const members = await collection.find({}).toArray();
@@ -35,7 +35,7 @@ router.put('/api/members/:id', async (req, res) => {
         const { name, email, points } = req.body;
         
         await client.connect();
-        const database = client.db('test');
+        const database = client.db('member-management');
         const collection = database.collection('game-member');
         
         const updateData = {};
@@ -74,7 +74,7 @@ router.delete('/api/members/:id', async (req, res) => {
         const { id } = req.params;
         
         await client.connect();
-        const database = client.db('test');
+        const database = client.db('member-management');
         const collection = database.collection('game-member');
         
         const result = await collection.deleteOne({ _id: id });

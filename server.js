@@ -104,8 +104,8 @@ const friendInviteRoutes = require('./routes/friend-invite');
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API 라우트 사용
-app.use('/api/game', gameRoutes.router);
-app.use('/api/dailygames', dailygamesRoutes.router);
+app.use('/api/game', gameRoutes);
+app.use('/api/dailygames', dailygamesRoutes);
 app.use('/', membersRoutes);
 app.use('/api/notices', noticesRoutes);
 app.use('/api/game-progress', gameProgressRoutes);
@@ -667,10 +667,6 @@ async function startServer() {
         
         // config/db.js의 connectDB 함수 호출
         await connectDB();
-        
-        // MongoDB 연결 후 라우터 설정
-        gameRoutes.setDatabase(db);
-        dailygamesRoutes.setDatabase(db);
         
         app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
             console.log(`서버가 포트 ${process.env.PORT || 3000}에서 실행 중입니다.`);

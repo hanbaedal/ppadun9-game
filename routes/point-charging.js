@@ -24,7 +24,7 @@ async function connectDB() {
             });
             
             await client.connect();
-            db = client.db('test'); // test 데이터베이스 사용
+            db = client.db('member-management'); // member-management 데이터베이스 사용
             console.log('MongoDB 연결 성공:', db.databaseName);
         }
     } catch (error) {
