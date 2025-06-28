@@ -292,6 +292,40 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        /* 통계 카드 스타일 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            font-size: 1.8rem;
+            margin: 0 0 5px 0;
+            font-weight: 700;
+        }
+
+        .stat-card p {
+            font-size: 0.75rem;
+            margin: 0;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -348,30 +382,7 @@
         <!-- Controls Section -->
         <div class="controls-section">
             <div class="search-controls">
-                <div class="input-group" style="flex: 1; min-width: 200px;">
-                    <input type="text" class="form-control" id="searchInput" placeholder="제목, 내용, 사용자명, 사용자ID로 검색...">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="button" onclick="searchInquiries()">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-                <select class="form-control" id="statusFilter" style="width: auto;">
-                    <option value="">전체 상태</option>
-                    <option value="pending">답변 대기</option>
-                    <option value="answered">답변 완료</option>
-                    <option value="closed">처리 완료</option>
-                </select>
-                <select class="form-control" id="categoryFilter" style="width: auto;">
-                    <option value="">전체 카테고리</option>
-                    <option value="game">게임</option>
-                    <option value="general">일반</option>
-                    <option value="technical">기술</option>
-                    <option value="billing">결제</option>
-                </select>
-                <button class="btn btn-success" onclick="showNewInquiryModal()">
-                    <i class="fas fa-plus"></i> 새 문의
-                </button>
+                <h4>고객 문의 관리</h4>
             </div>
         </div>
 
@@ -454,53 +465,6 @@
         </div>
     </div>
 
-    <!-- New Inquiry Modal -->
-    <div class="modal fade" id="newInquiryModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">새 문의 등록</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="newInquiryForm">
-                        <div class="form-group">
-                            <label for="inquiryTitle">제목 *</label>
-                            <input type="text" class="form-control" id="inquiryTitle" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="inquiryContent">내용 *</label>
-                            <textarea class="form-control" id="inquiryContent" rows="4" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="inquiryUserId">사용자 ID *</label>
-                            <input type="text" class="form-control" id="inquiryUserId" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="inquiryUserName">사용자명 *</label>
-                            <input type="text" class="form-control" id="inquiryUserName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="inquiryCategory">카테고리</label>
-                            <select class="form-control" id="inquiryCategory">
-                                <option value="general" selected>일반</option>
-                                <option value="game">게임</option>
-                                <option value="technical">기술</option>
-                                <option value="billing">결제</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
-                    <button type="button" class="btn btn-primary" onclick="submitNewInquiry()">등록</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -508,6 +472,7 @@
         let currentPage = 1;
         let currentInquiryId = null;
         let currentInquiry = null;
+        let dailyInquiryMap = new Map(); // 일별 번호 매핑
 
         // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', function() {
@@ -586,19 +551,14 @@
         // 문의 목록 로드
         async function loadInquiries(page = 1) {
             try {
-                const searchTerm = document.getElementById('searchInput').value;
-                const statusFilter = document.getElementById('statusFilter').value;
-                const categoryFilter = document.getElementById('categoryFilter').value;
-                
                 let url = `/api/customer-inquiries?page=${page}&limit=10`;
-                if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
-                if (statusFilter) url += `&status=${statusFilter}`;
-                if (categoryFilter) url += `&category=${categoryFilter}`;
                 
                 const response = await fetch(url);
                 const data = await response.json();
                 
                 if (data.success) {
+                    // 일별 번호 매핑 생성
+                    createDailyNumberMapping(data.inquiries);
                     displayInquiries(data.inquiries);
                     displayPagination(data.page, data.totalPages);
                     currentPage = data.page;
@@ -612,6 +572,36 @@
             }
         }
 
+        // 일별 번호 매핑 생성
+        function createDailyNumberMapping(inquiries) {
+            dailyInquiryMap.clear();
+            
+            // 날짜별로 그룹화
+            const dailyGroups = {};
+            inquiries.forEach(inquiry => {
+                const date = new Date(inquiry.createdAt).toDateString();
+                if (!dailyGroups[date]) {
+                    dailyGroups[date] = [];
+                }
+                dailyGroups[date].push(inquiry);
+            });
+            
+            // 각 날짜별로 번호 할당
+            Object.keys(dailyGroups).forEach(date => {
+                dailyGroups[date].forEach((inquiry, index) => {
+                    dailyInquiryMap.set(inquiry._id, `${formatDateForNumber(inquiry.createdAt)}-${String(index + 1).padStart(2, '0')}`);
+                });
+            });
+        }
+
+        // 날짜를 번호용으로 포맷
+        function formatDateForNumber(dateString) {
+            const date = new Date(dateString);
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${month}${day}`;
+        }
+
         // 문의 목록 표시
         function displayInquiries(inquiries) {
             const tbody = document.getElementById('inquiriesTableBody');
@@ -621,37 +611,40 @@
                 return;
             }
             
-            tbody.innerHTML = inquiries.map((inquiry, index) => `
-                <tr>
-                    <td>${inquiry._id}</td>
-                    <td>
-                        <a href="#" onclick="showInquiryDetail('${inquiry._id}')" class="text-primary">
-                            ${inquiry.title}
-                        </a>
-                    </td>
-                    <td>${inquiry.userName}</td>
-                    <td>${inquiry.userId}</td>
-                    <td>
-                        <span class="category-badge category-${inquiry.category}">
-                            ${getCategoryText(inquiry.category)}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="status-badge status-${inquiry.status}">
-                            ${getStatusText(inquiry.status)}
-                        </span>
-                    </td>
-                    <td>${formatDate(inquiry.createdAt)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" onclick="showInquiryDetail('${inquiry._id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteInquiry('${inquiry._id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = inquiries.map((inquiry) => {
+                const dailyNumber = dailyInquiryMap.get(inquiry._id) || inquiry._id;
+                return `
+                    <tr>
+                        <td>${dailyNumber}</td>
+                        <td>
+                            <a href="#" onclick="showInquiryDetail('${inquiry._id}')" class="text-primary">
+                                ${inquiry.title}
+                            </a>
+                        </td>
+                        <td>${inquiry.userName}</td>
+                        <td>${inquiry.userId}</td>
+                        <td>
+                            <span class="category-badge category-${inquiry.category}">
+                                ${getCategoryText(inquiry.category)}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-${inquiry.status}">
+                                ${getStatusText(inquiry.status)}
+                            </span>
+                        </td>
+                        <td>${formatDate(inquiry.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showInquiryDetail('${inquiry._id}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteInquiry('${inquiry._id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // 페이지네이션 표시
@@ -685,12 +678,6 @@
             }
             
             pagination.innerHTML = paginationHtml;
-        }
-
-        // 검색
-        function searchInquiries() {
-            currentPage = 1;
-            loadInquiries(1);
         }
 
         // 문의 상세 보기
@@ -842,56 +829,6 @@
             }
         }
 
-        // 새 문의 모달 표시
-        function showNewInquiryModal() {
-            document.getElementById('newInquiryForm').reset();
-            $('#newInquiryModal').modal('show');
-        }
-
-        // 새 문의 등록
-        async function submitNewInquiry() {
-            try {
-                const form = document.getElementById('newInquiryForm');
-                const formData = new FormData(form);
-                
-                const inquiryData = {
-                    title: document.getElementById('inquiryTitle').value.trim(),
-                    content: document.getElementById('inquiryContent').value.trim(),
-                    userId: document.getElementById('inquiryUserId').value.trim(),
-                    userName: document.getElementById('inquiryUserName').value.trim(),
-                    category: document.getElementById('inquiryCategory').value
-                };
-                
-                // 필수 필드 검증
-                if (!inquiryData.title || !inquiryData.content || !inquiryData.userId || !inquiryData.userName) {
-                    alert('모든 필수 항목을 입력해주세요.');
-                    return;
-                }
-                
-                const response = await fetch('/api/customer-inquiries', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(inquiryData)
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('문의가 성공적으로 등록되었습니다.');
-                    $('#newInquiryModal').modal('hide');
-                    loadInquiries(1);
-                    loadStats();
-                } else {
-                    alert('문의 등록에 실패했습니다: ' + data.message);
-                }
-            } catch (error) {
-                console.error('문의 등록 오류:', error);
-                alert('문의 등록 중 오류가 발생했습니다.');
-            }
-        }
-
         // 문의 삭제
         async function deleteInquiry(inquiryId) {
             try {
@@ -942,16 +879,6 @@
             const date = new Date(dateString);
             return date.toLocaleDateString('ko-KR') + ' ' + date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
         }
-
-        // 이벤트 리스너
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchInquiries();
-            }
-        });
-
-        document.getElementById('statusFilter').addEventListener('change', searchInquiries);
-        document.getElementById('categoryFilter').addEventListener('change', searchInquiries);
     </script>
 </body>
 </html> 
