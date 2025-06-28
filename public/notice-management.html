@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 관리 - 빠던나인 프로젝트</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f0d4 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(245, 241, 235, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 20px;
+            min-height: calc(100vh - 100px);
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        .page-header {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .page-title {
+            color: #333;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-back {
+            background: linear-gradient(135deg, #87ceeb 0%, #98d8e8 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 8px 20px;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
+        }
+        
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(135, 206, 235, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .notice-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .notice-form {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #87ceeb;
+            box-shadow: 0 0 0 0.2rem rgba(135, 206, 235, 0.25);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #87ceeb 0%, #98d8e8 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(135, 206, 235, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+        }
+        
+        .notice-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .notice-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .notice-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .notice-title {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .notice-content {
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .notice-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        
+        .notice-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #87ceeb 0%, #98d8e8 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            border-bottom: none;
+        }
+        
+        .modal-footer {
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding-top: 70px;
+                padding-bottom: 15px;
+            }
+            
+            .page-header {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .page-title {
+                font-size: 1.3rem;
+            }
+            
+            .notice-card, .notice-form {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .notice-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .notice-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cogs me-2"></i>
+                빠던나인 프로젝트 관리
+            </a>
+            
+            <div class="navbar-nav mx-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-bullhorn me-2"></i> 
+                    공지사항 관리
+                </span>
+            </div>
+            
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-home"></i> 메인으로
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <!-- 페이지 헤더 -->
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="page-title">
+                        <i class="fas fa-bullhorn"></i>
+                        공지사항 관리
+                    </h1>
+                    <a href="/" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> 메인으로
+                    </a>
+                </div>
+            </div>
+
+            <!-- 알림 메시지 -->
+            <div id="alertMessage" class="alert" style="display: none;"></div>
+
+            <!-- 공지사항 등록 폼 -->
+            <div class="notice-card">
+                <h3 class="mb-3">
+                    <i class="fas fa-plus-circle"></i> 새 공지사항 등록
+                </h3>
+                <form id="noticeForm">
+                    <div class="form-group">
+                        <label for="title">제목</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="content">내용</label>
+                        <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">우선순위</label>
+                        <select class="form-control" id="priority" name="priority">
+                            <option value="low">낮음</option>
+                            <option value="medium" selected>보통</option>
+                            <option value="high">높음</option>
+                            <option value="urgent">긴급</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="isActive">상태</label>
+                        <select class="form-control" id="isActive" name="isActive">
+                            <option value="true" selected>활성</option>
+                            <option value="false">비활성</option>
+                        </select>
+                    </div>
+                    <div class="text-right">
+                        <button type="button" class="btn btn-secondary mr-2" onclick="resetForm()">
+                            <i class="fas fa-undo"></i> 초기화
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 등록
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 공지사항 목록 -->
+            <div class="notice-card">
+                <h3 class="mb-3">
+                    <i class="fas fa-list"></i> 공지사항 목록
+                </h3>
+                <div id="noticeList" class="notice-list">
+                    <!-- 공지사항들이 여기에 동적으로 로드됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수정 모달 -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit"></i> 공지사항 수정
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId" name="id">
+                        <div class="form-group">
+                            <label for="editTitle">제목</label>
+                            <input type="text" class="form-control" id="editTitle" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editContent">내용</label>
+                            <textarea class="form-control" id="editContent" name="content" rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPriority">우선순위</label>
+                            <select class="form-control" id="editPriority" name="priority">
+                                <option value="low">낮음</option>
+                                <option value="medium">보통</option>
+                                <option value="high">높음</option>
+                                <option value="urgent">긴급</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editIsActive">상태</label>
+                            <select class="form-control" id="editIsActive" name="isActive">
+                                <option value="true">활성</option>
+                                <option value="false">비활성</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> 취소
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="updateNotice()">
+                        <i class="fas fa-save"></i> 수정
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotices();
+            setupFormHandlers();
+        });
+
+        // 폼 이벤트 핸들러 설정
+        function setupFormHandlers() {
+            const form = document.getElementById('noticeForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                createNotice();
+            });
+        }
+
+        // 공지사항 목록 로드
+        async function loadNotices() {
+            try {
+                const response = await fetch('/api/notices');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayNotices(data.notices);
+                } else {
+                    showAlert('공지사항을 불러오는데 실패했습니다.', 'danger');
+                }
+            } catch (error) {
+                console.error('공지사항 로드 오류:', error);
+                showAlert('서버 오류가 발생했습니다.', 'danger');
+            }
+        }
+
+        // 공지사항 목록 표시
+        function displayNotices(notices) {
+            const noticeList = document.getElementById('noticeList');
+            
+            if (notices.length === 0) {
+                noticeList.innerHTML = '<p class="text-center text-muted">등록된 공지사항이 없습니다.</p>';
+                return;
+            }
+
+            const noticesHtml = notices.map(notice => {
+                const priorityClass = getPriorityClass(notice.priority);
+                const priorityText = getPriorityText(notice.priority);
+                const statusText = notice.isActive ? '활성' : '비활성';
+                const statusClass = notice.isActive ? 'text-success' : 'text-muted';
+                
+                return `
+                    <div class="notice-item">
+                        <div class="notice-title">
+                            <span class="badge ${priorityClass} mr-2">${priorityText}</span>
+                            ${notice.title}
+                        </div>
+                        <div class="notice-content">${notice.content}</div>
+                        <div class="notice-meta">
+                            <div>
+                                <span class="text-muted">작성일: ${new Date(notice.createdAt).toLocaleDateString()}</span>
+                                <span class="text-muted ml-3">상태: <span class="${statusClass}">${statusText}</span></span>
+                            </div>
+                            <div class="notice-actions">
+                                <button class="btn btn-warning btn-sm" onclick="editNotice('${notice._id}')">
+                                    <i class="fas fa-edit"></i> 수정
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteNotice('${notice._id}')">
+                                    <i class="fas fa-trash"></i> 삭제
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            noticeList.innerHTML = noticesHtml;
+        }
+
+        // 우선순위 클래스 반환
+        function getPriorityClass(priority) {
+            switch(priority) {
+                case 'urgent': return 'badge-danger';
+                case 'high': return 'badge-warning';
+                case 'medium': return 'badge-info';
+                case 'low': return 'badge-secondary';
+                default: return 'badge-secondary';
+            }
+        }
+
+        // 우선순위 텍스트 반환
+        function getPriorityText(priority) {
+            switch(priority) {
+                case 'urgent': return '긴급';
+                case 'high': return '높음';
+                case 'medium': return '보통';
+                case 'low': return '낮음';
+                default: return '보통';
+            }
+        }
+
+        // 공지사항 생성
+        async function createNotice() {
+            const formData = new FormData(document.getElementById('noticeForm'));
+            const noticeData = {
+                title: formData.get('title'),
+                content: formData.get('content'),
+                priority: formData.get('priority'),
+                isActive: formData.get('isActive') === 'true'
+            };
+
+            try {
+                const response = await fetch('/api/notices', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(noticeData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('공지사항이 성공적으로 등록되었습니다.', 'success');
+                    resetForm();
+                    loadNotices();
+                } else {
+                    showAlert(data.message || '공지사항 등록에 실패했습니다.', 'danger');
+                }
+            } catch (error) {
+                console.error('공지사항 생성 오류:', error);
+                showAlert('서버 오류가 발생했습니다.', 'danger');
+            }
+        }
+
+        // 공지사항 수정 모달 열기
+        async function editNotice(id) {
+            try {
+                const response = await fetch(`/api/notices/${id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const notice = data.notice;
+                    document.getElementById('editId').value = notice._id;
+                    document.getElementById('editTitle').value = notice.title;
+                    document.getElementById('editContent').value = notice.content;
+                    document.getElementById('editPriority').value = notice.priority;
+                    document.getElementById('editIsActive').value = notice.isActive.toString();
+                    
+                    $('#editModal').modal('show');
+                } else {
+                    showAlert('공지사항 정보를 불러오는데 실패했습니다.', 'danger');
+                }
+            } catch (error) {
+                console.error('공지사항 정보 로드 오류:', error);
+                showAlert('서버 오류가 발생했습니다.', 'danger');
+            }
+        }
+
+        // 공지사항 수정
+        async function updateNotice() {
+            const formData = new FormData(document.getElementById('editForm'));
+            const id = formData.get('id');
+            const noticeData = {
+                title: formData.get('title'),
+                content: formData.get('content'),
+                priority: formData.get('priority'),
+                isActive: formData.get('isActive') === 'true'
+            };
+
+            try {
+                const response = await fetch(`/api/notices/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(noticeData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('공지사항이 성공적으로 수정되었습니다.', 'success');
+                    $('#editModal').modal('hide');
+                    loadNotices();
+                } else {
+                    showAlert(data.message || '공지사항 수정에 실패했습니다.', 'danger');
+                }
+            } catch (error) {
+                console.error('공지사항 수정 오류:', error);
+                showAlert('서버 오류가 발생했습니다.', 'danger');
+            }
+        }
+
+        // 공지사항 삭제
+        async function deleteNotice(id) {
+            if (!confirm('정말로 이 공지사항을 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/notices/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('공지사항이 성공적으로 삭제되었습니다.', 'success');
+                    loadNotices();
+                } else {
+                    showAlert(data.message || '공지사항 삭제에 실패했습니다.', 'danger');
+                }
+            } catch (error) {
+                console.error('공지사항 삭제 오류:', error);
+                showAlert('서버 오류가 발생했습니다.', 'danger');
+            }
+        }
+
+        // 폼 초기화
+        function resetForm() {
+            document.getElementById('noticeForm').reset();
+        }
+
+        // 알림 메시지 표시
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.display = 'block';
+
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 
