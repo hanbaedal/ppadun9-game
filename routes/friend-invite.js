@@ -50,20 +50,22 @@ router.get('/', async (req, res) => {
         // 모든 초대 내역 조회 (초대 날짜 내림차순)
         const invites = await collection.find({}).sort({ inviteDate: -1 }).toArray();
         console.log('조회된 초대 내역 수:', invites.length);
-        console.log('첫 번째 문서 샘플:', invites[0]);
+        if (invites.length > 0) {
+            console.log('첫 번째 문서 샘플:', invites[0]);
+        }
         
         // 회원별로 그룹화하여 초대 통계 계산
         const inviteStats = {};
         const totalInviteCount = invites.length;
         
         invites.forEach(invite => {
-            // 전화번호를 키로 사용 (회원 아이디로 간주)
-            const key = invite.phoneNumber || 'unknown';
-            
+            // memberId를 키로 사용 (회원 아이디)
+            const key = invite.memberId || 'unknown';
             if (!inviteStats[key]) {
                 inviteStats[key] = {
-                    memberId: invite.phoneNumber, // 회원 아이디 (전화번호)
-                    memberName: invite.phoneNumber, // 회원 이름 (전화번호로 표시)
+                    memberId: invite.memberId || '미지정',
+                    memberName: invite.memberName || '미지정',
+                    memberPhone: invite.memberPhone || '미지정',
                     inviteCount: 0,
                     totalInvited: 0, // 총 초대한 사람 수
                     invitedPhones: [], // 초대한 전화번호 목록
@@ -72,27 +74,25 @@ router.get('/', async (req, res) => {
                     invites: []
                 };
             }
-            
             inviteStats[key].inviteCount++;
-            inviteStats[key].invites.push(invite);
-            
+            inviteStats[key].invites.push({
+                phoneNumber: invite.inviterPhone || '미지정',
+                inviteDate: invite.inviteDate,
+                status: invite.status
+            });
             // 초대한 전화번호 목록에 추가 (중복 제거, 자기 자신 제외)
-            if (!inviteStats[key].invitedPhones.includes(invite.phoneNumber) && invite.phoneNumber !== key) {
-                inviteStats[key].invitedPhones.push(invite.phoneNumber);
+            if (invite.inviterPhone && !inviteStats[key].invitedPhones.includes(invite.inviterPhone) && invite.inviterPhone !== invite.memberPhone) {
+                inviteStats[key].invitedPhones.push(invite.inviterPhone);
                 inviteStats[key].totalInvited++;
             }
-            
             // 최신 날짜로 업데이트
             if (new Date(invite.inviteDate) > new Date(inviteStats[key].lastInviteDate)) {
                 inviteStats[key].lastInviteDate = invite.inviteDate;
             }
         });
-        
         // 통계를 배열로 변환하고 초대 횟수 순으로 정렬
         const inviteStatsArray = Object.values(inviteStats).sort((a, b) => b.inviteCount - a.inviteCount);
-        
         console.log('처리된 통계 데이터:', inviteStatsArray.length, '개 회원');
-        
         res.json({ 
             success: true, 
             invites: invites,
