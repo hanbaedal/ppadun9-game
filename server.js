@@ -78,18 +78,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 세션 설정
-app.use(session({
+const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
     resave: false,
     saveUninitialized: false,
-    store: new session.MemoryStore(),
     cookie: {
-        secure: false, // 개발 환경에서는 false로 설정
+        secure: process.env.NODE_ENV === 'production', // 프로덕션에서는 true
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         httpOnly: true,
         sameSite: 'lax'
     }
-}));
+};
+
+// 개발 환경에서만 MemoryStore 사용
+if (process.env.NODE_ENV !== 'production') {
+    sessionConfig.store = new session.MemoryStore();
+}
+
+app.use(session(sessionConfig));
 
 // API 라우트 설정
 const gameRoutes = require('./routes/game');
