@@ -292,6 +292,27 @@
             min-width: 50px;
         }
         
+        /* 상태 배지 스타일 */
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .badge-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
         /* 반응형 디자인 */
         @media (max-width: 768px) {
             .main-content {
@@ -624,6 +645,34 @@
             setTimeout(() => {
                 alertDiv.style.display = 'none';
             }, 5000);
+        }
+
+        // 상태에 따른 CSS 클래스 반환
+        function getStatusClass(status) {
+            switch (status) {
+                case 'completed':
+                    return 'badge-success';
+                case 'pending':
+                    return 'badge-warning';
+                case 'failed':
+                    return 'badge-danger';
+                default:
+                    return 'badge-secondary';
+            }
+        }
+
+        // 상태 텍스트 반환
+        function getStatusText(status) {
+            switch (status) {
+                case 'completed':
+                    return '완료';
+                case 'pending':
+                    return '대기중';
+                case 'failed':
+                    return '실패';
+                default:
+                    return '미지정';
+            }
         }
     </script>
 </body>
