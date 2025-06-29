@@ -539,7 +539,7 @@
                     <div class="invited-phone-item">
                         <div class="invited-phone-details">
                             <span class="invited-phone">${inviteDetail.phoneNumber || '미지정'}</span>
-                            <span class="invited-date">${inviteDetail.inviteDate ? new Date(inviteDetail.inviteDate).toLocaleString() : '미지정'}</span>
+                            <span class="invited-date">${inviteDetail.inviteDate ? new Date(inviteDetail.inviteDate).toLocaleDateString() : '미지정'}</span>
                             <span class="invited-status ${getStatusClass(inviteDetail.status)}">${getStatusText(inviteDetail.status)}</span>
                         </div>
                     </div>
@@ -568,7 +568,7 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">최근 초대일</span>
-                                <span class="detail-value">${invite.lastInviteDate ? new Date(invite.lastInviteDate).toLocaleString() : '미지정'}</span>
+                                <span class="detail-value">${invite.lastInviteDate ? new Date(invite.lastInviteDate).toLocaleDateString() : '미지정'}</span>
                             </div>
                         </div>
                         <div class="invited-phones-section">
