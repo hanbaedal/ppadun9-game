@@ -9,10 +9,12 @@ const { connectDB } = require('./config/db');
 // 환경 변수 설정
 dotenv.config();
 
-// 환경 변수 강제 설정
-process.env.MONGODB_URI = 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
-process.env.DB_NAME = 'member-management';
-process.env.SESSION_SECRET = 'ppadun9-secret-key-2024';
+// 개발 환경에서만 기본값 설정
+if (process.env.NODE_ENV !== 'production') {
+    process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+    process.env.DB_NAME = process.env.DB_NAME || 'member-management';
+    process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'ppadun9-secret-key-2024';
+}
 
 // Render 배포 환경 최적화
 if (process.env.NODE_ENV === 'production') {
@@ -23,8 +25,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // 환경 변수 검증
-if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
-    console.error('[Config] Production 환경에서 MONGODB_URI가 설정되지 않았습니다.');
+if (!process.env.MONGODB_URI) {
+    console.error('[Config] MONGODB_URI가 설정되지 않았습니다.');
     process.exit(1);
 }
 
@@ -676,18 +678,50 @@ app.get('/customer-center.html', (req, res) => {
 // 서버 시작
 async function startServer() {
     try {
+        console.log('[Server] 서버 시작 중...');
+        console.log('[Server] MongoDB 연결 시도...');
+        
         await connectToMongoDB();
+        console.log('[Server] MongoDB 연결 성공');
         
         // config/db.js의 connectDB 함수 호출
+        console.log('[Server] 추가 데이터베이스 연결 시도...');
         await connectDB();
+        console.log('[Server] 추가 데이터베이스 연결 성공');
         
-        app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
-            console.log(`서버가 포트 ${process.env.PORT || 3000}에서 실행 중입니다.`);
+        const port = process.env.PORT || 3000;
+        app.listen(port, '0.0.0.0', () => {
+            console.log(`[Server] 서버가 포트 ${port}에서 실행 중입니다.`);
+            console.log(`[Server] 환경: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`[Server] 데이터베이스: ${process.env.DB_NAME || 'member-management'}`);
         });
     } catch (error) {
-        console.error('서버 시작 오류:', error);
+        console.error('[Server] 서버 시작 오류:', error);
+        console.error('[Server] 오류 상세:', error.message);
+        console.error('[Server] 스택 트레이스:', error.stack);
         process.exit(1);
     }
 }
+
+// 프로세스 종료 핸들러
+process.on('SIGTERM', () => {
+    console.log('[Server] SIGTERM 신호 수신, 서버 종료 중...');
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('[Server] SIGINT 신호 수신, 서버 종료 중...');
+    process.exit(0);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('[Server] 처리되지 않은 예외:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[Server] 처리되지 않은 Promise 거부:', reason);
+    process.exit(1);
+});
 
 startServer(); 
