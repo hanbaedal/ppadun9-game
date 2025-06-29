@@ -597,7 +597,7 @@
                 return;
             }
 
-            const totalInvites = data.uniqueInviters || 0;
+            const totalInvites = data.totalInvitedPeople || 0; // 총 초대받은 사람 수
             const totalInviteCount = data.totalInviteCount || 0;
             const avgInviteCount = totalInvites > 0 ? Math.round(totalInviteCount / totalInvites) : 0;
             const topInviteCount = data.inviteStats.length > 0 ? (data.inviteStats[0].inviteCount || 0) : 0;

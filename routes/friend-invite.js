@@ -57,6 +57,7 @@ router.get('/', async (req, res) => {
         // 회원별로 그룹화하여 초대 통계 계산
         const inviteStats = {};
         const totalInviteCount = invites.length;
+        const allInvitedPhones = new Set(); // 모든 초대받은 전화번호 (중복 제거)
         
         invites.forEach(invite => {
             // memberId를 키로 사용 (회원 아이디)
@@ -80,26 +81,39 @@ router.get('/', async (req, res) => {
                 inviteDate: invite.inviteDate,
                 status: invite.status
             });
+            
+            // 초대받은 전화번호를 전체 집합에 추가 (중복 제거)
+            if (invite.inviterPhone) {
+                allInvitedPhones.add(invite.inviterPhone);
+            }
+            
             // 초대한 전화번호 목록에 추가 (중복 제거, 자기 자신 제외)
             if (invite.inviterPhone && !inviteStats[key].invitedPhones.includes(invite.inviterPhone) && invite.inviterPhone !== invite.memberPhone) {
                 inviteStats[key].invitedPhones.push(invite.inviterPhone);
                 inviteStats[key].totalInvited++;
             }
+            
             // 최신 날짜로 업데이트
             if (new Date(invite.inviteDate) > new Date(inviteStats[key].lastInviteDate)) {
                 inviteStats[key].lastInviteDate = invite.inviteDate;
             }
         });
+        
         // 통계를 배열로 변환하고 초대 횟수 순으로 정렬
         const inviteStatsArray = Object.values(inviteStats).sort((a, b) => b.inviteCount - a.inviteCount);
+        const totalInvitedPeople = allInvitedPhones.size; // 총 초대받은 사람 수 (중복 제거)
+        
         console.log('처리된 통계 데이터:', inviteStatsArray.length, '개 회원');
+        console.log('총 초대받은 사람 수:', totalInvitedPeople);
+        
         res.json({ 
             success: true, 
             invites: invites,
             inviteStats: inviteStatsArray,
             count: count,
             totalInviteCount: totalInviteCount,
-            uniqueInviters: inviteStatsArray.length
+            uniqueInviters: inviteStatsArray.length,
+            totalInvitedPeople: totalInvitedPeople
         });
     } catch (error) {
         console.error('친구초대 리스트 조회 오류:', error);
