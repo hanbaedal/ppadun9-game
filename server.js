@@ -124,12 +124,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API 라우트 사용
 app.use('/api/game', gameRoutes);
 app.use('/api/dailygames', dailygamesRoutes);
-app.use('/', membersRoutes);
 app.use('/api/notices', noticesRoutes);
 app.use('/api/game-progress', gameProgressRoutes);
 app.use('/api/point-charging', pointChargingRoutes);
 app.use('/api/friend-invite', friendInviteRoutes);
 app.use('/api/customer-inquiries', customerInquiriesRoutes);
+app.use('/', membersRoutes);
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -490,13 +490,10 @@ app.post('/api/employee/login', async (req, res) => {
 app.get('/api/employee/current-user', (req, res) => {
     try {
         console.log('=== 현재 사용자 정보 요청 ===');
-        console.log('요청 헤더:', req.headers);
         console.log('세션 ID:', req.sessionID);
-        console.log('세션 전체:', req.session);
         console.log('세션 사용자 정보:', req.session.user);
-        console.log('쿠키:', req.headers.cookie);
         
-        if (req.session.user) {
+        if (req.session && req.session.user) {
             console.log('로그인된 사용자 발견:', req.session.user);
             res.json({ 
                 success: true, 
@@ -570,18 +567,29 @@ app.get('/api/employee/online-users', async (req, res) => {
 // 로그인 통계 조회 API
 app.get('/api/employee/login-stats', async (req, res) => {
     try {
+        console.log('=== 로그인 통계 조회 요청 ===');
+        console.log('요청 URL:', req.url);
+        console.log('요청 메서드:', req.method);
+        console.log('요청 헤더:', req.headers);
+        console.log('요청 파라미터:', req.params);
+        console.log('요청 쿼리:', req.query);
+        
         if (!db) {
             console.error('MongoDB 연결이 설정되지 않았습니다.');
             return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
         }
 
         const collection = db.collection(COLLECTION_NAME);
+        console.log('컬렉션 접근:', COLLECTION_NAME);
         
         // 전체 직원 수
         const totalEmployees = await collection.countDocuments();
+        console.log('전체 직원 수:', totalEmployees);
         
         // 현재 온라인 사용자 (30분 이내 로그인)
         const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        console.log('30분 전 시간:', thirtyMinutesAgo);
+        
         const onlineUsersList = await collection.find(
             { lastLoginAt: { $gte: thirtyMinutesAgo } },
             { 
@@ -592,7 +600,9 @@ app.get('/api/employee/login-stats', async (req, res) => {
         ).sort({ lastLoginAt: -1 }).toArray();
         
         const onlineUsers = onlineUsersList.length;
+        console.log('온라인 사용자 수:', onlineUsers);
         
+        console.log('응답 전송 중...');
         res.json({
             success: true,
             stats: {
@@ -601,6 +611,7 @@ app.get('/api/employee/login-stats', async (req, res) => {
                 onlineUsersList: onlineUsersList
             }
         });
+        console.log('응답 전송 완료');
     } catch (error) {
         console.error('로그인 통계 조회 오류:', error);
         console.error('오류 상세:', error.message);
