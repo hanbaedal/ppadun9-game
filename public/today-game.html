@@ -237,68 +237,9 @@
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
-        // 현재 로그인한 사용자 정보 가져오기
-        async function loadCurrentUser() {
-            try {
-                const response = await fetch('/api/employee/current-user');
-                const data = await response.json();
-                
-                const userNameElement = document.getElementById('userName');
-                const logoutItem = document.getElementById('logoutItem');
-                const logoutBtn = document.getElementById('logoutBtn');
-                
-                if (data.success && data.user) {
-                    userNameElement.textContent = data.user.name || data.user.username;
-                    logoutItem.style.display = 'block';
-                    
-                    // 로그아웃 버튼 이벤트 리스너
-                    logoutBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        if (confirm('로그아웃하시겠습니까?')) {
-                            logout();
-                        }
-                    });
-                } else {
-                    userNameElement.textContent = '사용자';
-                    logoutItem.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('사용자 정보 로드 오류:', error);
-                const userNameElement = document.getElementById('userName');
-                const logoutItem = document.getElementById('logoutItem');
-                userNameElement.textContent = '사용자';
-                logoutItem.style.display = 'none';
-            }
-        }
-
-        // 로그아웃 처리
-        async function logout() {
-            try {
-                const response = await fetch('/api/employee/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('로그아웃되었습니다.');
-                    window.location.href = '/';
-                } else {
-                    alert('로그아웃 중 오류가 발생했습니다.');
-                }
-            } catch (error) {
-                console.error('로그아웃 오류:', error);
-                alert('서버 오류가 발생했습니다.');
-            }
-        }
-
         // 페이지 로드 시 실행
         window.onload = function() {
             updateDate();
-            loadCurrentUser();
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

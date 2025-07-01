@@ -466,7 +466,7 @@
             
             <div class="menu-grid">
                 <!-- 1. 수익관리 -->
-                <a href="#" onclick="checkAuthAndNavigate('/revenue-management.html'); return false;" class="menu-item">
+                <a href="/revenue-management.html" class="menu-item">
                     <div class="menu-icon">💰</div>
                     <div class="menu-text">
                         <h3>수익관리</h3>
@@ -475,7 +475,7 @@
                 </a>
 
                 <!-- 2. 직원관리 -->
-                <a href="#" onclick="checkAuthAndNavigate('/employee-member.html'); return false;" class="menu-item">
+                <a href="/employee-member.html" class="menu-item">
                     <div class="menu-icon">👥</div>
                     <div class="menu-text">
                         <h3>직원 관리</h3>
@@ -484,7 +484,7 @@
                 </a>
 
                 <!-- 3. 오늘의 경기 등록 -->
-                <a href="#" onclick="checkAuthAndNavigate('/today-game.html'); return false;" class="menu-item" id="todayGameMenu">
+                <a href="/today-game.html" class="menu-item" id="todayGameMenu">
                     <div class="menu-icon">⚾</div>
                     <div class="menu-text">
                         <h3>오늘의 경기 등록</h3>
@@ -493,7 +493,7 @@
                 </a>
 
                 <!-- 4. 게임 설정 -->
-                <a href="#" onclick="checkAuthAndNavigate('/team-game.html'); return false;" class="menu-item" id="gameSettingMenu">
+                <a href="/team-game.html" class="menu-item" id="gameSettingMenu">
                     <div class="menu-icon">📱</div>
                     <div class="menu-text">
                         <h3>게임 설정</h3>
@@ -502,7 +502,7 @@
                 </a>
 
                 <!-- 5. 회원관리 -->
-                <a href="#" onclick="checkAuthAndNavigate('/member-management.html'); return false;" class="menu-item">
+                <a href="/member-management.html" class="menu-item">
                     <div class="menu-icon">👤</div>
                     <div class="menu-text">
                         <h3>회원 관리</h3>
@@ -511,7 +511,7 @@
                 </a>
 
                 <!-- 6. 공지사항 등록/수정/삭제 -->
-                <a href="#" onclick="checkAuthAndNavigate('/notice-management.html'); return false;" class="menu-item">
+                <a href="/notice-management.html" class="menu-item">
                     <div class="menu-icon">📢</div>
                     <div class="menu-text">
                         <h3>공지사항 관리</h3>
@@ -520,7 +520,7 @@
                 </a>
 
                 <!-- 7. 포인트 충전 리스트 -->
-                <a href="#" onclick="checkAuthAndNavigate('/point-charging-list.html'); return false;" class="menu-item">
+                <a href="/point-charging-list.html" class="menu-item">
                     <div class="menu-icon">💰</div>
                     <div class="menu-text">
                         <h3>포인트 충전 리스트</h3>
@@ -529,7 +529,7 @@
                 </a>
 
                 <!-- 8. 친구초대 상위 리스트 -->
-                <a href="#" onclick="checkAuthAndNavigate('/friend-invite-list.html'); return false;" class="menu-item">
+                <a href="/friend-invite-list.html" class="menu-item">
                     <div class="menu-icon">🤝</div>
                     <div class="menu-text">
                         <h3>친구초대 리스트</h3>
@@ -538,7 +538,7 @@
                 </a>
 
                 <!-- 9. 고객센터 -->
-                <a href="#" onclick="checkAuthAndNavigate('/customer-center.html'); return false;" class="menu-item">
+                <a href="/customer-center.html" class="menu-item">
                     <div class="menu-icon">📞</div>
                     <div class="menu-text">
                         <h3>고객센터</h3>
@@ -575,41 +575,6 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="/js/main.js"></script>
     <script>
-
-
-        // 메뉴 클릭 시 로그인 체크
-        async function checkAuthAndNavigate(url) {
-            try {
-                const response = await fetch('/api/employee/current-user', {
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('서버 응답 오류');
-                }
-                
-                const data = await response.json();
-                
-                if (!data.success || !data.user) {
-                    // 로그인되지 않은 경우 로그인 페이지로 이동
-                    alert('로그인이 필요합니다.');
-                    window.location.href = '/employee-login.html';
-                    return;
-                }
-                
-                // 로그인된 경우 해당 페이지로 이동
-                window.location.href = url;
-            } catch (error) {
-                console.error('로그인 상태 확인 오류:', error);
-                alert('로그인이 필요합니다.');
-                window.location.href = '/employee-login.html';
-            }
-        }
-
         // 게임 시작 함수
         function openGame() {
             // 외부 게임 사이트로 이동
@@ -666,12 +631,13 @@
         async function loadCurrentUser() {
             try {
                 console.log('사용자 정보 로드 시작');
+                console.log('현재 URL:', window.location.href);
                 
                 const userNameElement = document.getElementById('userName');
                 const logoutItem = document.getElementById('logoutItem');
                 const logoutBtn = document.getElementById('logoutBtn');
                 
-                // 서버에서 실제 로그인 상태 확인
+                // 먼저 API 호출로 실제 로그인 상태 확인
                 try {
                     const response = await fetch('/api/employee/current-user', {
                         credentials: 'include',
@@ -680,6 +646,7 @@
                             'Content-Type': 'application/json'
                         }
                     });
+                    console.log('API 응답 상태:', response.status);
                     
                     if (response.ok) {
                         const data = await response.json();
@@ -690,13 +657,8 @@
                             // 로컬 스토리지에 저장
                             localStorage.setItem('currentUser', JSON.stringify(data.user));
                             
-                            // UI 업데이트 - 로그인한 사용자 이름 표시
+                            // UI 업데이트
                             userNameElement.textContent = data.user.name || data.user.username;
-                            userNameElement.style.cursor = 'default';
-                            userNameElement.onclick = null;
-                            userNameElement.title = '';
-                            
-                            // 로그아웃 버튼 표시
                             logoutItem.style.display = 'block';
                             
                             // 로그아웃 버튼 이벤트 리스너
@@ -705,6 +667,8 @@
                                 showLogoutConfirm();
                             });
                             
+                            // 모든 메뉴 활성화
+                            enableAllMenus();
                             return;
                         }
                     }
@@ -712,30 +676,82 @@
                     console.error('API 호출 오류:', apiError);
                 }
                 
-                // 로그인되지 않은 상태 처리
-                console.log('로그인되지 않은 상태');
-                userNameElement.textContent = '사용자';
-                userNameElement.style.cursor = 'default';
-                userNameElement.onclick = null;
-                userNameElement.title = '';
+                // API에서 로그인 정보를 가져올 수 없는 경우, 로컬 스토리지 확인
+                const storedUser = localStorage.getItem('currentUser');
+                console.log('로컬 스토리지 사용자 정보:', storedUser);
                 
-                // 로그아웃 버튼 숨기기
-                logoutItem.style.display = 'none';
-                
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    console.log('로컬 스토리지 사용자 정보:', user);
+                    
+                    // 로그인된 사용자가 있는 경우 - 실제 이름을 헤더 중간에 표시
+                    userNameElement.textContent = user.name || user.username;
+                    console.log('사용자 이름 표시:', user.name || user.username);
+                    
+                    // 로그아웃 버튼 표시
+                    logoutItem.style.display = 'block';
+                    
+                    // 로그아웃 버튼 이벤트 리스너
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        showLogoutConfirm();
+                    });
+                    
+                    // 모든 메뉴 활성화
+                    enableAllMenus();
+                } else {
+                    console.log('로그인되지 않은 상태');
+                    // 로그인되지 않은 경우 - '로그인' 표시
+                    userNameElement.textContent = '로그인';
+                    userNameElement.onclick = function(e) {
+                        e.preventDefault();
+                        window.location.href = '/employee-login.html';
+                    };
+                    userNameElement.title = '로그인하기';
+                    userNameElement.style.cursor = 'pointer';
+                    
+                    // 로그아웃 버튼 숨기기
+                    logoutItem.style.display = 'none';
+                    
+                    // 메뉴 비활성화 (로그인 필요)
+                    disableAllMenus();
+                }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
                 const userNameElement = document.getElementById('userName');
                 const logoutItem = document.getElementById('logoutItem');
                 
-                userNameElement.textContent = '사용자';
-                userNameElement.style.cursor = 'default';
-                userNameElement.onclick = null;
-                userNameElement.title = '';
+                userNameElement.textContent = '로그인';
+                userNameElement.onclick = function(e) {
+                    e.preventDefault();
+                    window.location.href = '/employee-login.html';
+                };
+                userNameElement.title = '로그인하기';
+                userNameElement.style.cursor = 'pointer';
                 logoutItem.style.display = 'none';
+                disableAllMenus();
             }
         }
         
-
+        // 모든 메뉴 활성화
+        function enableAllMenus() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.style.opacity = '1';
+                item.style.pointerEvents = 'auto';
+                item.style.cursor = 'pointer';
+            });
+        }
+        
+        // 모든 메뉴 비활성화
+        function disableAllMenus() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.style.opacity = '0.5';
+                item.style.pointerEvents = 'none';
+                item.style.cursor = 'not-allowed';
+            });
+        }
         
         // 로그아웃 확인 다이얼로그
         function showLogoutConfirm() {

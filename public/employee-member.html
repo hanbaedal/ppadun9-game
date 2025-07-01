@@ -348,27 +348,6 @@
         // 직원관리 페이지 JavaScript
         console.log('직원관리 페이지가 로드되었습니다.');
         
-        // 로그인 체크 함수
-        async function checkLoginStatus() {
-            try {
-                const response = await fetch('/api/employee/current-user');
-                const data = await response.json();
-                
-                if (!data.success || !data.user) {
-                    // 로그인되지 않은 경우 로그인 페이지로 이동
-                    alert('로그인이 필요합니다.');
-                    window.location.href = '/employee-login.html';
-                    return false;
-                }
-                return true;
-            } catch (error) {
-                console.error('로그인 상태 확인 오류:', error);
-                alert('로그인이 필요합니다.');
-                window.location.href = '/employee-login.html';
-                return false;
-            }
-        }
-
         // 현재 로그인한 사용자 정보 가져오기
         async function loadCurrentUser() {
             try {
@@ -376,18 +355,21 @@
                 const data = await response.json();
                 
                 const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
                 
                 if (data.success && data.user) {
                     userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name || data.user.username}`;
+                    logoutItem.style.display = 'block';
                 } else {
-                    // 로그인되지 않은 경우 로그인 페이지로 이동
-                    alert('로그인이 필요합니다.');
-                    window.location.href = '/employee-login.html';
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> 사용자`;
+                    logoutItem.style.display = 'none';
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                alert('로그인이 필요합니다.');
-                window.location.href = '/employee-login.html';
+                const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
+                userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> 사용자`;
+                logoutItem.style.display = 'none';
             }
         }
 
@@ -416,12 +398,8 @@
         }
 
         // 페이지 로드 시 실행
-        window.onload = async function() {
-            // 먼저 로그인 상태 확인
-            const isLoggedIn = await checkLoginStatus();
-            if (isLoggedIn) {
-                loadCurrentUser();
-            }
+        window.onload = function() {
+            loadCurrentUser();
         };
 
         // 로그아웃 버튼 이벤트 리스너
