@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "setup-db": "node setup-database.js",
     "build": "npm install",
     "postinstall": "npm install mongodb && echo 'Build completed successfully'"
   },

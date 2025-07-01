@@ -1,16 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
-// MongoDB 연결 설정
-const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri);
+// MongoDB 연결 설정 (server.js와 동일한 방식)
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+const DB_NAME = process.env.DB_NAME || 'member-management';
 
 // 모든 회원 조회
 router.get('/api/members', async (req, res) => {
+    let client;
     try {
+        client = new MongoClient(MONGODB_URI, {
+            serverSelectionTimeoutMS: 60000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 60000
+        });
         await client.connect();
-        const database = client.db('member-management');
+        const database = client.db(DB_NAME);
         const collection = database.collection('game-member');
         
         const members = await collection.find({}).toArray();
@@ -25,17 +31,32 @@ router.get('/api/members', async (req, res) => {
             success: false,
             message: '서버 오류가 발생했습니다.'
         });
+    } finally {
+        if (client) {
+            await client.close();
+        }
     }
 });
 
 // 회원 수정
 router.put('/api/members/:id', async (req, res) => {
+    let client;
     try {
         const { id } = req.params;
         const { name, email, points } = req.body;
         
+        // ObjectId 형식 검증
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ error: '올바르지 않은 회원 ID 형식입니다.' });
+        }
+        
+        client = new MongoClient(MONGODB_URI, {
+            serverSelectionTimeoutMS: 60000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 60000
+        });
         await client.connect();
-        const database = client.db('member-management');
+        const database = client.db(DB_NAME);
         const collection = database.collection('game-member');
         
         const updateData = {};
@@ -44,7 +65,7 @@ router.put('/api/members/:id', async (req, res) => {
         if (points !== undefined) updateData.points = points;
         
         const result = await collection.updateOne(
-            { _id: id },
+            { _id: new ObjectId(id) },
             { $set: updateData }
         );
         
@@ -65,19 +86,34 @@ router.put('/api/members/:id', async (req, res) => {
             success: false,
             message: '서버 오류가 발생했습니다.'
         });
+    } finally {
+        if (client) {
+            await client.close();
+        }
     }
 });
 
 // 회원 삭제
 router.delete('/api/members/:id', async (req, res) => {
+    let client;
     try {
         const { id } = req.params;
         
+        // ObjectId 형식 검증
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ error: '올바르지 않은 회원 ID 형식입니다.' });
+        }
+        
+        client = new MongoClient(MONGODB_URI, {
+            serverSelectionTimeoutMS: 60000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 60000
+        });
         await client.connect();
-        const database = client.db('member-management');
+        const database = client.db(DB_NAME);
         const collection = database.collection('game-member');
         
-        const result = await collection.deleteOne({ _id: id });
+        const result = await collection.deleteOne({ _id: new ObjectId(id) });
         
         if (result.deletedCount > 0) {
             res.json({
@@ -96,6 +132,10 @@ router.delete('/api/members/:id', async (req, res) => {
             success: false,
             message: '서버 오류가 발생했습니다.'
         });
+    } finally {
+        if (client) {
+            await client.close();
+        }
     }
 });
 

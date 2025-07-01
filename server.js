@@ -11,9 +11,15 @@ dotenv.config();
 
 // 개발 환경에서만 기본값 설정
 if (process.env.NODE_ENV !== 'production') {
-    process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
-    process.env.DB_NAME = process.env.DB_NAME || 'member-management';
-    process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'ppadun9-secret-key-2024';
+    if (!process.env.MONGODB_URI) {
+        process.env.MONGODB_URI = 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+    }
+    if (!process.env.DB_NAME) {
+        process.env.DB_NAME = 'member-management';
+    }
+    if (!process.env.SESSION_SECRET) {
+        process.env.SESSION_SECRET = 'ppadun9-secret-key-2024';
+    }
 }
 
 // Render 배포 환경 최적화
@@ -320,6 +326,12 @@ app.get('/api/employee/:id', async (req, res) => {
         }
 
         const { id } = req.params;
+        
+        // ObjectId 형식 검증
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ error: '올바르지 않은 직원 ID 형식입니다.' });
+        }
+        
         const collection = db.collection(COLLECTION_NAME);
         
         const employee = await collection.findOne({ _id: new ObjectId(id) });
@@ -345,6 +357,12 @@ app.put('/api/employee/:id', async (req, res) => {
         }
 
         const { id } = req.params;
+        
+        // ObjectId 형식 검증
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ error: '올바르지 않은 직원 ID 형식입니다.' });
+        }
+        
         const updateData = req.body;
         const collection = db.collection(COLLECTION_NAME);
         
@@ -376,6 +394,12 @@ app.delete('/api/employee/:id', async (req, res) => {
         }
 
         const { id } = req.params;
+        
+        // ObjectId 형식 검증
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ error: '올바르지 않은 직원 ID 형식입니다.' });
+        }
+        
         const collection = db.collection(COLLECTION_NAME);
         
         const result = await collection.deleteOne({ _id: new ObjectId(id) });
@@ -553,49 +577,28 @@ app.get('/api/employee/login-stats', async (req, res) => {
 
         const collection = db.collection(COLLECTION_NAME);
         
-        // 전체 통계
+        // 전체 직원 수
         const totalEmployees = await collection.countDocuments();
         
-        // 총 로그인 횟수 계산 (더 안전한 방법)
-        const allEmployees = await collection.find({}, { loginCount: 1 }).toArray();
-        const totalLogins = allEmployees.reduce((sum, emp) => sum + (emp.loginCount || 0), 0);
-        
-        // 현재 온라인 사용자 수 (30분 이내 로그인)
+        // 현재 온라인 사용자 (30분 이내 로그인)
         const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-        const onlineUsers = await collection.countDocuments({
-            lastLoginAt: { $gte: thirtyMinutesAgo }
-        });
-        
-        // 최근 로그인한 사용자들 (상위 10명)
-        const recentLogins = await collection.find(
-            { lastLoginAt: { $exists: true } },
+        const onlineUsersList = await collection.find(
+            { lastLoginAt: { $gte: thirtyMinutesAgo } },
             { 
                 username: 1, 
                 name: 1, 
-                loginCount: 1, 
                 lastLoginAt: 1 
             }
-        ).sort({ lastLoginAt: -1 }).limit(10).toArray();
+        ).sort({ lastLoginAt: -1 }).toArray();
         
-        // 로그인 횟수 상위 사용자들 (상위 10명)
-        const topLogins = await collection.find(
-            { loginCount: { $exists: true, $gt: 0 } },
-            { 
-                username: 1, 
-                name: 1, 
-                loginCount: 1, 
-                lastLoginAt: 1 
-            }
-        ).sort({ loginCount: -1 }).limit(10).toArray();
+        const onlineUsers = onlineUsersList.length;
         
         res.json({
             success: true,
             stats: {
                 totalEmployees: totalEmployees,
-                totalLogins: totalLogins,
                 onlineUsers: onlineUsers,
-                recentLogins: recentLogins,
-                topLogins: topLogins
+                onlineUsersList: onlineUsersList
             }
         });
     } catch (error) {

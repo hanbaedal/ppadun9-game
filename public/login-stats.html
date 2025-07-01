@@ -161,57 +161,27 @@
             </div>
             
             <div id="statsContent" style="display: none;">
-                <!-- 전체 통계 -->
+                <!-- 현재 로그인한 직원 통계 -->
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
+                        <div class="stats-card text-center">
+                            <div class="stats-number" id="onlineUsers">0</div>
+                            <div class="stats-label">현재 로그인한 직원 수</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
                         <div class="stats-card text-center">
                             <div class="stats-number" id="totalEmployees">0</div>
                             <div class="stats-label">전체 직원 수</div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="stats-card text-center">
-                            <div class="stats-number" id="totalLogins">0</div>
-                            <div class="stats-label">총 로그인 횟수</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stats-card text-center">
-                            <div class="stats-number" id="onlineUsers">0</div>
-                            <div class="stats-label">현재 접속자</div>
-                        </div>
-                    </div>
                 </div>
                 
-                <!-- 최근 로그인 -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="stats-card">
-                            <h4><i class="fas fa-clock me-2"></i>최근 로그인한 사용자</h4>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>순위</th>
-                                            <th>이름</th>
-                                            <th>아이디</th>
-                                            <th>로그인 횟수</th>
-                                            <th>마지막 로그인</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="recentLoginsTable">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 로그인 횟수 상위 -->
+                <!-- 현재 로그인한 직원 명단 -->
                 <div class="row">
                     <div class="col-12">
                         <div class="stats-card">
-                            <h4><i class="fas fa-trophy me-2"></i>로그인 횟수 상위 사용자</h4>
+                            <h4><i class="fas fa-users me-2"></i>현재 로그인한 직원 명단</h4>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
@@ -219,11 +189,10 @@
                                             <th>순위</th>
                                             <th>이름</th>
                                             <th>아이디</th>
-                                            <th>로그인 횟수</th>
-                                            <th>마지막 로그인</th>
+                                            <th>로그인 시간</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="topLoginsTable">
+                                    <tbody id="onlineUsersTable">
                                     </tbody>
                                 </table>
                             </div>
@@ -280,6 +249,7 @@
         // 로그인 통계 로드
         async function loadLoginStats() {
             try {
+                console.log('로그인 통계 로드 시작');
                 const response = await fetch('/api/employee/login-stats', {
                     credentials: 'include',
                     headers: {
@@ -288,20 +258,26 @@
                     }
                 });
                 
+                console.log('응답 상태:', response.status);
+                
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('응답 데이터:', data);
                     
                     if (data.success) {
                         displayStats(data.stats);
                     } else {
-                        showError('통계 데이터를 가져올 수 없습니다.');
+                        console.error('API 오류:', data.error);
+                        showError('통계 데이터를 가져올 수 없습니다: ' + (data.error || '알 수 없는 오류'));
                     }
                 } else {
-                    showError('서버 오류가 발생했습니다.');
+                    const errorText = await response.text();
+                    console.error('HTTP 오류:', response.status, errorText);
+                    showError('서버 오류가 발생했습니다. (상태: ' + response.status + ')');
                 }
             } catch (error) {
                 console.error('통계 로드 오류:', error);
-                showError('네트워크 오류가 발생했습니다.');
+                showError('네트워크 오류가 발생했습니다: ' + error.message);
             }
         }
         
@@ -313,42 +289,32 @@
             // 통계 내용 표시
             document.getElementById('statsContent').style.display = 'block';
             
-            // 전체 통계
-            document.getElementById('totalEmployees').textContent = stats.totalEmployees;
-            document.getElementById('totalLogins').textContent = stats.totalLogins;
+            // 현재 로그인한 직원 수와 전체 직원 수
             document.getElementById('onlineUsers').textContent = stats.onlineUsers || 0;
+            document.getElementById('totalEmployees').textContent = stats.totalEmployees;
             
-            // 최근 로그인 테이블
-            const recentTable = document.getElementById('recentLoginsTable');
-            recentTable.innerHTML = '';
+            // 현재 로그인한 직원 명단 테이블
+            const onlineTable = document.getElementById('onlineUsersTable');
+            onlineTable.innerHTML = '';
             
-            stats.recentLogins.forEach((user, index) => {
+            if (stats.onlineUsersList && stats.onlineUsersList.length > 0) {
+                stats.onlineUsersList.forEach((user, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${user.name || '이름 없음'}</td>
+                        <td>${user.username}</td>
+                        <td class="last-login">${formatDate(user.lastLoginAt)}</td>
+                    `;
+                    onlineTable.appendChild(row);
+                });
+            } else {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${user.name || '이름 없음'}</td>
-                    <td>${user.username}</td>
-                    <td><span class="login-count">${user.loginCount || 0}</span></td>
-                    <td class="last-login">${formatDate(user.lastLoginAt)}</td>
+                    <td colspan="4" class="text-center text-muted">현재 로그인한 직원이 없습니다.</td>
                 `;
-                recentTable.appendChild(row);
-            });
-            
-            // 로그인 횟수 상위 테이블
-            const topTable = document.getElementById('topLoginsTable');
-            topTable.innerHTML = '';
-            
-            stats.topLogins.forEach((user, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${user.name || '이름 없음'}</td>
-                    <td>${user.username}</td>
-                    <td><span class="login-count">${user.loginCount || 0}</span></td>
-                    <td class="last-login">${formatDate(user.lastLoginAt)}</td>
-                `;
-                topTable.appendChild(row);
-            });
+                onlineTable.appendChild(row);
+            }
         }
         
         // 날짜 포맷팅
