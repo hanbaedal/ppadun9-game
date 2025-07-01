@@ -85,13 +85,13 @@ app.use(express.urlencoded({ extended: true }));
 // 세션 설정
 const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
-        secure: false, // Render에서 HTTPS 문제 방지
+        secure: process.env.NODE_ENV === 'production', // Render에서는 HTTPS 사용
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         httpOnly: true,
-        sameSite: 'lax'
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
     }
 };
 

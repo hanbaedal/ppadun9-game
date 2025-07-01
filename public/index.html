@@ -147,6 +147,17 @@
             color: #333;
         }
         
+        .menu-item.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+        
+        .menu-item.disabled:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
         .menu-item::before {
             content: '';
             position: absolute;
@@ -604,6 +615,11 @@
                         'Content-Type': 'application/json'
                     }
                 });
+                
+                if (!response.ok) {
+                    throw new Error('서버 응답 오류');
+                }
+                
                 const data = await response.json();
                 
                 if (!data.success || !data.user) {
@@ -631,6 +647,9 @@
         // 페이지 로드 시 추가 초기화
         document.addEventListener('DOMContentLoaded', function() {
             console.log('빠던나인 프로젝트 관리 시스템이 로드되었습니다.');
+            
+            // 초기에 모든 메뉴 비활성화
+            disableAllMenus();
             
             // URL 파라미터에서 메시지 확인
             checkUrlMessage();
@@ -684,7 +703,7 @@
                 const logoutItem = document.getElementById('logoutItem');
                 const logoutBtn = document.getElementById('logoutBtn');
                 
-                // 먼저 API 호출로 실제 로그인 상태 확인
+                // 서버에서 실제 로그인 상태 확인
                 try {
                     const response = await fetch('/api/employee/current-user', {
                         credentials: 'include',
@@ -717,55 +736,45 @@
                             // 모든 메뉴 활성화
                             enableAllMenus();
                             return;
+                        } else {
+                            // 서버에서 로그인되지 않음 - 로컬 스토리지 정리
+                            console.log('서버에서 로그인되지 않음 - 로컬 스토리지 정리');
+                            localStorage.removeItem('currentUser');
                         }
+                    } else {
+                        // 서버 응답 오류 - 로컬 스토리지 정리
+                        console.log('서버 응답 오류 - 로컬 스토리지 정리');
+                        localStorage.removeItem('currentUser');
                     }
                 } catch (apiError) {
                     console.error('API 호출 오류:', apiError);
+                    // API 호출 실패 - 로컬 스토리지 정리
+                    localStorage.removeItem('currentUser');
                 }
                 
-                // API에서 로그인 정보를 가져올 수 없는 경우, 로컬 스토리지 확인
-                const storedUser = localStorage.getItem('currentUser');
-                console.log('로컬 스토리지 사용자 정보:', storedUser);
+                // 로그인되지 않은 상태 처리
+                console.log('로그인되지 않은 상태');
+                userNameElement.textContent = '로그인';
+                userNameElement.onclick = function(e) {
+                    e.preventDefault();
+                    window.location.href = '/employee-login.html';
+                };
+                userNameElement.title = '로그인하기';
+                userNameElement.style.cursor = 'pointer';
                 
-                if (storedUser) {
-                    const user = JSON.parse(storedUser);
-                    console.log('로컬 스토리지 사용자 정보:', user);
-                    
-                    // 로그인된 사용자가 있는 경우 - 실제 이름을 헤더 중간에 표시
-                    userNameElement.textContent = user.name || user.username;
-                    console.log('사용자 이름 표시:', user.name || user.username);
-                    
-                    // 로그아웃 버튼 표시
-                    logoutItem.style.display = 'block';
-                    
-                    // 로그아웃 버튼 이벤트 리스너
-                    logoutBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        showLogoutConfirm();
-                    });
-                    
-                    // 모든 메뉴 활성화
-                    enableAllMenus();
-                } else {
-                    console.log('로그인되지 않은 상태');
-                    // 로그인되지 않은 경우 - '로그인' 표시
-                    userNameElement.textContent = '로그인';
-                    userNameElement.onclick = function(e) {
-                        e.preventDefault();
-                        window.location.href = '/employee-login.html';
-                    };
-                    userNameElement.title = '로그인하기';
-                    
-                    // 로그아웃 버튼 숨기기
-                    logoutItem.style.display = 'none';
-                    
-                    // 모든 메뉴 활성화 (로그인 없이도 접근 가능)
-                    enableAllMenus();
-                }
+                // 로그아웃 버튼 숨기기
+                logoutItem.style.display = 'none';
+                
+                // 메뉴 비활성화 (로그인 필요)
+                disableAllMenus();
+                
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
                 const userNameElement = document.getElementById('userName');
                 const logoutItem = document.getElementById('logoutItem');
+                
+                // 로컬 스토리지 정리
+                localStorage.removeItem('currentUser');
                 
                 userNameElement.textContent = '로그인';
                 userNameElement.onclick = function(e) {
@@ -773,35 +782,30 @@
                     window.location.href = '/employee-login.html';
                 };
                 userNameElement.title = '로그인하기';
+                userNameElement.style.cursor = 'pointer';
                 logoutItem.style.display = 'none';
-                enableAllMenus();
+                disableAllMenus();
             }
         }
         
         // 모든 메뉴 활성화
         function enableAllMenus() {
-            const todayGameMenu = document.getElementById('todayGameMenu');
-            const gameSettingMenu = document.getElementById('gameSettingMenu');
-            const employeeMemberMenu = document.querySelector('a[href="/employee-member.html"]');
+            const menuItems = document.querySelectorAll('.menu-item');
             
-            // 모든 메뉴 활성화
-            if (todayGameMenu) {
-                todayGameMenu.style.opacity = '1';
-                todayGameMenu.style.pointerEvents = 'auto';
-                todayGameMenu.title = '오늘의 경기 등록';
-            }
+            menuItems.forEach(item => {
+                item.classList.remove('disabled');
+                item.title = '';
+            });
+        }
+        
+        // 모든 메뉴 비활성화
+        function disableAllMenus() {
+            const menuItems = document.querySelectorAll('.menu-item');
             
-            if (gameSettingMenu) {
-                gameSettingMenu.style.opacity = '1';
-                gameSettingMenu.style.pointerEvents = 'auto';
-                gameSettingMenu.title = '게임 설정';
-            }
-            
-            if (employeeMemberMenu) {
-                employeeMemberMenu.style.opacity = '1';
-                employeeMemberMenu.style.pointerEvents = 'auto';
-                employeeMemberMenu.title = '회원 관리';
-            }
+            menuItems.forEach(item => {
+                item.classList.add('disabled');
+                item.title = '로그인이 필요합니다';
+            });
         }
         
         // 로그아웃 확인 다이얼로그
