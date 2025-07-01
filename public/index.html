@@ -640,24 +640,22 @@
                 const logoutItem = document.getElementById('logoutItem');
                 const logoutBtn = document.getElementById('logoutBtn');
                 
-                // 로컬 스토리지에서 사용자 정보 확인 (임시 해결책)
+                // 로컬 스토리지에서 사용자 정보 확인
                 const storedUser = localStorage.getItem('currentUser');
                 console.log('로컬 스토리지 사용자 정보:', storedUser);
                 
-                // 임시로 고정된 사용자 정보 (테스트용)
-                const testUser = {
-                    name: '관리자',
-                    username: 'admin',
-                    position: '관리자'
-                };
-                
-                // 로컬 스토리지에 사용자 정보가 없으면 테스트용 정보 저장
+                // 임시로 사용자 정보 설정 (테스트용)
                 if (!storedUser) {
-                    localStorage.setItem('currentUser', JSON.stringify(testUser));
-                    console.log('테스트용 사용자 정보 저장');
+                    const tempUser = {
+                        name: '홍길동',
+                        username: 'hong',
+                        position: '관리자'
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(tempUser));
+                    console.log('임시 사용자 정보 설정:', tempUser);
                 }
                 
-                const user = storedUser ? JSON.parse(storedUser) : testUser;
+                const user = storedUser ? JSON.parse(storedUser) : JSON.parse(localStorage.getItem('currentUser'));
                 console.log('사용할 사용자 정보:', user);
                 
                 if (user) {
