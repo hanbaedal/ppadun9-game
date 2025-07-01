@@ -142,14 +142,7 @@
 
     <div class="main-content">
         <div class="container">
-            <div class="row mb-4">
-                <div class="col-12">
-                    <a href="/" class="back-btn">
-                        <i class="fas fa-arrow-left me-2"></i>
-                        메인으로 돌아가기
-                    </a>
-                </div>
-            </div>
+
             
             <div class="row mb-4">
                 <div class="col-12">
@@ -170,16 +163,22 @@
             <div id="statsContent" style="display: none;">
                 <!-- 전체 통계 -->
                 <div class="row mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="stats-card text-center">
                             <div class="stats-number" id="totalEmployees">0</div>
                             <div class="stats-label">전체 직원 수</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="stats-card text-center">
                             <div class="stats-number" id="totalLogins">0</div>
                             <div class="stats-label">총 로그인 횟수</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card text-center">
+                            <div class="stats-number" id="onlineUsers">0</div>
+                            <div class="stats-label">현재 접속자</div>
                         </div>
                     </div>
                 </div>
@@ -317,6 +316,7 @@
             // 전체 통계
             document.getElementById('totalEmployees').textContent = stats.totalEmployees;
             document.getElementById('totalLogins').textContent = stats.totalLogins;
+            document.getElementById('onlineUsers').textContent = stats.onlineUsers || 0;
             
             // 최근 로그인 테이블
             const recentTable = document.getElementById('recentLoginsTable');

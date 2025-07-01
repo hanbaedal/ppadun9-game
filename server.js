@@ -510,6 +510,39 @@ app.post('/api/employee/logout', (req, res) => {
     }
 });
 
+// 현재 로그인된 사용자 수 조회 API
+app.get('/api/employee/online-users', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 현재 시간에서 30분 이내에 로그인한 사용자들을 온라인으로 간주
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        
+        const onlineUsers = await collection.find(
+            { lastLoginAt: { $gte: thirtyMinutesAgo } },
+            { 
+                username: 1, 
+                name: 1, 
+                lastLoginAt: 1 
+            }
+        ).sort({ lastLoginAt: -1 }).toArray();
+        
+        res.json({
+            success: true,
+            onlineUsers: onlineUsers,
+            onlineCount: onlineUsers.length
+        });
+    } catch (error) {
+        console.error('온라인 사용자 조회 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
 // 로그인 통계 조회 API
 app.get('/api/employee/login-stats', async (req, res) => {
     try {
@@ -522,9 +555,16 @@ app.get('/api/employee/login-stats', async (req, res) => {
         
         // 전체 통계
         const totalEmployees = await collection.countDocuments();
-        const totalLogins = await collection.aggregate([
-            { $group: { _id: null, total: { $sum: { $ifNull: ['$loginCount', 0] } } } }
-        ]).toArray();
+        
+        // 총 로그인 횟수 계산 (더 안전한 방법)
+        const allEmployees = await collection.find({}, { loginCount: 1 }).toArray();
+        const totalLogins = allEmployees.reduce((sum, emp) => sum + (emp.loginCount || 0), 0);
+        
+        // 현재 온라인 사용자 수 (30분 이내 로그인)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        const onlineUsers = await collection.countDocuments({
+            lastLoginAt: { $gte: thirtyMinutesAgo }
+        });
         
         // 최근 로그인한 사용자들 (상위 10명)
         const recentLogins = await collection.find(
@@ -552,14 +592,19 @@ app.get('/api/employee/login-stats', async (req, res) => {
             success: true,
             stats: {
                 totalEmployees: totalEmployees,
-                totalLogins: totalLogins[0]?.total || 0,
+                totalLogins: totalLogins,
+                onlineUsers: onlineUsers,
                 recentLogins: recentLogins,
                 topLogins: topLogins
             }
         });
     } catch (error) {
         console.error('로그인 통계 조회 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+        console.error('오류 상세:', error.message);
+        res.status(500).json({ 
+            error: '서버 오류가 발생했습니다.',
+            details: error.message 
+        });
     }
 });
 
