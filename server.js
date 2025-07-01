@@ -75,7 +75,10 @@ app.use((req, res, next) => {
 });
 
 // 미들웨어 설정
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -85,7 +88,7 @@ const sessionConfig = {
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // 프로덕션에서는 true
+        secure: false, // Render에서 HTTPS 문제 방지
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         httpOnly: true,
         sameSite: 'lax'

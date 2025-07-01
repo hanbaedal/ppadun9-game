@@ -625,7 +625,10 @@
         async function loadCurrentUser() {
             try {
                 console.log('사용자 정보 로드 시작');
-                const response = await fetch('/api/employee/current-user');
+                const response = await fetch('/api/employee/current-user', {
+                    credentials: 'include'
+                });
+                console.log('API 응답 상태:', response.status);
                 const data = await response.json();
                 console.log('사용자 정보 응답:', data);
                 
@@ -732,7 +735,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    credentials: 'include'
                 });
                 
                 const data = await response.json();
