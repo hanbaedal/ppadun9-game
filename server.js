@@ -85,8 +85,8 @@ app.use(express.urlencoded({ extended: true }));
 // 세션 설정
 const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
         secure: false, // Render에서 HTTPS 문제 방지
         maxAge: 24 * 60 * 60 * 1000, // 24시간
@@ -444,15 +444,21 @@ app.post('/api/employee/login', async (req, res) => {
 // 현재 로그인한 사용자 정보 가져오기 API
 app.get('/api/employee/current-user', (req, res) => {
     try {
-        console.log('현재 사용자 정보 요청, 세션:', req.session);
+        console.log('=== 현재 사용자 정보 요청 ===');
+        console.log('요청 헤더:', req.headers);
+        console.log('세션 ID:', req.sessionID);
+        console.log('세션 전체:', req.session);
         console.log('세션 사용자 정보:', req.session.user);
+        console.log('쿠키:', req.headers.cookie);
         
         if (req.session.user) {
+            console.log('로그인된 사용자 발견:', req.session.user);
             res.json({ 
                 success: true, 
                 user: req.session.user 
             });
         } else {
+            console.log('로그인되지 않은 상태');
             res.json({ 
                 success: false, 
                 message: '로그인되지 않았습니다.' 
