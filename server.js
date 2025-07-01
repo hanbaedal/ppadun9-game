@@ -68,6 +68,9 @@ async function connectToMongoDB() {
         await client.connect();
         db = client.db(DB_NAME);
         console.log(`MongoDB에 성공적으로 연결되었습니다. (DB: ${DB_NAME})`);
+        
+        // members 라우트에 데이터베이스 전달
+        setMembersDatabase(db);
     } catch (error) {
         console.error('MongoDB 연결 오류:', error);
         throw error;
@@ -111,7 +114,7 @@ app.use(session(sessionConfig));
 // API 라우트 설정
 const gameRoutes = require('./routes/game');
 const dailygamesRoutes = require('./routes/dailygames');
-const membersRoutes = require('./routes/members');
+const { router: membersRoutes, setDatabase: setMembersDatabase } = require('./routes/members');
 const noticesRoutes = require('./routes/notices');
 const gameProgressRoutes = require('./routes/game-progress');
 const pointChargingRoutes = require('./routes/point-charging');

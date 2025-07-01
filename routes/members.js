@@ -1,24 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient, ObjectId } = require('mongodb');
+const { ObjectId } = require('mongodb');
 
-// MongoDB 연결 설정 (server.js와 동일한 방식)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
-const DB_NAME = process.env.DB_NAME || 'member-management';
+// server.js에서 전달받은 데이터베이스 연결 사용
+let db = null;
+
+// 데이터베이스 연결 설정 함수
+function setDatabase(database) {
+    db = database;
+}
+
+// 모든 회원 조회
 
 // 모든 회원 조회
 router.get('/members', async (req, res) => {
-    let client;
     try {
-        client = new MongoClient(MONGODB_URI, {
-            serverSelectionTimeoutMS: 60000,
-            socketTimeoutMS: 45000,
-            connectTimeoutMS: 60000
-        });
-        await client.connect();
-        const database = client.db(DB_NAME);
-        const collection = database.collection('game-member');
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
         
+        const collection = db.collection('game-member');
         const members = await collection.find({}).toArray();
         
         res.json({
@@ -31,16 +35,11 @@ router.get('/members', async (req, res) => {
             success: false,
             message: '서버 오류가 발생했습니다.'
         });
-    } finally {
-        if (client) {
-            await client.close();
-        }
     }
 });
 
 // 회원 수정
 router.put('/members/:id', async (req, res) => {
-    let client;
     try {
         const { id } = req.params;
         const { name, email, points } = req.body;
@@ -50,14 +49,14 @@ router.put('/members/:id', async (req, res) => {
             return res.status(400).json({ error: '올바르지 않은 회원 ID 형식입니다.' });
         }
         
-        client = new MongoClient(MONGODB_URI, {
-            serverSelectionTimeoutMS: 60000,
-            socketTimeoutMS: 45000,
-            connectTimeoutMS: 60000
-        });
-        await client.connect();
-        const database = client.db(DB_NAME);
-        const collection = database.collection('game-member');
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        const collection = db.collection('game-member');
         
         const updateData = {};
         if (name) updateData.name = name;
@@ -86,16 +85,11 @@ router.put('/members/:id', async (req, res) => {
             success: false,
             message: '서버 오류가 발생했습니다.'
         });
-    } finally {
-        if (client) {
-            await client.close();
-        }
     }
 });
 
 // 회원 삭제
 router.delete('/members/:id', async (req, res) => {
-    let client;
     try {
         const { id } = req.params;
         
@@ -104,14 +98,14 @@ router.delete('/members/:id', async (req, res) => {
             return res.status(400).json({ error: '올바르지 않은 회원 ID 형식입니다.' });
         }
         
-        client = new MongoClient(MONGODB_URI, {
-            serverSelectionTimeoutMS: 60000,
-            socketTimeoutMS: 45000,
-            connectTimeoutMS: 60000
-        });
-        await client.connect();
-        const database = client.db(DB_NAME);
-        const collection = database.collection('game-member');
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        const collection = db.collection('game-member');
         
         const result = await collection.deleteOne({ _id: new ObjectId(id) });
         
@@ -132,11 +126,7 @@ router.delete('/members/:id', async (req, res) => {
             success: false,
             message: '서버 오류가 발생했습니다.'
         });
-    } finally {
-        if (client) {
-            await client.close();
-        }
     }
 });
 
-module.exports = router; 
+module.exports = { router, setDatabase }; 
