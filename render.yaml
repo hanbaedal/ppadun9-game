@@ -15,4 +15,4 @@ services:
         generateValue: true
     healthCheckPath: /
     autoDeploy: true
-    plan: free 
+    plan: free

@@ -471,8 +471,8 @@
                         noGame: document.getElementById(`noGame${i}`).value
                     };
 
-                    games.push(gameData);
-                }
+                        games.push(gameData);
+                    }
 
                 // 기존 데이터 확인
                 const existingResponse = await fetch(`/api/dailygames/${date}`);
@@ -491,15 +491,15 @@
                 } else {
                     // 새 데이터 생성
                     response = await fetch('/api/dailygames', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            date: date,
-                            games: games
-                        })
-                    });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: date,
+                        games: games
+                    })
+                });
                 }
 
                 if (!response.ok) {
