@@ -178,22 +178,22 @@
         <div class="container-fluid px-3">
             <!-- 왼쪽: 홈 아이콘과 제목 -->
             <div class="d-flex align-items-center">
-                <a href="/" class="home-icon me-3">
-                    <i class="fas fa-home"></i>
+                <a href="/" class="navbar-brand">
+                    <i class="fas fa-cogs me-2"></i>
+                    빠던나인
                 </a>
-                <h1 class="page-title mb-0">오늘의 KBO 야구 경기 설정</h1>
             </div>
             
             <!-- 중간: 로그인한 직원 이름 -->
             <div class="navbar-nav mx-auto">
                 <span class="navbar-text" id="userName">
-                    <i class="fas fa-user-circle me-2"></i> 홍길동
+                    <i class="fas fa-user-circle me-2"></i> 사용자
                 </span>
             </div>
             
             <!-- 오른쪽: 로그아웃 버튼 -->
             <div class="navbar-nav">
-                <div class="nav-item" id="logoutItem">
+                <div class="nav-item" id="logoutItem" style="display: none;">
                     <a class="nav-link" href="#" id="logoutBtn">
                         <i class="fas fa-sign-out-alt"></i> 로그아웃
                     </a>
@@ -237,6 +237,27 @@
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
+        // 로그인 체크 함수
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/employee/current-user');
+                const data = await response.json();
+                
+                if (!data.success || !data.user) {
+                    // 로그인되지 않은 경우 로그인 페이지로 이동
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/employee-login.html';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('로그인 상태 확인 오류:', error);
+                alert('로그인이 필요합니다.');
+                window.location.href = '/employee-login.html';
+                return false;
+            }
+        }
+
         // 현재 로그인한 사용자 정보 가져오기
         async function loadCurrentUser() {
             try {
@@ -248,14 +269,14 @@
                 if (data.success && data.user) {
                     userNameElement.textContent = data.user.name || data.user.username;
                 } else {
-                    // 로그인되지 않은 경우 기본값 표시
-                    userNameElement.textContent = '사용자';
+                    // 로그인되지 않은 경우 로그인 페이지로 이동
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/employee-login.html';
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                // 오류 발생 시 기본값 표시
-                const userNameElement = document.getElementById('userName');
-                userNameElement.textContent = '사용자';
+                alert('로그인이 필요합니다.');
+                window.location.href = '/employee-login.html';
             }
         }
 
@@ -284,9 +305,12 @@
         }
 
         // 페이지 로드 시 실행
-        window.onload = function() {
-            updateDate();
-            loadCurrentUser();
+        window.onload = async function() {
+            // 먼저 로그인 상태 확인
+            const isLoggedIn = await checkLoginStatus();
+            if (isLoggedIn) {
+                loadCurrentUser();
+            }
             
             // 로그아웃 버튼 이벤트 리스너
             document.getElementById('logoutBtn').addEventListener('click', function(e) {

@@ -330,18 +330,30 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-home"></i> 빠던나인 프로젝트 관리
-            </a>
-            <div class="navbar-nav ml-auto">
-                <span class="navbar-text" id="userName">홍길동</span>
-                <li class="nav-item" id="logoutItem" style="display: none;">
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid px-3">
+            <!-- 왼쪽: 홈 아이콘과 제목 -->
+            <div class="d-flex align-items-center">
+                <a href="/" class="navbar-brand">
+                    <i class="fas fa-cogs me-2"></i>
+                    빠던나인
+                </a>
+            </div>
+            
+            <!-- 중간: 로그인한 직원 이름 -->
+            <div class="navbar-nav mx-auto">
+                <span class="navbar-text" id="userName">
+                    <i class="fas fa-user-circle me-2"></i> 사용자
+                </span>
+            </div>
+            
+            <!-- 오른쪽: 로그아웃 버튼 -->
+            <div class="navbar-nav">
+                <div class="nav-item" id="logoutItem" style="display: none;">
                     <a class="nav-link" href="#" id="logoutBtn">
                         <i class="fas fa-sign-out-alt"></i> 로그아웃
                     </a>
-                </li>
+                </div>
             </div>
         </div>
     </nav>
@@ -474,12 +486,26 @@
         let currentInquiry = null;
         let dailyInquiryMap = new Map(); // 일별 번호 매핑
 
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCurrentUser();
-            loadStats();
-            loadInquiries();
-        });
+        // 로그인 체크 함수
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/employee/current-user');
+                const data = await response.json();
+                
+                if (!data.success || !data.user) {
+                    // 로그인되지 않은 경우 로그인 페이지로 이동
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/employee-login.html';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('로그인 상태 확인 오류:', error);
+                alert('로그인이 필요합니다.');
+                window.location.href = '/employee-login.html';
+                return false;
+            }
+        }
 
         // 현재 사용자 정보 로드
         async function loadCurrentUser() {
@@ -502,18 +528,18 @@
                         }
                     });
                 } else {
-                    userNameElement.textContent = '로그인';
-                    userNameElement.onclick = function() {
-                        window.location.href = '/employee-login.html';
-                    };
-                    logoutItem.style.display = 'none';
+                    // 로그인되지 않은 경우 로그인 페이지로 이동
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/employee-login.html';
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
+                alert('로그인이 필요합니다.');
+                window.location.href = '/employee-login.html';
             }
         }
 
-        // 로그아웃
+        // 로그아웃 처리
         async function logout() {
             try {
                 const response = await fetch('/api/employee/logout', {
@@ -523,13 +549,28 @@
                     }
                 });
                 
-                if (response.ok) {
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('로그아웃되었습니다.');
                     window.location.href = '/';
+                } else {
+                    alert('로그아웃 중 오류가 발생했습니다.');
                 }
             } catch (error) {
                 console.error('로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
             }
         }
+
+        // 페이지 로드 시 실행
+        window.onload = async function() {
+            // 먼저 로그인 상태 확인
+            const isLoggedIn = await checkLoginStatus();
+            if (isLoggedIn) {
+                loadCurrentUser();
+            }
+        };
 
         // 통계 로드
         async function loadStats() {

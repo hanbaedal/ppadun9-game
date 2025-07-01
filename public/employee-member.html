@@ -257,11 +257,13 @@
 
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container-fluid px-3">
-            <!-- 왼쪽: 프로젝트 제목 -->
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-cogs me-2"></i>
-                빠던나인 프로젝트 관리
-            </a>
+            <!-- 왼쪽: 홈 아이콘과 제목 -->
+            <div class="d-flex align-items-center">
+                <a href="/" class="navbar-brand">
+                    <i class="fas fa-cogs me-2"></i>
+                    빠던나인
+                </a>
+            </div>
             
             <!-- 중간: 로그인한 직원 이름 -->
             <div class="navbar-nav mx-auto">
@@ -272,17 +274,12 @@
             
             <!-- 오른쪽: 로그아웃 버튼 -->
             <div class="navbar-nav">
-                <div class="nav-item">
+                <div class="nav-item" id="logoutItem" style="display: none;">
                     <a class="nav-link" href="#" id="logoutBtn">
                         <i class="fas fa-sign-out-alt"></i> 로그아웃
                     </a>
                 </div>
             </div>
-            
-            <!-- 모바일 토글 버튼 -->
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
         </div>
     </nav>
 
@@ -351,30 +348,26 @@
         // 직원관리 페이지 JavaScript
         console.log('직원관리 페이지가 로드되었습니다.');
         
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCurrentUser();
-            
-            // 로그아웃 버튼 이벤트 리스너
-            document.getElementById('logoutBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                if (confirm('로그아웃하시겠습니까?')) {
-                    logout();
-                }
-            });
-            
-            // 메뉴 아이템 호버 효과
-            const menuItems = document.querySelectorAll('.menu-item');
-            menuItems.forEach(item => {
-                item.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-5px)';
-                });
+        // 로그인 체크 함수
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/employee/current-user');
+                const data = await response.json();
                 
-                item.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        });
+                if (!data.success || !data.user) {
+                    // 로그인되지 않은 경우 로그인 페이지로 이동
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/employee-login.html';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('로그인 상태 확인 오류:', error);
+                alert('로그인이 필요합니다.');
+                window.location.href = '/employee-login.html';
+                return false;
+            }
+        }
 
         // 현재 로그인한 사용자 정보 가져오기
         async function loadCurrentUser() {
@@ -387,14 +380,14 @@
                 if (data.success && data.user) {
                     userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name || data.user.username}`;
                 } else {
-                    // 로그인되지 않은 경우 기본값 표시
-                    userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> 사용자`;
+                    // 로그인되지 않은 경우 로그인 페이지로 이동
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/employee-login.html';
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                // 오류 발생 시 기본값 표시
-                const userNameElement = document.getElementById('userName');
-                userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> 사용자`;
+                alert('로그인이 필요합니다.');
+                window.location.href = '/employee-login.html';
             }
         }
 
@@ -421,6 +414,35 @@
                 alert('서버 오류가 발생했습니다.');
             }
         }
+
+        // 페이지 로드 시 실행
+        window.onload = async function() {
+            // 먼저 로그인 상태 확인
+            const isLoggedIn = await checkLoginStatus();
+            if (isLoggedIn) {
+                loadCurrentUser();
+            }
+        };
+
+        // 로그아웃 버튼 이벤트 리스너
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('로그아웃하시겠습니까?')) {
+                logout();
+            }
+        });
+        
+        // 메뉴 아이템 호버 효과
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
     </script>
 </body>
 </html> 
