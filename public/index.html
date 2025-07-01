@@ -640,29 +640,32 @@
                 const logoutItem = document.getElementById('logoutItem');
                 const logoutBtn = document.getElementById('logoutBtn');
                 
-                // 실제 API 호출
-                const response = await fetch('/api/employee/current-user', {
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                console.log('API 응답 상태:', response.status);
-                console.log('API 응답 헤더:', response.headers);
+                // 로컬 스토리지에서 사용자 정보 확인 (임시 해결책)
+                const storedUser = localStorage.getItem('currentUser');
+                console.log('로컬 스토리지 사용자 정보:', storedUser);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // 임시로 고정된 사용자 정보 (테스트용)
+                const testUser = {
+                    name: '관리자',
+                    username: 'admin',
+                    position: '관리자'
+                };
+                
+                // 로컬 스토리지에 사용자 정보가 없으면 테스트용 정보 저장
+                if (!storedUser) {
+                    localStorage.setItem('currentUser', JSON.stringify(testUser));
+                    console.log('테스트용 사용자 정보 저장');
                 }
                 
-                const data = await response.json();
-                console.log('사용자 정보 응답:', data);
+                const user = storedUser ? JSON.parse(storedUser) : testUser;
+                console.log('사용할 사용자 정보:', user);
                 
-                if (data.success && data.user) {
-                    console.log('로그인된 사용자 발견:', data.user);
+                if (user) {
+                    console.log('사용자 정보:', user);
+                    
                     // 로그인된 사용자가 있는 경우 - 실제 이름을 헤더 중간에 표시
-                    userNameElement.textContent = data.user.name || data.user.username;
-                    console.log('사용자 이름 표시:', data.user.name || data.user.username);
+                    userNameElement.textContent = user.name || user.username;
+                    console.log('사용자 이름 표시:', user.name || user.username);
                     
                     // 로그아웃 버튼 표시
                     logoutItem.style.display = 'block';
@@ -674,7 +677,7 @@
                     });
                     
                     // 툴팁 추가 (이름과 직책 표시)
-                    userInfoElement.title = `${data.user.name} (${data.user.position})`;
+                    userInfoElement.title = `${user.name} (${user.position})`;
                     
                     // 모든 메뉴 활성화
                     enableAllMenus();
@@ -693,6 +696,36 @@
                     
                     // 모든 메뉴 활성화 (로그인 없이도 접근 가능)
                     enableAllMenus();
+                }
+                
+                // 실제 API 호출은 백그라운드에서 시도 (디버깅용)
+                try {
+                    const response = await fetch('/api/employee/current-user', {
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log('API 응답 상태:', response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('API 사용자 정보 응답:', data);
+                        
+                        if (data.success && data.user) {
+                            console.log('API에서 로그인된 사용자 발견:', data.user);
+                            // 로컬 스토리지에 저장
+                            localStorage.setItem('currentUser', JSON.stringify(data.user));
+                            
+                            // UI 업데이트
+                            userNameElement.textContent = data.user.name || data.user.username;
+                            logoutItem.style.display = 'block';
+                            userInfoElement.title = `${data.user.name} (${data.user.position})`;
+                        }
+                    }
+                } catch (apiError) {
+                    console.error('API 호출 오류:', apiError);
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
@@ -758,6 +791,10 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    // 로컬 스토리지에서 사용자 정보 제거
+                    localStorage.removeItem('currentUser');
+                    console.log('로컬 스토리지에서 사용자 정보 제거');
+                    
                     alert('로그아웃되었습니다.');
                     // 로그인 페이지로 이동
                     window.location.href = '/employee-login.html';

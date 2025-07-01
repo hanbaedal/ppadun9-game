@@ -363,6 +363,13 @@
                 
                 if (response.ok) {
                     showAlert('로그인이 성공했습니다!', 'success');
+                    
+                    // 로그인 성공 시 사용자 정보를 로컬 스토리지에 저장
+                    if (data.user) {
+                        localStorage.setItem('currentUser', JSON.stringify(data.user));
+                        console.log('사용자 정보를 로컬 스토리지에 저장:', data.user);
+                    }
+                    
                     // 로그인 성공 시 메인 페이지로 이동
                     setTimeout(() => {
                         window.location.href = '/';
