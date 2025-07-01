@@ -422,18 +422,39 @@ app.post('/api/employee/login', async (req, res) => {
             return res.status(401).json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         }
         
+        // 로그인 카운트 증가
+        const newLoginCount = (employee.loginCount || 0) + 1;
+        const lastLoginAt = new Date();
+        
+        // 데이터베이스에 로그인 카운트와 마지막 로그인 시간 업데이트
+        await collection.updateOne(
+            { username },
+            { 
+                $set: { 
+                    loginCount: newLoginCount,
+                    lastLoginAt: lastLoginAt
+                } 
+            }
+        );
+        
         // 로그인 성공 - 비밀번호는 제외하고 사용자 정보 반환
         const { password: _, ...userInfo } = employee;
-        console.log('로그인 성공, 세션에 저장할 사용자 정보:', userInfo);
+        const updatedUserInfo = {
+            ...userInfo,
+            loginCount: newLoginCount,
+            lastLoginAt: lastLoginAt
+        };
+        
+        console.log('로그인 성공, 세션에 저장할 사용자 정보:', updatedUserInfo);
         
         // 세션에 사용자 정보 저장
-        req.session.user = userInfo;
+        req.session.user = updatedUserInfo;
         console.log('세션 저장 완료:', req.session.user);
         
         res.json({ 
             success: true, 
             message: '로그인이 성공했습니다.',
-            user: userInfo
+            user: updatedUserInfo
         });
     } catch (error) {
         console.error('직원 로그인 오류:', error);
@@ -485,6 +506,59 @@ app.post('/api/employee/logout', (req, res) => {
         });
     } catch (error) {
         console.error('로그아웃 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 로그인 통계 조회 API
+app.get('/api/employee/login-stats', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 전체 통계
+        const totalEmployees = await collection.countDocuments();
+        const totalLogins = await collection.aggregate([
+            { $group: { _id: null, total: { $sum: { $ifNull: ['$loginCount', 0] } } } }
+        ]).toArray();
+        
+        // 최근 로그인한 사용자들 (상위 10명)
+        const recentLogins = await collection.find(
+            { lastLoginAt: { $exists: true } },
+            { 
+                username: 1, 
+                name: 1, 
+                loginCount: 1, 
+                lastLoginAt: 1 
+            }
+        ).sort({ lastLoginAt: -1 }).limit(10).toArray();
+        
+        // 로그인 횟수 상위 사용자들 (상위 10명)
+        const topLogins = await collection.find(
+            { loginCount: { $exists: true, $gt: 0 } },
+            { 
+                username: 1, 
+                name: 1, 
+                loginCount: 1, 
+                lastLoginAt: 1 
+            }
+        ).sort({ loginCount: -1 }).limit(10).toArray();
+        
+        res.json({
+            success: true,
+            stats: {
+                totalEmployees: totalEmployees,
+                totalLogins: totalLogins[0]?.total || 0,
+                recentLogins: recentLogins,
+                topLogins: topLogins
+            }
+        });
+    } catch (error) {
+        console.error('로그인 통계 조회 오류:', error);
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });

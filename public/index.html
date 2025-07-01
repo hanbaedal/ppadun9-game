@@ -575,26 +575,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="/js/main.js"></script>
     <script>
-        // 로그인 체크 함수
-        async function checkLoginStatus() {
-            try {
-                const response = await fetch('/api/employee/current-user');
-                const data = await response.json();
-                
-                if (!data.success || !data.user) {
-                    // 로그인되지 않은 경우 로그인 페이지로 이동
-                    alert('로그인이 필요합니다.');
-                    window.location.href = '/employee-login.html';
-                    return false;
-                }
-                return true;
-            } catch (error) {
-                console.error('로그인 상태 확인 오류:', error);
-                alert('로그인이 필요합니다.');
-                window.location.href = '/employee-login.html';
-                return false;
-            }
-        }
+
 
         // 메뉴 클릭 시 로그인 체크
         async function checkAuthAndNavigate(url) {
