@@ -7,7 +7,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun
 const DB_NAME = process.env.DB_NAME || 'member-management';
 
 // 모든 회원 조회
-router.get('/api/members', async (req, res) => {
+router.get('/members', async (req, res) => {
     let client;
     try {
         client = new MongoClient(MONGODB_URI, {
@@ -39,7 +39,7 @@ router.get('/api/members', async (req, res) => {
 });
 
 // 회원 수정
-router.put('/api/members/:id', async (req, res) => {
+router.put('/members/:id', async (req, res) => {
     let client;
     try {
         const { id } = req.params;
@@ -94,7 +94,7 @@ router.put('/api/members/:id', async (req, res) => {
 });
 
 // 회원 삭제
-router.delete('/api/members/:id', async (req, res) => {
+router.delete('/members/:id', async (req, res) => {
     let client;
     try {
         const { id } = req.params;
