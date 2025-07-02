@@ -324,7 +324,7 @@ app.get('/api/employee/list', async (req, res) => {
     }
 });
 
-// 로그인 통계 조회 API (현재 로그인한 직원 수 카운트 추가)
+// 로그인 통계 조회 API (실시간 세션 기반 온라인 사용자 추적)
 app.get('/api/employee/login-stats', async (req, res) => {
     try {
         console.log('=== 로그인 통계 조회 요청 ===');
@@ -345,26 +345,37 @@ app.get('/api/employee/login-stats', async (req, res) => {
         const totalEmployees = await collection.countDocuments();
         console.log('전체 직원 수:', totalEmployees);
         
-        // 현재 로그인한 직원 수 계산 (더 긴 시간으로 설정)
-        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2시간 전
-        console.log('2시간 전 시간:', twoHoursAgo);
+        // 실시간 온라인 사용자 목록 (세션 기반)
+        let onlineUsersList = [];
         
-        // 전체 직원의 lastLoginAt 필드 상태 확인
-        const allEmployees = await collection.find({}, { username: 1, name: 1, lastLoginAt: 1 }).toArray();
-        console.log('전체 직원 lastLoginAt 상태:', allEmployees.map(emp => ({
-            username: emp.username,
-            name: emp.name,
-            hasLastLoginAt: !!emp.lastLoginAt,
-            lastLoginAt: emp.lastLoginAt
-        })));
+        // 현재 활성 세션에서 로그인한 사용자들 수집
+        if (req.session && req.session.user) {
+            console.log('현재 세션 사용자:', req.session.user);
+            
+            // 현재 세션 사용자를 온라인 목록에 추가
+            const currentUser = await collection.findOne(
+                { username: req.session.user.username },
+                { username: 1, name: 1, lastLoginAt: 1, loginCount: 1 }
+            );
+            
+            if (currentUser) {
+                onlineUsersList.push({
+                    ...currentUser,
+                    lastLoginAt: new Date(), // 현재 시간으로 설정
+                    isCurrentSession: true
+                });
+            }
+        }
         
-        // lastLoginAt 필드가 있고 2시간 이내에 로그인한 직원들 (더 관대한 조건)
-        let onlineUsersList = await collection.find(
+        // 추가로 lastLoginAt 필드가 있는 직원들도 포함 (24시간 이내)
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const recentLoginUsers = await collection.find(
             { 
                 lastLoginAt: { 
                     $exists: true, 
-                    $gte: twoHoursAgo 
-                } 
+                    $gte: oneDayAgo 
+                },
+                username: { $ne: req.session?.user?.username } // 현재 세션 사용자 제외
             },
             { 
                 username: 1, 
@@ -374,22 +385,17 @@ app.get('/api/employee/login-stats', async (req, res) => {
             }
         ).sort({ lastLoginAt: -1 }).toArray();
         
-        // 만약 온라인 사용자가 없으면, lastLoginAt 필드가 있는 모든 직원을 표시
-        if (onlineUsersList.length === 0) {
-            console.log('온라인 사용자가 없어서 lastLoginAt 필드가 있는 모든 직원을 표시합니다.');
-            onlineUsersList = await collection.find(
-                { lastLoginAt: { $exists: true } },
-                { 
-                    username: 1, 
-                    name: 1, 
-                    lastLoginAt: 1,
-                    loginCount: 1
-                }
-            ).sort({ lastLoginAt: -1 }).toArray();
-        }
+        // 중복 제거하면서 합치기
+        const existingUsernames = new Set(onlineUsersList.map(u => u.username));
+        recentLoginUsers.forEach(user => {
+            if (!existingUsernames.has(user.username)) {
+                onlineUsersList.push(user);
+                existingUsernames.add(user.username);
+            }
+        });
         
         const onlineUsers = onlineUsersList.length;
-        console.log('현재 로그인한 직원 수:', onlineUsers);
+        console.log('실시간 온라인 직원 수:', onlineUsers);
         console.log('온라인 직원 목록:', onlineUsersList);
         
         // 성공 응답
