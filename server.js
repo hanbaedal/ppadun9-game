@@ -345,9 +345,9 @@ app.get('/api/employee/login-stats', async (req, res) => {
         const totalEmployees = await collection.countDocuments();
         console.log('전체 직원 수:', totalEmployees);
         
-        // 현재 로그인한 직원 수 계산 (lastLoginAt 필드 기준)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-        console.log('30분 전 시간:', thirtyMinutesAgo);
+        // 현재 로그인한 직원 수 계산 (더 긴 시간으로 설정)
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2시간 전
+        console.log('2시간 전 시간:', twoHoursAgo);
         
         // 전체 직원의 lastLoginAt 필드 상태 확인
         const allEmployees = await collection.find({}, { username: 1, name: 1, lastLoginAt: 1 }).toArray();
@@ -358,12 +358,12 @@ app.get('/api/employee/login-stats', async (req, res) => {
             lastLoginAt: emp.lastLoginAt
         })));
         
-        // lastLoginAt 필드가 있고 30분 이내에 로그인한 직원들
-        const onlineUsersList = await collection.find(
+        // lastLoginAt 필드가 있고 2시간 이내에 로그인한 직원들 (더 관대한 조건)
+        let onlineUsersList = await collection.find(
             { 
                 lastLoginAt: { 
                     $exists: true, 
-                    $gte: thirtyMinutesAgo 
+                    $gte: twoHoursAgo 
                 } 
             },
             { 
@@ -373,6 +373,20 @@ app.get('/api/employee/login-stats', async (req, res) => {
                 loginCount: 1
             }
         ).sort({ lastLoginAt: -1 }).toArray();
+        
+        // 만약 온라인 사용자가 없으면, lastLoginAt 필드가 있는 모든 직원을 표시
+        if (onlineUsersList.length === 0) {
+            console.log('온라인 사용자가 없어서 lastLoginAt 필드가 있는 모든 직원을 표시합니다.');
+            onlineUsersList = await collection.find(
+                { lastLoginAt: { $exists: true } },
+                { 
+                    username: 1, 
+                    name: 1, 
+                    lastLoginAt: 1,
+                    loginCount: 1
+                }
+            ).sort({ lastLoginAt: -1 }).toArray();
+        }
         
         const onlineUsers = onlineUsersList.length;
         console.log('현재 로그인한 직원 수:', onlineUsers);
