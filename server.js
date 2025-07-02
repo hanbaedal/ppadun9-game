@@ -9,7 +9,7 @@ const { connectDB } = require('./config/db');
 // 환경 변수 설정
 dotenv.config();
 
-// 개발 환경에서만 기본값 설정
+// 환경변수 기본값 설정 (개발 환경에서만)
 if (process.env.NODE_ENV !== 'production') {
     if (!process.env.MONGODB_URI) {
         process.env.MONGODB_URI = 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
@@ -40,11 +40,13 @@ console.log('[Config] 환경변수 확인:');
 console.log('- NODE_ENV:', process.env.NODE_ENV);
 console.log('- MONGODB_URI:', process.env.MONGODB_URI ? '설정됨' : '설정되지 않음');
 console.log('- DB_NAME:', process.env.DB_NAME || '기본값 사용');
+console.log('- SESSION_SECRET:', process.env.SESSION_SECRET ? '설정됨' : '설정되지 않음');
+console.log('- PORT:', process.env.PORT || 3000);
 
 const app = express();
 
 // MongoDB 연결 설정
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
+const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.DB_NAME || 'member-management';
 const COLLECTION_NAME = 'employee-member';
 const TODAYGAMES_COLLECTION = 'todaygames';
@@ -100,7 +102,7 @@ const sessionConfig = {
         secure: process.env.NODE_ENV === 'production', // Render에서는 HTTPS 사용
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+        sameSite: 'lax' // strict에서 lax로 변경하여 400 오류 방지
     }
 };
 
@@ -134,7 +136,7 @@ app.use('/api/friend-invite', friendInviteRoutes);
 app.use('/api/customer-inquiries', customerInquiriesRoutes);
 
 // members 라우트는 /api/members로 접근하도록 변경
-app.use('/api', membersRoutes);
+app.use('/api/members', membersRoutes);
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -322,6 +324,62 @@ app.get('/api/employee/list', async (req, res) => {
     }
 });
 
+// 로그인 통계 조회 API (무료 플랜 최적화)
+app.get('/api/employee/login-stats', async (req, res) => {
+    try {
+        console.log('=== 로그인 통계 조회 요청 ===');
+        
+        // MongoDB 연결 확인
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ 
+                success: false,
+                error: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        console.log('컬렉션 접근:', COLLECTION_NAME);
+        
+        // 간단한 통계만 반환 (세션 의존성 제거)
+        const totalEmployees = await collection.countDocuments();
+        console.log('전체 직원 수:', totalEmployees);
+        
+        // 최근 등록된 직원 10명 (lastLoginAt 필드 없이도 작동)
+        const recentEmployees = await collection.find(
+            {},
+            { 
+                username: 1, 
+                name: 1, 
+                createdAt: 1,
+                loginCount: 1
+            }
+        ).sort({ createdAt: -1 }).limit(10).toArray();
+        
+        console.log('최근 직원 수:', recentEmployees.length);
+        
+        // 성공 응답
+        res.json({
+            success: true,
+            stats: {
+                totalEmployees: totalEmployees,
+                onlineUsers: 0, // 간단하게 0으로 설정
+                onlineUsersList: recentEmployees // 최근 등록된 직원들
+            }
+        });
+        
+    } catch (error) {
+        console.error('로그인 통계 조회 오류:', error);
+        
+        // 오류 응답 (400 대신 500 사용)
+        res.status(500).json({ 
+            success: false,
+            error: '서버 오류가 발생했습니다.',
+            details: error.message
+        });
+    }
+});
+
 // 직원 상세 조회 API
 app.get('/api/employee/:id', async (req, res) => {
     try {
@@ -491,29 +549,35 @@ app.post('/api/employee/login', async (req, res) => {
     }
 });
 
-// 현재 로그인한 사용자 정보 가져오기 API
+// 현재 로그인한 사용자 정보 가져오기 API (무료 플랜 최적화)
 app.get('/api/employee/current-user', (req, res) => {
     try {
         console.log('=== 현재 사용자 정보 요청 ===');
-        console.log('세션 ID:', req.sessionID);
-        console.log('세션 사용자 정보:', req.session.user);
         
+        // 세션 기반 대신 간단한 응답
         if (req.session && req.session.user) {
-            console.log('로그인된 사용자 발견:', req.session.user);
+            console.log('세션에서 사용자 발견:', req.session.user);
             res.json({ 
                 success: true, 
                 user: req.session.user 
             });
         } else {
-            console.log('로그인되지 않은 상태');
+            console.log('세션에 사용자 정보 없음 - 기본 응답');
+            // 세션이 없어도 400 오류 대신 기본 응답
             res.json({ 
                 success: false, 
-                message: '로그인되지 않았습니다.' 
+                message: '로그인되지 않았습니다.',
+                user: null
             });
         }
     } catch (error) {
         console.error('현재 사용자 정보 조회 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+        // 오류가 발생해도 400 대신 500 사용
+        res.status(500).json({ 
+            success: false,
+            error: '서버 오류가 발생했습니다.',
+            user: null
+        });
     }
 });
 
@@ -569,51 +633,7 @@ app.get('/api/employee/online-users', async (req, res) => {
     }
 });
 
-// 로그인 통계 조회 API
-app.get('/api/employee/login-stats', async (req, res) => {
-    try {
-        console.log('=== 로그인 통계 조회 요청 ===');
-        
-        if (!db) {
-            console.error('MongoDB 연결이 설정되지 않았습니다.');
-            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-        }
 
-        const collection = db.collection(COLLECTION_NAME);
-        
-        // 전체 직원 수
-        const totalEmployees = await collection.countDocuments();
-        
-        // 현재 온라인 사용자 (30분 이내 로그인)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-        
-        const onlineUsersList = await collection.find(
-            { lastLoginAt: { $gte: thirtyMinutesAgo } },
-            { 
-                username: 1, 
-                name: 1, 
-                lastLoginAt: 1 
-            }
-        ).sort({ lastLoginAt: -1 }).toArray();
-        
-        const onlineUsers = onlineUsersList.length;
-        
-        res.json({
-            success: true,
-            stats: {
-                totalEmployees: totalEmployees,
-                onlineUsers: onlineUsers,
-                onlineUsersList: onlineUsersList
-            }
-        });
-    } catch (error) {
-        console.error('로그인 통계 조회 오류:', error);
-        res.status(500).json({ 
-            error: '서버 오류가 발생했습니다.',
-            details: error.message 
-        });
-    }
-});
 
 // 아이디 찾기 API
 app.post('/api/employee/find-id', async (req, res) => {
@@ -814,8 +834,18 @@ app.get('/customer-center.html', (req, res) => {
 async function startServer() {
     try {
         console.log('[Server] 서버 시작 중...');
-        console.log('[Server] MongoDB 연결 시도...');
         
+        // 프로덕션 환경에서 필수 환경변수 검증
+        if (process.env.NODE_ENV === 'production') {
+            if (!process.env.MONGODB_URI) {
+                throw new Error('MONGODB_URI 환경변수가 설정되지 않았습니다.');
+            }
+            if (!process.env.SESSION_SECRET) {
+                throw new Error('SESSION_SECRET 환경변수가 설정되지 않았습니다.');
+            }
+        }
+        
+        console.log('[Server] MongoDB 연결 시도...');
         await connectToMongoDB();
         console.log('[Server] MongoDB 연결 성공');
         

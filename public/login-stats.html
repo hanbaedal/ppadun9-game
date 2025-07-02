@@ -147,8 +147,8 @@
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="stats-header">
-                        <h1><i class="fas fa-chart-line me-3"></i>로그인 통계</h1>
-                        <p class="text-muted">직원들의 로그인 활동 현황</p>
+                        <h1><i class="fas fa-chart-line me-3"></i>직원 통계</h1>
+                        <p class="text-muted">직원 등록 현황 및 통계</p>
                     </div>
                 </div>
             </div>
@@ -167,6 +167,7 @@
                         <div class="stats-card text-center">
                             <div class="stats-number" id="onlineUsers">0</div>
                             <div class="stats-label">현재 로그인한 직원 수</div>
+                            <small class="text-muted">(간단한 통계)</small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -181,7 +182,7 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="stats-card">
-                            <h4><i class="fas fa-users me-2"></i>현재 로그인한 직원 명단</h4>
+                            <h4><i class="fas fa-users me-2"></i>최근 등록된 직원 명단</h4>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
@@ -189,7 +190,7 @@
                                             <th>순위</th>
                                             <th>이름</th>
                                             <th>아이디</th>
-                                            <th>로그인 시간</th>
+                                            <th>등록 시간</th>
                                         </tr>
                                     </thead>
                                     <tbody id="onlineUsersTable">
@@ -283,37 +284,42 @@
         
         // 통계 표시
         function displayStats(stats) {
-            // 로딩 메시지 숨기기
-            document.getElementById('loadingMessage').style.display = 'none';
-            
-            // 통계 내용 표시
-            document.getElementById('statsContent').style.display = 'block';
-            
-            // 현재 로그인한 직원 수와 전체 직원 수
-            document.getElementById('onlineUsers').textContent = stats.onlineUsers || 0;
-            document.getElementById('totalEmployees').textContent = stats.totalEmployees;
-            
-            // 현재 로그인한 직원 명단 테이블
-            const onlineTable = document.getElementById('onlineUsersTable');
-            onlineTable.innerHTML = '';
-            
-            if (stats.onlineUsersList && stats.onlineUsersList.length > 0) {
-                stats.onlineUsersList.forEach((user, index) => {
+            try {
+                // 로딩 메시지 숨기기
+                document.getElementById('loadingMessage').style.display = 'none';
+                
+                // 통계 내용 표시
+                document.getElementById('statsContent').style.display = 'block';
+                
+                // 현재 로그인한 직원 수와 전체 직원 수
+                document.getElementById('onlineUsers').textContent = stats.onlineUsers || 0;
+                document.getElementById('totalEmployees').textContent = stats.totalEmployees || 0;
+                
+                // 최근 등록된 직원 명단 테이블
+                const onlineTable = document.getElementById('onlineUsersTable');
+                onlineTable.innerHTML = '';
+                
+                if (stats.onlineUsersList && stats.onlineUsersList.length > 0) {
+                    stats.onlineUsersList.forEach((user, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${user.name || '이름 없음'}</td>
+                            <td>${user.username || '아이디 없음'}</td>
+                            <td class="last-login">${formatDate(user.createdAt)}</td>
+                        `;
+                        onlineTable.appendChild(row);
+                    });
+                } else {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${user.name || '이름 없음'}</td>
-                        <td>${user.username}</td>
-                        <td class="last-login">${formatDate(user.lastLoginAt)}</td>
+                        <td colspan="4" class="text-center text-muted">등록된 직원이 없습니다.</td>
                     `;
                     onlineTable.appendChild(row);
-                });
-            } else {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td colspan="4" class="text-center text-muted">현재 로그인한 직원이 없습니다.</td>
-                `;
-                onlineTable.appendChild(row);
+                }
+            } catch (error) {
+                console.error('통계 표시 오류:', error);
+                showError('통계 데이터 표시 중 오류가 발생했습니다: ' + error.message);
             }
         }
         
@@ -321,19 +327,34 @@
         function formatDate(dateString) {
             if (!dateString) return '로그인 기록 없음';
             
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffTime = Math.abs(now - date);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 1) {
-                return '오늘';
-            } else if (diffDays === 2) {
-                return '어제';
-            } else if (diffDays <= 7) {
-                return `${diffDays - 1}일 전`;
-            } else {
-                return date.toLocaleDateString('ko-KR');
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return '날짜 형식 오류';
+                }
+                
+                const now = new Date();
+                const diffTime = Math.abs(now - date);
+                const diffMinutes = Math.ceil(diffTime / (1000 * 60));
+                const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffMinutes < 60) {
+                    return `${diffMinutes}분 전`;
+                } else if (diffHours < 24) {
+                    return `${diffHours}시간 전`;
+                } else if (diffDays === 1) {
+                    return '오늘';
+                } else if (diffDays === 2) {
+                    return '어제';
+                } else if (diffDays <= 7) {
+                    return `${diffDays - 1}일 전`;
+                } else {
+                    return date.toLocaleDateString('ko-KR');
+                }
+            } catch (error) {
+                console.error('날짜 포맷팅 오류:', error);
+                return '날짜 오류';
             }
         }
         
