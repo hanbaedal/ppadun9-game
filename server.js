@@ -324,7 +324,7 @@ app.get('/api/employee/list', async (req, res) => {
     }
 });
 
-// 로그인 통계 조회 API (무료 플랜 최적화)
+// 로그인 통계 조회 API (현재 로그인한 직원 수 카운트 추가)
 app.get('/api/employee/login-stats', async (req, res) => {
     try {
         console.log('=== 로그인 통계 조회 요청 ===');
@@ -341,30 +341,41 @@ app.get('/api/employee/login-stats', async (req, res) => {
         const collection = db.collection(COLLECTION_NAME);
         console.log('컬렉션 접근:', COLLECTION_NAME);
         
-        // 간단한 통계만 반환 (세션 의존성 제거)
+        // 전체 직원 수
         const totalEmployees = await collection.countDocuments();
         console.log('전체 직원 수:', totalEmployees);
         
-        // 최근 등록된 직원 10명 (lastLoginAt 필드 없이도 작동)
-        const recentEmployees = await collection.find(
-            {},
+        // 현재 로그인한 직원 수 계산 (lastLoginAt 필드 기준)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        console.log('30분 전 시간:', thirtyMinutesAgo);
+        
+        // lastLoginAt 필드가 있고 30분 이내에 로그인한 직원들
+        const onlineUsersList = await collection.find(
+            { 
+                lastLoginAt: { 
+                    $exists: true, 
+                    $gte: thirtyMinutesAgo 
+                } 
+            },
             { 
                 username: 1, 
                 name: 1, 
-                createdAt: 1,
+                lastLoginAt: 1,
                 loginCount: 1
             }
-        ).sort({ createdAt: -1 }).limit(10).toArray();
+        ).sort({ lastLoginAt: -1 }).toArray();
         
-        console.log('최근 직원 수:', recentEmployees.length);
+        const onlineUsers = onlineUsersList.length;
+        console.log('현재 로그인한 직원 수:', onlineUsers);
+        console.log('온라인 직원 목록:', onlineUsersList);
         
         // 성공 응답
         res.json({
             success: true,
             stats: {
                 totalEmployees: totalEmployees,
-                onlineUsers: 0, // 간단하게 0으로 설정
-                onlineUsersList: recentEmployees // 최근 등록된 직원들
+                onlineUsers: onlineUsers,
+                onlineUsersList: onlineUsersList
             }
         });
         

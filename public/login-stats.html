@@ -167,7 +167,7 @@
                         <div class="stats-card text-center">
                             <div class="stats-number" id="onlineUsers">0</div>
                             <div class="stats-label">현재 로그인한 직원 수</div>
-                            <small class="text-muted">(간단한 통계)</small>
+                            <small class="text-muted">(30분 이내 로그인)</small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -182,7 +182,7 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="stats-card">
-                            <h4><i class="fas fa-users me-2"></i>최근 등록된 직원 명단</h4>
+                            <h4><i class="fas fa-users me-2"></i>현재 로그인한 직원 명단</h4>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
@@ -190,7 +190,7 @@
                                             <th>순위</th>
                                             <th>이름</th>
                                             <th>아이디</th>
-                                            <th>등록 시간</th>
+                                            <th>로그인 시간</th>
                                         </tr>
                                     </thead>
                                     <tbody id="onlineUsersTable">
@@ -295,7 +295,7 @@
                 document.getElementById('onlineUsers').textContent = stats.onlineUsers || 0;
                 document.getElementById('totalEmployees').textContent = stats.totalEmployees || 0;
                 
-                // 최근 등록된 직원 명단 테이블
+                // 현재 로그인한 직원 명단 테이블
                 const onlineTable = document.getElementById('onlineUsersTable');
                 onlineTable.innerHTML = '';
                 
@@ -306,14 +306,14 @@
                             <td>${index + 1}</td>
                             <td>${user.name || '이름 없음'}</td>
                             <td>${user.username || '아이디 없음'}</td>
-                            <td class="last-login">${formatDate(user.createdAt)}</td>
+                            <td class="last-login">${formatDate(user.lastLoginAt)}</td>
                         `;
                         onlineTable.appendChild(row);
                     });
                 } else {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td colspan="4" class="text-center text-muted">등록된 직원이 없습니다.</td>
+                        <td colspan="4" class="text-center text-muted">현재 로그인한 직원이 없습니다.</td>
                     `;
                     onlineTable.appendChild(row);
                 }
