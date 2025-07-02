@@ -349,6 +349,15 @@ app.get('/api/employee/login-stats', async (req, res) => {
         const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
         console.log('30분 전 시간:', thirtyMinutesAgo);
         
+        // 전체 직원의 lastLoginAt 필드 상태 확인
+        const allEmployees = await collection.find({}, { username: 1, name: 1, lastLoginAt: 1 }).toArray();
+        console.log('전체 직원 lastLoginAt 상태:', allEmployees.map(emp => ({
+            username: emp.username,
+            name: emp.name,
+            hasLastLoginAt: !!emp.lastLoginAt,
+            lastLoginAt: emp.lastLoginAt
+        })));
+        
         // lastLoginAt 필드가 있고 30분 이내에 로그인한 직원들
         const onlineUsersList = await collection.find(
             { 
@@ -832,6 +841,40 @@ app.get('/api/system/stats', async (req, res) => {
         });
     } catch (error) {
         console.error('시스템 통계 조회 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 데이터베이스 초기화 API (lastLoginAt 필드 추가)
+app.post('/api/system/init-login-fields', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // lastLoginAt 필드가 없는 직원들에게 기본값 설정
+        const result = await collection.updateMany(
+            { lastLoginAt: { $exists: false } },
+            { 
+                $set: { 
+                    lastLoginAt: new Date(),
+                    loginCount: 0
+                } 
+            }
+        );
+        
+        console.log('데이터베이스 초기화 결과:', result);
+        
+        res.json({
+            success: true,
+            message: '데이터베이스 초기화가 완료되었습니다.',
+            modifiedCount: result.modifiedCount,
+            matchedCount: result.matchedCount
+        });
+    } catch (error) {
+        console.error('데이터베이스 초기화 오류:', error);
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
