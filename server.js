@@ -362,7 +362,7 @@ app.get('/api/employee/login-stats', async (req, res) => {
             // 현재 세션 사용자를 온라인 목록에 추가
             const currentUser = await collection.findOne(
                 { username: req.session.user.username },
-                { username: 1, name: 1, lastLoginAt: 1, loginCount: 1 }
+                { username: 1, name: 1, lastLoginAt: 1, lastLogoutAt: 1, loginCount: 1, isLoggedIn: 1 }
             );
             
             if (currentUser) {
@@ -388,7 +388,9 @@ app.get('/api/employee/login-stats', async (req, res) => {
                 username: 1, 
                 name: 1, 
                 lastLoginAt: 1,
-                loginCount: 1
+                lastLogoutAt: 1,
+                loginCount: 1,
+                isLoggedIn: 1
             }
         ).sort({ lastLoginAt: -1 }).toArray();
         
@@ -566,7 +568,9 @@ app.post('/api/employee/login', async (req, res) => {
             { 
                 $set: { 
                     loginCount: newLoginCount,
-                    lastLoginAt: lastLoginAt
+                    lastLoginAt: lastLoginAt,
+                    isLoggedIn: true,
+                    updatedAt: new Date()
                 } 
             }
         );
@@ -646,6 +650,7 @@ app.post('/api/employee/logout', async (req, res) => {
                 { 
                     $set: { 
                         lastLogoutAt: new Date(),
+                        isLoggedIn: false,
                         updatedAt: new Date()
                     } 
                 }
