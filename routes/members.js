@@ -12,8 +12,8 @@ function setDatabase(database) {
 
 // 모든 회원 조회
 
-// 모든 회원 조회
-router.get('/members', async (req, res) => {
+// 데이터베이스 컬렉션 목록 확인 (디버깅용)
+router.get('/debug/collections', async (req, res) => {
     try {
         if (!db) {
             return res.status(503).json({
@@ -22,8 +22,54 @@ router.get('/members', async (req, res) => {
             });
         }
         
+        const collections = await db.listCollections().toArray();
+        const collectionNames = collections.map(col => col.name);
+        
+        res.json({
+            success: true,
+            collections: collectionNames,
+            total: collectionNames.length
+        });
+    } catch (error) {
+        console.error('컬렉션 목록 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 모든 회원 조회
+router.get('/members', async (req, res) => {
+    try {
+        console.log('회원 목록 조회 요청 받음');
+        
+        if (!db) {
+            console.error('데이터베이스 연결이 없음');
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        console.log('game-member 컬렉션 접근 시도');
         const collection = db.collection('game-member');
+        
+        // 컬렉션이 존재하는지 확인
+        const collections = await db.listCollections({name: 'game-member'}).toArray();
+        if (collections.length === 0) {
+            console.error('game-member 컬렉션이 존재하지 않음');
+            return res.status(404).json({
+                success: false,
+                message: 'game-member 컬렉션이 존재하지 않습니다.',
+                availableCollections: await db.listCollections().toArray().then(cols => cols.map(c => c.name))
+            });
+        }
+        
+        console.log('회원 데이터 조회 중...');
         const members = await collection.find({}).toArray();
+        console.log(`총 ${members.length}명의 회원 조회됨`);
         
         res.json({
             success: true,
@@ -33,7 +79,8 @@ router.get('/members', async (req, res) => {
         console.error('회원 목록 조회 오류:', error);
         res.status(500).json({
             success: false,
-            message: '서버 오류가 발생했습니다.'
+            message: '서버 오류가 발생했습니다.',
+            error: error.message
         });
     }
 });
