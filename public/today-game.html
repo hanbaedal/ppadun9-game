@@ -78,7 +78,7 @@
         
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             padding: 8px;
             max-width: 1200px;
@@ -233,40 +233,37 @@
         
         /* 모바일 반응형 */
         @media (max-width: 768px) {
+            .main-content {
+                padding-top: 45px;
+                padding-bottom: 5px;
+                min-height: calc(100vh - 90px);
+            }
+            
             .menu-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
-                padding: 12px;
+                gap: 10px;
+                padding: 8px;
             }
-
+            
             .menu-item {
-                padding: 15px;
-                min-height: 120px;
+                padding: 12px;
+                height: auto;
+                min-height: 90px;
+                gap: 10px;
             }
-
-            .menu-item i {
-                font-size: 1.8em;
-                margin-bottom: 8px;
+            
+            .menu-icon {
+                font-size: 2rem;
+                min-width: 45px;
             }
-
-            .menu-item h2 {
-                font-size: 1.1em;
+            
+            .navbar-brand {
+                font-size: 0.9rem;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
             }
-
-            .menu-item p {
-                font-size: 0.8em;
-                margin: 6px 0 0;
-            }
-
-            .page-title {
-                font-size: 1.3em;
-            }
-
-            .date-display {
-                font-size: 1.1em;
-                margin: 15px 0;
-                padding: 10px;
-            }
+        }
 
             .header {
                 padding: 12px 15px;
