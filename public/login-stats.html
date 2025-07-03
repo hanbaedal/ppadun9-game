@@ -191,6 +191,8 @@
                                             <th>이름</th>
                                             <th>아이디</th>
                                             <th>로그인 시간</th>
+                                            <th>로그아웃 시간</th>
+                                            <th>로그인 상태</th>
                                         </tr>
                                     </thead>
                                     <tbody id="onlineUsersTable">
@@ -302,18 +304,23 @@
                 if (stats.onlineUsersList && stats.onlineUsersList.length > 0) {
                     stats.onlineUsersList.forEach((user, index) => {
                         const row = document.createElement('tr');
+                        const loginStatus = user.isLoggedIn ? '온라인' : '오프라인';
+                        const statusClass = user.isLoggedIn ? 'text-success' : 'text-muted';
+                        
                         row.innerHTML = `
                             <td>${index + 1}</td>
                             <td>${user.name || '이름 없음'}</td>
                             <td>${user.username || '아이디 없음'}</td>
                             <td class="last-login">${formatDate(user.lastLoginAt)}</td>
+                            <td class="last-login">${formatDate(user.lastLogoutAt)}</td>
+                            <td><span class="${statusClass} font-weight-bold">${loginStatus}</span></td>
                         `;
                         onlineTable.appendChild(row);
                     });
                 } else {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td colspan="4" class="text-center text-muted">현재 로그인한 직원이 없습니다.</td>
+                        <td colspan="6" class="text-center text-muted">현재 로그인한 직원이 없습니다.</td>
                     `;
                     onlineTable.appendChild(row);
                 }
