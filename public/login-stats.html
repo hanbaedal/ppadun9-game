@@ -153,6 +153,23 @@
                 </div>
             </div>
             
+            <!-- 관리자 기능 -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="stats-card">
+                        <h5><i class="fas fa-cog me-2"></i>관리자 기능</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-warning" onclick="manualAutoLogout()">
+                                <i class="fas fa-sign-out-alt me-2"></i>모든 직원 자동 로그아웃
+                            </button>
+                            <small class="text-muted align-self-center">
+                                (매일 새벽 2시에 자동 실행됩니다)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div id="errorMessage" class="error-message" style="display: none;"></div>
             
             <div id="loadingMessage" class="loading">
@@ -193,6 +210,7 @@
                                             <th>로그인 시간</th>
                                             <th>로그아웃 시간</th>
                                             <th>로그인 상태</th>
+                                            <th>관리</th>
                                         </tr>
                                     </thead>
                                     <tbody id="onlineUsersTable">
@@ -213,7 +231,9 @@
         // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', function() {
             loadCurrentUser();
-            loadLoginStats();
+            checkSessionStatus().then(() => {
+                loadLoginStats();
+            });
         });
         
         // 현재 로그인한 사용자 정보 가져오기
@@ -246,6 +266,27 @@
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
+            }
+        }
+        
+        // 세션 상태 체크
+        async function checkSessionStatus() {
+            try {
+                console.log('세션 상태 체크 시작');
+                const response = await fetch('/api/employee/check-session-status', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('세션 상태 체크 결과:', data);
+                }
+            } catch (error) {
+                console.error('세션 상태 체크 오류:', error);
             }
         }
         
@@ -304,8 +345,25 @@
                 if (stats.onlineUsersList && stats.onlineUsersList.length > 0) {
                     stats.onlineUsersList.forEach((user, index) => {
                         const row = document.createElement('tr');
-                        const loginStatus = user.isLoggedIn ? '온라인' : '오프라인';
-                        const statusClass = user.isLoggedIn ? 'text-success' : 'text-muted';
+                        let loginStatus = '오프라인';
+                        let statusClass = 'text-muted';
+                        
+                        // 로그인 상태 판단 로직 개선
+                        if (user.isLoggedIn) {
+                            if (user.isCurrentSession) {
+                                loginStatus = '온라인 (현재 세션)';
+                                statusClass = 'text-success';
+                            } else {
+                                loginStatus = '온라인 (세션 만료)';
+                                statusClass = 'text-warning';
+                            }
+                        }
+                        
+                        const forceLogoutBtn = user.isLoggedIn ? 
+                            `<button class="btn btn-sm btn-warning" onclick="forceLogout('${user.username}', '${user.name}')">
+                                <i class="fas fa-sign-out-alt"></i> 강제 로그아웃
+                            </button>` : 
+                            '<span class="text-muted">-</span>';
                         
                         row.innerHTML = `
                             <td>${index + 1}</td>
@@ -314,13 +372,14 @@
                             <td class="last-login">${formatDate(user.lastLoginAt)}</td>
                             <td class="last-login">${formatDate(user.lastLogoutAt)}</td>
                             <td><span class="${statusClass} font-weight-bold">${loginStatus}</span></td>
+                            <td>${forceLogoutBtn}</td>
                         `;
                         onlineTable.appendChild(row);
                     });
                 } else {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td colspan="6" class="text-center text-muted">현재 로그인한 직원이 없습니다.</td>
+                        <td colspan="7" class="text-center text-muted">현재 로그인한 직원이 없습니다.</td>
                     `;
                     onlineTable.appendChild(row);
                 }
@@ -376,6 +435,67 @@
         function showLogoutConfirm() {
             if (confirm('로그아웃하시겠습니까?')) {
                 logout();
+            }
+        }
+        
+        // 수동 자동 로그아웃
+        async function manualAutoLogout() {
+            if (!confirm('정말로 모든 직원을 자동 로그아웃시키시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/system/auto-logout-all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`${data.message}\n\n로그아웃된 직원 수: ${data.logoutCount}명\n실행 시간: ${data.timestamp}`);
+                    // 페이지 새로고침
+                    loadLoginStats();
+                } else {
+                    alert('자동 로그아웃 중 오류가 발생했습니다: ' + (data.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('수동 자동 로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
+            }
+        }
+        
+        // 강제 로그아웃
+        async function forceLogout(username, name) {
+            if (!confirm(`정말로 ${name}(${username}) 사용자를 강제 로그아웃시키시겠습니까?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/employee/force-logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username: username })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    // 페이지 새로고침
+                    loadLoginStats();
+                } else {
+                    alert('강제 로그아웃 중 오류가 발생했습니다: ' + (data.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('강제 로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
             }
         }
         

@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
+const cron = require('node-cron');
 const { connectDB } = require('./config/db');
 
 // 환경 변수 설정
@@ -53,6 +54,72 @@ const TODAYGAMES_COLLECTION = 'todaygames';
 
 let db;
 
+// 자동 로그아웃 함수 (새벽 2시에 모든 직원 로그아웃)
+async function autoLogoutAllEmployees() {
+    try {
+        if (!db) {
+            console.log('데이터베이스 연결이 없어 자동 로그아웃을 건너뜁니다.');
+            return;
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 현재 로그인된 모든 직원을 로그아웃 처리
+        const result = await collection.updateMany(
+            { isLoggedIn: true },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: new Date(),
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        
+        const koreanTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        console.log(`[${koreanTime}] 자동 로그아웃 완료: ${result.modifiedCount}명의 직원이 로그아웃되었습니다.`);
+        
+        // 로그 파일에 기록 (선택사항)
+        console.log(`자동 로그아웃 - 날짜: ${koreanTime}, 로그아웃된 직원 수: ${result.modifiedCount}`);
+        
+    } catch (error) {
+        console.error('자동 로그아웃 오류:', error);
+    }
+}
+
+// 회원 자동 로그아웃 함수 (새벽 1시에 모든 회원 로그아웃)
+async function autoLogoutAllMembers() {
+    try {
+        if (!db) {
+            console.log('데이터베이스 연결이 없어 회원 자동 로그아웃을 건너뜁니다.');
+            return;
+        }
+
+        const collection = db.collection('game-member');
+        
+        // 현재 로그인된 모든 회원을 로그아웃 처리
+        const result = await collection.updateMany(
+            { isLoggedIn: true },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: new Date(),
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        
+        const koreanTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        console.log(`[${koreanTime}] 회원 자동 로그아웃 완료: ${result.modifiedCount}명의 회원이 로그아웃되었습니다.`);
+        
+        // 로그 파일에 기록
+        console.log(`회원 자동 로그아웃 - 날짜: ${koreanTime}, 로그아웃된 회원 수: ${result.modifiedCount}`);
+        
+    } catch (error) {
+        console.error('회원 자동 로그아웃 오류:', error);
+    }
+}
+
 // MongoDB 연결
 async function connectToMongoDB() {
     try {
@@ -70,10 +137,39 @@ async function connectToMongoDB() {
         await client.connect();
         db = client.db(DB_NAME);
         console.log(`MongoDB에 성공적으로 연결되었습니다. (DB: ${DB_NAME})`);
+        
+        // 데이터베이스 연결 후 cron job 설정
+        setupAutoLogoutCron();
+        
     } catch (error) {
         console.error('MongoDB 연결 오류:', error);
         throw error;
     }
+}
+
+// 자동 로그아웃 cron job 설정
+function setupAutoLogoutCron() {
+    // 매일 새벽 2시에 직원 자동 로그아웃 (한국 시간)
+    // cron 표현식: '0 2 * * *' (분 시 일 월 요일)
+    cron.schedule('0 2 * * *', async () => {
+        console.log('직원 자동 로그아웃 cron job 실행 중...');
+        await autoLogoutAllEmployees();
+    }, {
+        timezone: 'Asia/Seoul' // 한국 시간대 설정
+    });
+    
+    // 매일 새벽 1시에 회원 자동 로그아웃 (한국 시간)
+    // cron 표현식: '0 1 * * *' (분 시 일 월 요일)
+    cron.schedule('0 1 * * *', async () => {
+        console.log('회원 자동 로그아웃 cron job 실행 중...');
+        await autoLogoutAllMembers();
+    }, {
+        timezone: 'Asia/Seoul' // 한국 시간대 설정
+    });
+    
+    console.log('자동 로그아웃 cron job이 설정되었습니다.');
+    console.log('- 직원 자동 로그아웃: 매일 새벽 2시');
+    console.log('- 회원 자동 로그아웃: 매일 새벽 1시');
 }
 
 // 로깅 미들웨어
@@ -290,6 +386,10 @@ app.post('/api/employee/register', async (req, res) => {
             position,
             department,
             phone,
+            isLoggedIn: false, // 로그인 상태 필드 추가
+            loginCount: 0, // 로그인 카운트 필드 추가
+            lastLoginAt: null, // 마지막 로그인 시간 필드 추가
+            lastLogoutAt: null, // 마지막 로그아웃 시간 필드 추가
             createdAt: new Date(),
             updatedAt: new Date()
         };
@@ -352,7 +452,7 @@ app.get('/api/employee/login-stats', async (req, res) => {
         const totalEmployees = await collection.countDocuments();
         console.log('전체 직원 수:', totalEmployees);
         
-        // 실시간 온라인 사용자 목록 (세션 기반)
+        // 실시간 온라인 사용자 목록 (세션 + 데이터베이스 기반)
         let onlineUsersList = [];
         
         // 현재 활성 세션에서 로그인한 사용자들 수집
@@ -375,12 +475,9 @@ app.get('/api/employee/login-stats', async (req, res) => {
             }
         }
         
-        // 추가로 isLoggedIn이 true인 직원들 포함 (실제 로그인 상태 기반)
-        const recentLoginUsers = await collection.find(
-            { 
-                isLoggedIn: true,
-                username: { $ne: req.session?.user?.username } // 현재 세션 사용자 제외
-            },
+        // isLoggedIn이 true인 모든 직원들 포함 (데이터베이스 상태 기반)
+        const loggedInUsers = await collection.find(
+            { isLoggedIn: true },
             { 
                 username: 1, 
                 name: 1, 
@@ -391,11 +488,15 @@ app.get('/api/employee/login-stats', async (req, res) => {
             }
         ).sort({ lastLoginAt: -1 }).toArray();
         
-        // 중복 제거하면서 합치기
+        // 세션 사용자와 데이터베이스 사용자 합치기 (중복 제거)
         const existingUsernames = new Set(onlineUsersList.map(u => u.username));
-        recentLoginUsers.forEach(user => {
+        loggedInUsers.forEach(user => {
             if (!existingUsernames.has(user.username)) {
-                onlineUsersList.push(user);
+                // 세션이 없지만 isLoggedIn이 true인 경우도 온라인으로 표시
+                onlineUsersList.push({
+                    ...user,
+                    isCurrentSession: false
+                });
                 existingUsernames.add(user.username);
             }
         });
@@ -672,6 +773,128 @@ app.post('/api/employee/logout', async (req, res) => {
     }
 });
 
+// 세션 상태 체크 및 정리 API
+app.get('/api/employee/check-session-status', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 현재 세션이 있는 사용자 확인
+        const currentSessionUser = req.session && req.session.user ? req.session.user.username : null;
+        
+        // isLoggedIn이 true이지만 세션이 없는 사용자들을 찾아서 정리
+        if (!currentSessionUser) {
+            // 세션이 없는 경우, isLoggedIn이 true인 사용자들을 false로 업데이트
+            const result = await collection.updateMany(
+                { isLoggedIn: true },
+                { 
+                    $set: { 
+                        isLoggedIn: false,
+                        lastLogoutAt: new Date(),
+                        updatedAt: new Date()
+                    } 
+                }
+            );
+            
+            console.log('세션 만료로 인한 로그아웃 처리:', result.modifiedCount, '명');
+        }
+        
+        res.json({
+            success: true,
+            currentSessionUser: currentSessionUser,
+            message: '세션 상태 체크 완료'
+        });
+    } catch (error) {
+        console.error('세션 상태 체크 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 강제 로그아웃 API
+app.post('/api/employee/force-logout', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const { username } = req.body;
+        
+        if (!username) {
+            return res.status(400).json({ error: '사용자명이 필요합니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 해당 사용자를 강제 로그아웃 처리
+        const result = await collection.updateOne(
+            { username: username },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: new Date(),
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: '해당 사용자를 찾을 수 없습니다.' });
+        }
+        
+        console.log('강제 로그아웃 처리 완료:', username);
+        
+        res.json({
+            success: true,
+            message: `${username} 사용자가 강제 로그아웃되었습니다.`
+        });
+    } catch (error) {
+        console.error('강제 로그아웃 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 수동 자동 로그아웃 실행 API (관리자용)
+app.post('/api/system/auto-logout-all', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 현재 로그인된 모든 직원을 로그아웃 처리
+        const result = await collection.updateMany(
+            { isLoggedIn: true },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: new Date(),
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        
+        const koreanTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        console.log(`[${koreanTime}] 수동 자동 로그아웃 완료: ${result.modifiedCount}명의 직원이 로그아웃되었습니다.`);
+        
+        res.json({
+            success: true,
+            message: `${result.modifiedCount}명의 직원이 자동 로그아웃되었습니다.`,
+            logoutCount: result.modifiedCount,
+            timestamp: koreanTime
+        });
+    } catch (error) {
+        console.error('수동 자동 로그아웃 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
 // 현재 로그인된 사용자 수 조회 API
 app.get('/api/employee/online-users', async (req, res) => {
     try {
@@ -931,7 +1154,7 @@ app.post('/api/system/init-login-fields', async (req, res) => {
     }
 });
 
-// 직원 데이터베이스 스키마 업데이트 API (lastLogoutAt 필드 추가)
+// 직원 데이터베이스 스키마 업데이트 API (로그인 관련 필드 추가)
 app.post('/api/system/update-employee-schema', async (req, res) => {
     try {
         if (!db) {
@@ -940,8 +1163,46 @@ app.post('/api/system/update-employee-schema', async (req, res) => {
 
         const collection = db.collection(COLLECTION_NAME);
         
+        let totalModified = 0;
+        
+        // isLoggedIn 필드가 없는 직원들에게 기본값 설정
+        const isLoggedInResult = await collection.updateMany(
+            { isLoggedIn: { $exists: false } },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        totalModified += isLoggedInResult.modifiedCount;
+        
+        // loginCount 필드가 없는 직원들에게 기본값 설정
+        const loginCountResult = await collection.updateMany(
+            { loginCount: { $exists: false } },
+            { 
+                $set: { 
+                    loginCount: 0,
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        totalModified += loginCountResult.modifiedCount;
+        
+        // lastLoginAt 필드가 없는 직원들에게 기본값 설정
+        const lastLoginAtResult = await collection.updateMany(
+            { lastLoginAt: { $exists: false } },
+            { 
+                $set: { 
+                    lastLoginAt: null,
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        totalModified += lastLoginAtResult.modifiedCount;
+        
         // lastLogoutAt 필드가 없는 직원들에게 기본값 설정
-        const result = await collection.updateMany(
+        const lastLogoutAtResult = await collection.updateMany(
             { lastLogoutAt: { $exists: false } },
             { 
                 $set: { 
@@ -950,14 +1211,26 @@ app.post('/api/system/update-employee-schema', async (req, res) => {
                 } 
             }
         );
+        totalModified += lastLogoutAtResult.modifiedCount;
         
-        console.log('직원 스키마 업데이트 결과:', result);
+        console.log('직원 스키마 업데이트 결과:', {
+            isLoggedIn: isLoggedInResult.modifiedCount,
+            loginCount: loginCountResult.modifiedCount,
+            lastLoginAt: lastLoginAtResult.modifiedCount,
+            lastLogoutAt: lastLogoutAtResult.modifiedCount,
+            total: totalModified
+        });
         
         res.json({
             success: true,
             message: '직원 데이터베이스 스키마 업데이트가 완료되었습니다.',
-            modifiedCount: result.modifiedCount,
-            matchedCount: result.matchedCount
+            modifiedCount: totalModified,
+            details: {
+                isLoggedIn: isLoggedInResult.modifiedCount,
+                loginCount: loginCountResult.modifiedCount,
+                lastLoginAt: lastLoginAtResult.modifiedCount,
+                lastLogoutAt: lastLogoutAtResult.modifiedCount
+            }
         });
     } catch (error) {
         console.error('직원 스키마 업데이트 오류:', error);

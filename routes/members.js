@@ -318,11 +318,33 @@ router.get('/login-stats', async (req, res) => {
         // 현재 로그인한 회원 수
         const onlineMembers = await collection.countDocuments({ isLoggedIn: true });
         
-        // 최근 로그인한 회원들 (24시간 이내)
+        // 최근 로그인한 회원들 (24시간 이내) - 더 많은 정보 포함
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const recentLoginMembers = await collection.find(
             { lastLoginAt: { $gte: oneDayAgo } },
-            { userId: 1, name: 1, lastLoginAt: 1, loginCount: 1 }
+            { 
+                userId: 1, 
+                name: 1, 
+                lastLoginAt: 1, 
+                lastLogoutAt: 1,
+                loginCount: 1,
+                isLoggedIn: 1,
+                createdAt: 1
+            }
+        ).sort({ lastLoginAt: -1 }).toArray();
+        
+        // 로그인한 회원들 (현재 온라인)
+        const onlineMembersList = await collection.find(
+            { isLoggedIn: true },
+            { 
+                userId: 1, 
+                name: 1, 
+                lastLoginAt: 1, 
+                lastLogoutAt: 1,
+                loginCount: 1,
+                isLoggedIn: 1,
+                createdAt: 1
+            }
         ).sort({ lastLoginAt: -1 }).toArray();
         
         res.json({
@@ -330,7 +352,8 @@ router.get('/login-stats', async (req, res) => {
             stats: {
                 totalMembers: totalMembers,
                 onlineMembers: onlineMembers,
-                recentLoginMembers: recentLoginMembers
+                recentLoginMembers: recentLoginMembers,
+                onlineMembersList: onlineMembersList
             }
         });
     } catch (error) {
@@ -388,6 +411,48 @@ router.post('/:id/force-logout', async (req, res) => {
         }
     } catch (error) {
         console.error('강제 로그아웃 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 회원 수동 자동 로그아웃 API (관리자용)
+router.post('/auto-logout-all', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        const collection = db.collection('game-member');
+        
+        // 현재 로그인된 모든 회원을 로그아웃 처리
+        const result = await collection.updateMany(
+            { isLoggedIn: true },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: new Date(),
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        
+        const koreanTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        console.log(`[${koreanTime}] 수동 회원 자동 로그아웃 완료: ${result.modifiedCount}명의 회원이 로그아웃되었습니다.`);
+        
+        res.json({
+            success: true,
+            message: `${result.modifiedCount}명의 회원이 자동 로그아웃되었습니다.`,
+            logoutCount: result.modifiedCount,
+            timestamp: koreanTime
+        });
+    } catch (error) {
+        console.error('수동 회원 자동 로그아웃 오류:', error);
         res.status(500).json({
             success: false,
             message: '서버 오류가 발생했습니다.'

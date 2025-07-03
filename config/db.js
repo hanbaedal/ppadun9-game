@@ -7,8 +7,8 @@ let db;
 const connectDB = async () => {
     try {
         if (!client || !client.topology || !client.topology.isConnected()) {
-            const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
-            const DB_NAME = 'member-management';
+            const MONGODB_URI = process.env.MONGODB_URI;
+            const DB_NAME = process.env.DB_NAME || 'member-management';
             
             client = new MongoClient(MONGODB_URI, {
                 serverSelectionTimeoutMS: 60000,
