@@ -270,18 +270,7 @@
             }
         }
 
-        /* 태블릿 반응형 */
-        @media (max-width: 1024px) and (min-width: 769px) {
-            .menu-container {
-                gap: 18px;
-                padding: 18px;
-            }
 
-            .menu-item {
-                padding: 18px;
-                min-height: 130px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -315,26 +304,42 @@
 
     <div class="date-display" id="dateDisplay"></div>
 
-    <div class="menu-container">
+    <div class="menu-grid">
         <a href="/today-game-start.html" class="menu-item menu-start">
-            <i class="fas fa-play-circle"></i>
-            <h2>경기 시작</h2>
-            <p>KBO 야구 경기 시작 시간 설정</p>
+            <div class="menu-icon">
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <div class="menu-text">
+                <h3>경기 시작</h3>
+                <p>KBO 야구 경기 시작 시간 설정</p>
+            </div>
         </a>
         <a href="/today-game-end.html" class="menu-item menu-end">
-            <i class="fas fa-stop-circle"></i>
-            <h2>경기 종료</h2>
-            <p>KBO 야구 경기 종료 시간 설정</p>
+            <div class="menu-icon">
+                <i class="fas fa-stop-circle"></i>
+            </div>
+            <div class="menu-text">
+                <h3>경기 종료</h3>
+                <p>KBO 야구 경기 종료 시간 설정</p>
+            </div>
         </a>
         <a href="/today-game-status.html" class="menu-item menu-status">
-            <i class="fas fa-info-circle"></i>
-            <h2>경기 상황</h2>
-            <p>KBO 야구 경기 상태 관리</p>
+            <div class="menu-icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div class="menu-text">
+                <h3>경기 상황</h3>
+                <p>KBO 야구 경기 상태 관리</p>
+            </div>
         </a>
         <a href="/today-game-display.html" class="menu-item menu-display">
-            <i class="fas fa-list-alt"></i>
-            <h2>경기 확인</h2>
-            <p>KBO 야구 경기 전체 정보 확인</p>
+            <div class="menu-icon">
+                <i class="fas fa-list-alt"></i>
+            </div>
+            <div class="menu-text">
+                <h3>경기 확인</h3>
+                <p>KBO 야구 경기 전체 정보 확인</p>
+            </div>
         </a>
     </div>
 

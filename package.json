@@ -4,7 +4,7 @@
   "description": "빠던나인 프로젝트 관리 시스템",
   "main": "server.js",
   "engines": {
-    "node": ">=18.0.0"
+    "node": "18.x"
   },
   "scripts": {
     "start": "node server.js",
