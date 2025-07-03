@@ -1,1 +1,421 @@
- 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원 관리 - 빠던나인</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f0d4 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(245, 241, 235, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar .container-fluid {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+        
+        .navbar .navbar-brand {
+            flex: 0 0 auto !important;
+            margin-right: 0 !important;
+            order: 1 !important;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #333 !important;
+        }
+        
+        .navbar .navbar-nav.mx-auto {
+            flex: 1 !important;
+            display: flex !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            order: 2 !important;
+        }
+        
+        .navbar .navbar-nav:last-child {
+            flex: 0 0 auto !important;
+            margin-left: auto !important;
+            order: 3 !important;
+            position: absolute !important;
+            right: 20px !important;
+        }
+        
+        .navbar .navbar-text {
+            color: #333 !important;
+            font-weight: 500;
+            margin: 0 !important;
+        }
+        
+        .navbar .nav-link {
+            color: #333 !important;
+        }
+        
+        .navbar .nav-link:hover {
+            color: #007bff !important;
+        }
+        
+        #userInfo {
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        #userInfo:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        
+        #logoutBtn {
+            color: #dc3545 !important;
+            font-weight: 500;
+            padding: 8px 16px !important;
+            border-radius: 6px !important;
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        #logoutBtn:hover {
+            color: #fff !important;
+            background-color: #dc3545 !important;
+            text-decoration: none !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 20px;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dashboard-title {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .dashboard-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .menu-item {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+        
+        .menu-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #28a745;
+        }
+        
+        .menu-text h3 {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.4rem;
+        }
+        
+        .menu-text p {
+            color: #666;
+            margin: 0;
+            line-height: 1.5;
+            font-size: 1rem;
+        }
+        
+        .stats-preview {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(40, 167, 69, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .stats-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #28a745;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding-top: 70px;
+                padding-bottom: 15px;
+            }
+            
+            .dashboard-header {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-top: 20px;
+            }
+            
+            .menu-item {
+                padding: 25px;
+            }
+            
+            .menu-icon {
+                font-size: 3rem;
+                margin-bottom: 15px;
+            }
+            
+            .menu-text h3 {
+                font-size: 1.2rem;
+            }
+            
+            .menu-text p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid px-3">
+            <!-- 왼쪽: 홈 아이콘과 제목 -->
+            <div class="d-flex align-items-center">
+                <a href="/" class="navbar-brand">
+                    <i class="fas fa-cogs me-2"></i>
+                    빠던나인
+                </a>
+            </div>
+            
+            <!-- 중간: 로그인한 직원 이름 -->
+            <div class="navbar-nav mx-auto">
+                <span class="navbar-text" id="userName">
+                    <i class="fas fa-user-circle me-2"></i> 사용자
+                </span>
+            </div>
+            
+            <!-- 오른쪽: 로그아웃 버튼 -->
+            <div class="navbar-nav">
+                <div class="nav-item" id="logoutItem" style="display: none;">
+                    <a class="nav-link" href="#" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> 로그아웃
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <!-- 대시보드 헤더 -->
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">
+                    <i class="fas fa-users me-3"></i>회원 관리 대시보드
+                </h1>
+                <p class="dashboard-subtitle">회원 정보 관리 및 로그인 현황을 한눈에 확인하세요</p>
+            </div>
+            
+            <!-- 메뉴 그리드 -->
+            <div class="menu-grid">
+                <!-- 1. 회원 리스트 -->
+                <a href="/member-list.html" class="menu-item">
+                    <div class="menu-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="menu-text">
+                        <h3>회원 리스트</h3>
+                        <p>전체 회원 정보 조회 및 관리</p>
+                    </div>
+                    <div class="stats-preview">
+                        <div class="stats-number" id="totalMembers">-</div>
+                        <div class="stats-label">전체 회원 수</div>
+                    </div>
+                </a>
+
+                <!-- 2. 회원 로그인 현황 -->
+                <a href="/member-login.html" class="menu-item">
+                    <div class="menu-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="menu-text">
+                        <h3>회원 로그인 현황</h3>
+                        <p>실시간 로그인 통계 및 현황</p>
+                    </div>
+                    <div class="stats-preview">
+                        <div class="stats-number" id="onlineMembers">-</div>
+                        <div class="stats-label">현재 온라인</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentUser();
+            loadDashboardStats();
+        });
+        
+        // 현재 로그인한 사용자 정보 가져오기
+        async function loadCurrentUser() {
+            try {
+                const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
+                const logoutBtn = document.getElementById('logoutBtn');
+                
+                const response = await fetch('/api/employee/current-user', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success && data.user) {
+                        userNameElement.textContent = data.user.name || data.user.username;
+                        logoutItem.style.display = 'block';
+                        
+                        logoutBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            showLogoutConfirm();
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('사용자 정보 로드 오류:', error);
+            }
+        }
+        
+        // 대시보드 통계 로드
+        async function loadDashboardStats() {
+            try {
+                // 회원 통계 로드 (임시로 직원 통계 사용)
+                const response = await fetch('/api/employee/login-stats', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.getElementById('totalMembers').textContent = data.stats.totalEmployees || 0;
+                        document.getElementById('onlineMembers').textContent = data.stats.onlineUsers || 0;
+                    }
+                }
+            } catch (error) {
+                console.error('대시보드 통계 로드 오류:', error);
+                document.getElementById('totalMembers').textContent = '0';
+                document.getElementById('onlineMembers').textContent = '0';
+            }
+        }
+        
+        // 로그아웃 확인
+        function showLogoutConfirm() {
+            if (confirm('로그아웃하시겠습니까?')) {
+                logout();
+            }
+        }
+        
+        // 로그아웃
+        async function logout() {
+            try {
+                const response = await fetch('/api/employee/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.removeItem('currentUser');
+                    alert('로그아웃되었습니다.');
+                    window.location.href = '/employee-login.html';
+                } else {
+                    alert('로그아웃 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
+            }
+        }
+    </script>
+</body>
+</html> 

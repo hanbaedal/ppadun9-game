@@ -502,7 +502,7 @@
                 </a>
 
                 <!-- 5. 회원관리 -->
-                <a href="/member-management.html" class="menu-item" onclick="handleMemberManagementClick(event)">
+                <a href="/member-management.html" class="menu-item">
                     <div class="menu-icon">👤</div>
                     <div class="menu-text">
                         <h3>회원 관리</h3>
@@ -669,7 +669,6 @@
                             
                             // 모든 메뉴 활성화
                             enableAllMenus();
-                            console.log('모든 메뉴가 활성화되었습니다.');
                             return;
                         }
                     }
@@ -682,84 +681,75 @@
                 console.log('로컬 스토리지 사용자 정보:', storedUser);
                 
                 if (storedUser) {
-                    try {
-                        const user = JSON.parse(storedUser);
-                        console.log('로컬 스토리지 사용자 정보:', user);
-                        
-                        // 로그인된 사용자가 있는 경우 - 실제 이름을 헤더 중간에 표시
-                        userNameElement.textContent = user.name || user.username;
-                        console.log('사용자 이름 표시:', user.name || user.username);
-                        
-                        // 로그아웃 버튼 표시
-                        logoutItem.style.display = 'block';
-                        
-                        // 로그아웃 버튼 이벤트 리스너
-                        logoutBtn.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            showLogoutConfirm();
-                        });
-                        
-                        // 모든 메뉴 활성화
-                        enableAllMenus();
-                        console.log('로컬 스토리지 기반으로 모든 메뉴가 활성화되었습니다.');
-                    } catch (parseError) {
-                        console.error('로컬 스토리지 파싱 오류:', parseError);
-                        localStorage.removeItem('currentUser');
-                        handleNotLoggedIn();
-                    }
+                    const user = JSON.parse(storedUser);
+                    console.log('로컬 스토리지 사용자 정보:', user);
+                    
+                    // 로그인된 사용자가 있는 경우 - 실제 이름을 헤더 중간에 표시
+                    userNameElement.textContent = user.name || user.username;
+                    console.log('사용자 이름 표시:', user.name || user.username);
+                    
+                    // 로그아웃 버튼 표시
+                    logoutItem.style.display = 'block';
+                    
+                    // 로그아웃 버튼 이벤트 리스너
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        showLogoutConfirm();
+                    });
+                    
+                    // 모든 메뉴 활성화
+                    enableAllMenus();
                 } else {
                     console.log('로그인되지 않은 상태');
-                    handleNotLoggedIn();
+                    // 로그인되지 않은 경우 - '로그인' 표시
+                    userNameElement.textContent = '로그인';
+                    userNameElement.onclick = function(e) {
+                        e.preventDefault();
+                        window.location.href = '/employee-login.html';
+                    };
+                    userNameElement.title = '로그인하기';
+                    userNameElement.style.cursor = 'pointer';
+                    
+                    // 로그아웃 버튼 숨기기
+                    logoutItem.style.display = 'none';
+                    
+                    // 메뉴 비활성화 (로그인 필요)
+                    disableAllMenus();
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                handleNotLoggedIn();
+                const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
+                
+                userNameElement.textContent = '로그인';
+                userNameElement.onclick = function(e) {
+                    e.preventDefault();
+                    window.location.href = '/employee-login.html';
+                };
+                userNameElement.title = '로그인하기';
+                userNameElement.style.cursor = 'pointer';
+                logoutItem.style.display = 'none';
+                disableAllMenus();
             }
-        }
-        
-        // 로그인되지 않은 상태 처리
-        function handleNotLoggedIn() {
-            const userNameElement = document.getElementById('userName');
-            const logoutItem = document.getElementById('logoutItem');
-            
-            // 로그인되지 않은 경우 - '로그인' 표시
-            userNameElement.textContent = '로그인';
-            userNameElement.onclick = function(e) {
-                e.preventDefault();
-                window.location.href = '/employee-login.html';
-            };
-            userNameElement.title = '로그인하기';
-            userNameElement.style.cursor = 'pointer';
-            
-            // 로그아웃 버튼 숨기기
-            logoutItem.style.display = 'none';
-            
-            // 메뉴 비활성화 (로그인 필요)
-            disableAllMenus();
-            console.log('로그인되지 않아 모든 메뉴가 비활성화되었습니다.');
         }
         
         // 모든 메뉴 활성화
         function enableAllMenus() {
             const menuItems = document.querySelectorAll('.menu-item');
-            console.log('활성화할 메뉴 아이템 수:', menuItems.length);
-            menuItems.forEach((item, index) => {
+            menuItems.forEach(item => {
                 item.style.opacity = '1';
                 item.style.pointerEvents = 'auto';
                 item.style.cursor = 'pointer';
-                console.log(`메뉴 ${index + 1} 활성화:`, item.href);
             });
         }
         
         // 모든 메뉴 비활성화
         function disableAllMenus() {
             const menuItems = document.querySelectorAll('.menu-item');
-            console.log('비활성화할 메뉴 아이템 수:', menuItems.length);
-            menuItems.forEach((item, index) => {
+            menuItems.forEach(item => {
                 item.style.opacity = '0.5';
                 item.style.pointerEvents = 'none';
                 item.style.cursor = 'not-allowed';
-                console.log(`메뉴 ${index + 1} 비활성화:`, item.href);
             });
         }
         
@@ -767,35 +757,6 @@
         function showLogoutConfirm() {
             if (confirm('로그아웃하시겠습니까?')) {
                 logout();
-            }
-        }
-        
-        // 회원관리 메뉴 클릭 핸들러
-        function handleMemberManagementClick(event) {
-            console.log('회원관리 메뉴 클릭됨');
-            
-            // 로그인 상태 확인
-            const storedUser = localStorage.getItem('currentUser');
-            if (!storedUser) {
-                event.preventDefault();
-                alert('로그인이 필요합니다.');
-                window.location.href = '/employee-login.html';
-                return;
-            }
-            
-            try {
-                const user = JSON.parse(storedUser);
-                console.log('로그인된 사용자:', user);
-                
-                // 회원관리 페이지로 이동
-                console.log('회원관리 페이지로 이동합니다.');
-                window.location.href = '/member-management.html';
-            } catch (error) {
-                console.error('사용자 정보 파싱 오류:', error);
-                event.preventDefault();
-                alert('로그인 정보에 문제가 있습니다. 다시 로그인해주세요.');
-                localStorage.removeItem('currentUser');
-                window.location.href = '/employee-login.html';
             }
         }
         
