@@ -929,6 +929,40 @@ app.post('/api/system/init-login-fields', async (req, res) => {
     }
 });
 
+// 직원 데이터베이스 스키마 업데이트 API (lastLogoutAt 필드 추가)
+app.post('/api/system/update-employee-schema', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // lastLogoutAt 필드가 없는 직원들에게 기본값 설정
+        const result = await collection.updateMany(
+            { lastLogoutAt: { $exists: false } },
+            { 
+                $set: { 
+                    lastLogoutAt: null,
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        
+        console.log('직원 스키마 업데이트 결과:', result);
+        
+        res.json({
+            success: true,
+            message: '직원 데이터베이스 스키마 업데이트가 완료되었습니다.',
+            modifiedCount: result.modifiedCount,
+            matchedCount: result.matchedCount
+        });
+    } catch (error) {
+        console.error('직원 스키마 업데이트 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
 // 고객센터 페이지
 app.get('/customer-center.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'customer-center.html'));

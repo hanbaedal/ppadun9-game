@@ -41,7 +41,7 @@ router.get('/debug/collections', async (req, res) => {
 });
 
 // 모든 회원 조회
-router.get('/members', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         console.log('회원 목록 조회 요청 받음');
         
@@ -86,7 +86,7 @@ router.get('/members', async (req, res) => {
 });
 
 // 회원 수정
-router.put('/members/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { name, email, points } = req.body;
@@ -136,7 +136,7 @@ router.put('/members/:id', async (req, res) => {
 });
 
 // 회원 삭제
-router.delete('/members/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -335,6 +335,74 @@ router.get('/login-stats', async (req, res) => {
         });
     } catch (error) {
         console.error('회원 로그인 통계 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 회원 데이터베이스 스키마 업데이트 API
+router.post('/update-schema', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        const collection = db.collection('game-member');
+        
+        // 새로운 필드들을 기존 회원들에게 추가
+        const updateOperations = [
+            // lastLoginAt 필드가 없는 회원들에게 기본값 설정
+            {
+                filter: { lastLoginAt: { $exists: false } },
+                update: { 
+                    $set: { 
+                        lastLoginAt: null,
+                        loginCount: 0,
+                        isLoggedIn: false,
+                        lastLogoutAt: null,
+                        updatedAt: new Date()
+                    } 
+                }
+            },
+            // updatedAt 필드가 없는 회원들에게 기본값 설정
+            {
+                filter: { updatedAt: { $exists: false } },
+                update: { 
+                    $set: { 
+                        updatedAt: new Date()
+                    } 
+                }
+            }
+        ];
+        
+        const results = [];
+        
+        for (const operation of updateOperations) {
+            const result = await collection.updateMany(
+                operation.filter,
+                operation.update
+            );
+            results.push(result);
+        }
+        
+        console.log('회원 스키마 업데이트 결과:', results);
+        
+        res.json({
+            success: true,
+            message: '회원 데이터베이스 스키마 업데이트가 완료되었습니다.',
+            results: results.map((result, index) => ({
+                operation: index + 1,
+                modifiedCount: result.modifiedCount,
+                matchedCount: result.matchedCount
+            }))
+        });
+    } catch (error) {
+        console.error('회원 스키마 업데이트 오류:', error);
         res.status(500).json({
             success: false,
             message: '서버 오류가 발생했습니다.'
