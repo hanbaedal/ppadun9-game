@@ -492,7 +492,7 @@
             }
         }
         
-        // 날짜 포맷팅
+        // 날짜 포맷팅 (한국 시간 기준)
         function formatDate(dateString) {
             if (!dateString) return '로그인 기록 없음';
             
@@ -502,8 +502,12 @@
                     return '날짜 형식 오류';
                 }
                 
+                // 한국 시간으로 변환
+                const koreanDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
                 const now = new Date();
-                const diffTime = Math.abs(now - date);
+                const koreanNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                
+                const diffTime = Math.abs(koreanNow - koreanDate);
                 const diffMinutes = Math.ceil(diffTime / (1000 * 60));
                 const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -519,7 +523,7 @@
                 } else if (diffDays <= 7) {
                     return `${diffDays - 1}일 전`;
                 } else {
-                    return date.toLocaleDateString('ko-KR');
+                    return koreanDate.toLocaleDateString('ko-KR');
                 }
             } catch (error) {
                 console.error('날짜 포맷팅 오류:', error);

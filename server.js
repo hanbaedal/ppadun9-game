@@ -10,26 +10,18 @@ const { connectDB } = require('./config/db');
 // 환경 변수 설정
 dotenv.config();
 
-// 환경변수 기본값 설정 (개발 환경에서만)
-if (process.env.NODE_ENV !== 'production') {
-    if (!process.env.MONGODB_URI) {
-        process.env.MONGODB_URI = 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/member-management?retryWrites=true&w=majority&appName=member-management';
-    }
-    if (!process.env.DB_NAME) {
-        process.env.DB_NAME = 'member-management';
-    }
-    if (!process.env.SESSION_SECRET) {
-        process.env.SESSION_SECRET = 'ppadun9-secret-key-2024';
-    }
+// 환경 변수 검증
+if (!process.env.MONGODB_URI) {
+    console.error('[Config] MONGODB_URI가 설정되지 않았습니다.');
+    process.exit(1);
 }
 
-// Render 배포 환경 최적화
-if (process.env.NODE_ENV === 'production') {
-    // Production 환경에서는 환경변수가 Render에서 설정됨
-    console.log('[Config] Production 환경 감지');
-} else {
-    console.log('[Config] 개발 환경 감지');
-}
+console.log('[Config] 환경변수 확인:');
+console.log('- NODE_ENV:', process.env.NODE_ENV);
+console.log('- MONGODB_URI:', process.env.MONGODB_URI ? '설정됨' : '설정되지 않음');
+console.log('- DB_NAME:', process.env.DB_NAME || '기본값 사용');
+console.log('- SESSION_SECRET:', process.env.SESSION_SECRET ? '설정됨' : '설정되지 않음');
+console.log('- PORT:', process.env.PORT || 3000);
 
 // 환경 변수 검증
 if (!process.env.MONGODB_URI) {
@@ -199,8 +191,11 @@ const sessionConfig = {
     }
 };
 
-// 개발 환경에서만 MemoryStore 사용
-if (process.env.NODE_ENV !== 'production') {
+// 세션 스토어 설정
+if (process.env.NODE_ENV === 'production') {
+    // Production 환경에서는 Redis나 다른 영구 스토어 사용 권장
+    // 현재는 기본 MemoryStore 사용
+} else {
     sessionConfig.store = new session.MemoryStore();
 }
 
@@ -1268,7 +1263,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({
         success: false,
         message: '서버 오류가 발생했습니다.',
-        error: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
+        error: 'Internal Server Error',
         timestamp: new Date().toISOString()
     });
 });
@@ -1307,7 +1302,7 @@ async function startServer() {
         const port = process.env.PORT || 3000;
         app.listen(port, '0.0.0.0', () => {
             console.log(`[Server] 서버가 포트 ${port}에서 실행 중입니다.`);
-            console.log(`[Server] 환경: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`[Server] 환경: ${process.env.NODE_ENV || 'production'}`);
             console.log(`[Server] 데이터베이스: ${process.env.DB_NAME || 'member-management'}`);
         });
     } catch (error) {
