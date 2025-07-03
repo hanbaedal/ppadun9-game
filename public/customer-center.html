@@ -11,9 +11,8 @@
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 0;
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f0d4 100%);
+            min-height: 100vh;
         }
 
         .navbar {
@@ -21,23 +20,56 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
         }
-
-        .navbar-brand {
+        
+        .navbar .container-fluid {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+        
+        .navbar .navbar-brand {
+            flex: 0 0 auto !important;
+            margin-right: 0 !important;
+            order: 1 !important;
             font-weight: 700;
             font-size: 1.3rem;
             color: #333 !important;
         }
-
-        .navbar-nav .nav-link {
+        
+        .navbar .navbar-nav.mx-auto {
+            flex: 1 !important;
+            display: flex !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            order: 2 !important;
+        }
+        
+        .navbar .navbar-nav:last-child {
+            flex: 0 0 auto !important;
+            margin-left: auto !important;
+            order: 3 !important;
+            position: absolute !important;
+            right: 20px !important;
+        }
+        
+        .navbar .navbar-text {
+            color: #333 !important;
+            font-weight: 500;
+            margin: 0 !important;
+        }
+        
+        .navbar .nav-link {
             color: #333 !important;
         }
-
-        .navbar-nav .nav-link:hover {
+        
+        .navbar .nav-link:hover {
             color: #007bff !important;
         }
 
         .main-container {
-            padding: 20px;
+            padding-top: 80px;
+            padding-bottom: 20px;
             max-width: 1400px;
             margin: 0 auto;
         }
@@ -546,6 +578,8 @@
         // 페이지 로드 시 실행
         window.onload = function() {
             loadCurrentUser();
+            loadStats();
+            loadInquiries();
         };
 
         // 통계 로드
