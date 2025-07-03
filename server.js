@@ -203,9 +203,19 @@ app.get('/employee-member.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'employee-member.html'));
 });
 
-// 회원 관리 페이지 (새로운)
+// 회원 리스트 페이지 (기존 member-management.html)
+app.get('/member-list.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'member-list.html'));
+});
+
+// 회원 관리 메인 페이지 (새로운)
 app.get('/member-management.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'member-management.html'));
+});
+
+// 회원 로그인 현황 페이지 (새로운)
+app.get('/member-login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'member-login.html'));
 });
 
 // 포인트 충전 리스트 페이지
