@@ -70,9 +70,6 @@ async function connectToMongoDB() {
         await client.connect();
         db = client.db(DB_NAME);
         console.log(`MongoDB에 성공적으로 연결되었습니다. (DB: ${DB_NAME})`);
-        
-        // members 라우트에 데이터베이스 전달
-        setMembersDatabase(db);
     } catch (error) {
         console.error('MongoDB 연결 오류:', error);
         throw error;
@@ -963,8 +960,17 @@ async function startServer() {
         
         // config/db.js의 connectDB 함수 호출
         console.log('[Server] 추가 데이터베이스 연결 시도...');
-        await connectDB();
+        const additionalDb = await connectDB();
         console.log('[Server] 추가 데이터베이스 연결 성공');
+        
+        // members 라우트에 올바른 데이터베이스 전달
+        if (additionalDb) {
+            setMembersDatabase(additionalDb);
+            console.log('[Server] Members 라우트에 데이터베이스 설정 완료');
+        } else {
+            setMembersDatabase(db);
+            console.log('[Server] Members 라우트에 기본 데이터베이스 설정 완료');
+        }
         
         const port = process.env.PORT || 3000;
         app.listen(port, '0.0.0.0', () => {
