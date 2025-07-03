@@ -399,9 +399,26 @@ router.post('/:id/force-logout', async (req, res) => {
         );
         
         if (result.matchedCount > 0) {
+            // 강제 로그아웃된 회원 정보 조회
+            const loggedOutMember = await collection.findOne(
+                { _id: new ObjectId(id) },
+                { userId: 1, name: 1, isLoggedIn: 1, lastLogoutAt: 1 }
+            );
+            
+            const koreanTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+            console.log(`[${koreanTime}] 강제 로그아웃 완료: ${loggedOutMember.name}(${loggedOutMember.userId})`);
+            
             res.json({
                 success: true,
-                message: '회원이 강제 로그아웃되었습니다.'
+                message: `${loggedOutMember.name} 회원이 강제 로그아웃되었습니다.`,
+                member: {
+                    id: loggedOutMember._id,
+                    userId: loggedOutMember.userId,
+                    name: loggedOutMember.name,
+                    isLoggedIn: loggedOutMember.isLoggedIn,
+                    lastLogoutAt: loggedOutMember.lastLogoutAt
+                },
+                timestamp: koreanTime
             });
         } else {
             res.status(404).json({
