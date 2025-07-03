@@ -369,19 +369,16 @@ app.get('/api/employee/login-stats', async (req, res) => {
                 onlineUsersList.push({
                     ...currentUser,
                     lastLoginAt: new Date(), // 현재 시간으로 설정
+                    isLoggedIn: true, // 현재 세션 사용자는 온라인
                     isCurrentSession: true
                 });
             }
         }
         
-        // 추가로 lastLoginAt 필드가 있는 직원들도 포함 (24시간 이내)
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        // 추가로 isLoggedIn이 true인 직원들 포함 (실제 로그인 상태 기반)
         const recentLoginUsers = await collection.find(
             { 
-                lastLoginAt: { 
-                    $exists: true, 
-                    $gte: oneDayAgo 
-                },
+                isLoggedIn: true,
                 username: { $ne: req.session?.user?.username } // 현재 세션 사용자 제외
             },
             { 
