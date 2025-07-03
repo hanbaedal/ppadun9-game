@@ -176,4 +176,170 @@ router.delete('/members/:id', async (req, res) => {
     }
 });
 
+// 회원 로그인 API
+router.post('/login', async (req, res) => {
+    try {
+        const { userId, password } = req.body;
+        
+        if (!userId || !password) {
+            return res.status(400).json({
+                success: false,
+                message: '아이디와 비밀번호를 모두 입력해주세요.'
+            });
+        }
+        
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        const collection = db.collection('game-member');
+        
+        // 회원 검색
+        const member = await collection.findOne({ userId });
+        
+        if (!member) {
+            return res.status(401).json({
+                success: false,
+                message: '아이디 또는 비밀번호가 올바르지 않습니다.'
+            });
+        }
+        
+        // 비밀번호 확인 (실제로는 해시화된 비밀번호와 비교해야 함)
+        if (member.password !== password) {
+            return res.status(401).json({
+                success: false,
+                message: '아이디 또는 비밀번호가 올바르지 않습니다.'
+            });
+        }
+        
+        // 로그인 정보 업데이트
+        const loginCount = (member.loginCount || 0) + 1;
+        const lastLoginAt = new Date();
+        
+        await collection.updateOne(
+            { userId },
+            {
+                $set: {
+                    loginCount: loginCount,
+                    lastLoginAt: lastLoginAt,
+                    isLoggedIn: true,
+                    updatedAt: new Date()
+                }
+            }
+        );
+        
+        // 비밀번호 제외하고 회원 정보 반환
+        const { password: _, ...memberInfo } = member;
+        const updatedMemberInfo = {
+            ...memberInfo,
+            loginCount: loginCount,
+            lastLoginAt: lastLoginAt,
+            isLoggedIn: true
+        };
+        
+        res.json({
+            success: true,
+            message: '로그인이 성공했습니다.',
+            member: updatedMemberInfo
+        });
+    } catch (error) {
+        console.error('회원 로그인 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 회원 로그아웃 API
+router.post('/logout', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: '회원 ID가 필요합니다.'
+            });
+        }
+        
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        const collection = db.collection('game-member');
+        
+        // 로그아웃 정보 업데이트
+        await collection.updateOne(
+            { userId },
+            {
+                $set: {
+                    isLoggedIn: false,
+                    lastLogoutAt: new Date(),
+                    updatedAt: new Date()
+                }
+            }
+        );
+        
+        res.json({
+            success: true,
+            message: '로그아웃되었습니다.'
+        });
+    } catch (error) {
+        console.error('회원 로그아웃 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 회원 로그인 통계 API
+router.get('/login-stats', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        const collection = db.collection('game-member');
+        
+        // 전체 회원 수
+        const totalMembers = await collection.countDocuments();
+        
+        // 현재 로그인한 회원 수
+        const onlineMembers = await collection.countDocuments({ isLoggedIn: true });
+        
+        // 최근 로그인한 회원들 (24시간 이내)
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const recentLoginMembers = await collection.find(
+            { lastLoginAt: { $gte: oneDayAgo } },
+            { userId: 1, name: 1, lastLoginAt: 1, loginCount: 1 }
+        ).sort({ lastLoginAt: -1 }).toArray();
+        
+        res.json({
+            success: true,
+            stats: {
+                totalMembers: totalMembers,
+                onlineMembers: onlineMembers,
+                recentLoginMembers: recentLoginMembers
+            }
+        });
+    } catch (error) {
+        console.error('회원 로그인 통계 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
 module.exports = { router, setDatabase }; 

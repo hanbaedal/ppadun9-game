@@ -629,8 +629,31 @@ app.get('/api/employee/current-user', (req, res) => {
 });
 
 // 로그아웃 API
-app.post('/api/employee/logout', (req, res) => {
+app.post('/api/employee/logout', async (req, res) => {
     try {
+        // 로그아웃 시간을 데이터베이스에 기록
+        if (req.session && req.session.user && req.session.user.username) {
+            if (!db) {
+                console.error('MongoDB 연결이 설정되지 않았습니다.');
+                return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+            }
+
+            const collection = db.collection(COLLECTION_NAME);
+            
+            // 로그아웃 시간 업데이트
+            await collection.updateOne(
+                { username: req.session.user.username },
+                { 
+                    $set: { 
+                        lastLogoutAt: new Date(),
+                        updatedAt: new Date()
+                    } 
+                }
+            );
+            
+            console.log('로그아웃 시간 기록 완료:', req.session.user.username);
+        }
+
         req.session.destroy((err) => {
             if (err) {
                 console.error('세션 삭제 오류:', err);
