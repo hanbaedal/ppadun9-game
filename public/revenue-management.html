@@ -103,10 +103,10 @@
         
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            padding: 20px;
-            max-width: 800px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 8px;
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
         }
@@ -114,7 +114,7 @@
         .menu-item {
             background: rgba(230, 240, 250, 0.95);
             border-radius: 12px;
-            padding: 20px;
+            padding: 12px;
             text-decoration: none;
             color: #333;
             transition: all 0.3s ease;
@@ -124,10 +124,9 @@
             overflow: hidden;
             height: 120px;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            justify-content: center;
-            text-align: center;
+            gap: 12px;
         }
         
         .menu-item:hover {
@@ -149,21 +148,30 @@
         
         .menu-icon {
             font-size: 2.5rem;
-            margin-bottom: 10px;
+            flex-shrink: 0;
+            text-align: center;
+            min-width: 60px;
+        }
+        
+        .menu-text {
+            flex: 1;
+            text-align: left;
         }
         
         .menu-text h3 {
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             color: #333;
-            font-size: 1.1rem;
+            text-align: left;
+            font-size: 0.95rem;
         }
         
         .menu-text p {
             color: #666;
+            text-align: left;
             margin: 0;
             line-height: 1.2;
-            font-size: 0.9rem;
+            font-size: 0.55rem;
         }
         
         .page-title {
@@ -174,30 +182,75 @@
             font-size: 2rem;
         }
         
-        @media (max-width: 768px) {
+        /* 태블릿 */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding-top: 50px;
+                padding-bottom: 8px;
+                min-height: calc(100vh - 100px);
+            }
+            
             .menu-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-                padding: 15px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 6px;
             }
             
             .menu-item {
-                padding: 15px;
+                padding: 10px;
                 height: 100px;
+                gap: 10px;
             }
             
             .menu-icon {
                 font-size: 2rem;
-                margin-bottom: 8px;
+                min-width: 50px;
             }
             
             .menu-text h3 {
-                font-size: 1rem;
+                font-size: 0.9rem;
+                margin-bottom: 3px;
             }
             
             .menu-text p {
-                font-size: 0.8rem;
+                font-size: 0.5rem;
+                line-height: 1.1;
             }
+        }
+        
+        /* 모바일 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding-top: 45px;
+                padding-bottom: 5px;
+                min-height: calc(100vh - 90px);
+            }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 8px;
+            }
+            
+            .menu-item {
+                padding: 12px;
+                height: auto;
+                min-height: 90px;
+                gap: 10px;
+            }
+            
+            .menu-icon {
+                font-size: 2rem;
+                min-width: 45px;
+            }
+            
+            .navbar-brand {
+                font-size: 0.9rem;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
         }
     </style>
 </head>
