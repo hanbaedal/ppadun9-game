@@ -342,6 +342,59 @@ router.get('/login-stats', async (req, res) => {
     }
 });
 
+// 강제 로그아웃 API
+router.post('/:id/force-logout', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: '올바르지 않은 회원 ID 형식입니다.'
+            });
+        }
+        
+        if (!db) {
+            return res.status(503).json({
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.'
+            });
+        }
+        
+        const collection = db.collection('game-member');
+        
+        // 회원을 강제 로그아웃 상태로 변경
+        const result = await collection.updateOne(
+            { _id: new ObjectId(id) },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: new Date(),
+                    updatedAt: new Date()
+                } 
+            }
+        );
+        
+        if (result.matchedCount > 0) {
+            res.json({
+                success: true,
+                message: '회원이 강제 로그아웃되었습니다.'
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: '회원을 찾을 수 없습니다.'
+            });
+        }
+    } catch (error) {
+        console.error('강제 로그아웃 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
 // 회원 데이터베이스 스키마 업데이트 API
 router.post('/update-schema', async (req, res) => {
     try {

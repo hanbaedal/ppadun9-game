@@ -76,6 +76,9 @@
                         <th>이메일</th>
                         <th>포인트</th>
                         <th>가입일</th>
+                        <th>로그인 상태</th>
+                        <th>마지막 로그인</th>
+                        <th>마지막 로그아웃</th>
                         <th>관리</th>
                     </tr>
                 </thead>
@@ -121,13 +124,18 @@
             tbody.empty();
             
             if (members.length === 0) {
-                tbody.append('<tr><td colspan="6" class="text-center">회원이 없습니다.</td></tr>');
+                tbody.append('<tr><td colspan="9" class="text-center">회원이 없습니다.</td></tr>');
                 return;
             }
             
             members.forEach(function(member, index) {
                 console.log('회원 데이터:', member);
                 const createdAt = member.createdAt ? new Date(member.createdAt).toLocaleDateString() : '-';
+                const lastLoginAt = member.lastLoginAt ? new Date(member.lastLoginAt).toLocaleString() : '-';
+                const lastLogoutAt = member.lastLogoutAt ? new Date(member.lastLogoutAt).toLocaleString() : '-';
+                const isLoggedIn = member.isLoggedIn ? '온라인' : '오프라인';
+                const loginStatusClass = member.isLoggedIn ? 'text-success' : 'text-muted';
+                
                 const row = `
                     <tr>
                         <td>${member.userId || member._id || '-'}</td>
@@ -135,9 +143,13 @@
                         <td>${member.email || '-'}</td>
                         <td>${member.points || 0}</td>
                         <td>${createdAt}</td>
+                        <td><span class="${loginStatusClass} font-weight-bold">${isLoggedIn}</span></td>
+                        <td>${lastLoginAt}</td>
+                        <td>${lastLogoutAt}</td>
                         <td>
                             <button class="btn btn-sm btn-primary btn-action" onclick="editMember('${member._id}')">수정</button>
                             <button class="btn btn-sm btn-danger btn-action" onclick="deleteMember('${member._id}')">삭제</button>
+                            ${member.isLoggedIn ? `<button class="btn btn-sm btn-warning btn-action" onclick="forceLogout('${member._id}')">강제 로그아웃</button>` : ''}
                         </td>
                     </tr>
                 `;
@@ -178,6 +190,28 @@
                         } else {
                             alert('삭제에 실패했습니다.');
                         }
+                    }
+                });
+            }
+        }
+
+        // 강제 로그아웃
+        function forceLogout(id) {
+            if (confirm('정말 이 회원을 강제 로그아웃시키시겠습니까?')) {
+                $.ajax({
+                    url: `/api/members/${id}/force-logout`,
+                    method: 'POST',
+                    success: function(data) {
+                        if (data.success) {
+                            loadMembers();
+                            alert('강제 로그아웃되었습니다.');
+                        } else {
+                            alert('강제 로그아웃에 실패했습니다: ' + (data.message || '알 수 없는 오류'));
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('강제 로그아웃 오류:', xhr, status, error);
+                        alert('서버 오류가 발생했습니다.');
                     }
                 });
             }
