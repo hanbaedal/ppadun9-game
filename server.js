@@ -914,6 +914,36 @@ app.get('/customer-center.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'customer-center.html'));
 });
 
+// 404 에러 핸들러
+app.use((req, res, next) => {
+    console.log(`404 에러: ${req.method} ${req.url}`);
+    res.status(404).json({
+        success: false,
+        message: '요청한 리소스를 찾을 수 없습니다.',
+        path: req.url,
+        method: req.method
+    });
+});
+
+// 전역 에러 핸들러
+app.use((err, req, res, next) => {
+    console.error('전역 에러 핸들러:', {
+        message: err.message,
+        stack: err.stack,
+        url: req.url,
+        method: req.method,
+        timestamp: new Date().toISOString(),
+        userAgent: req.get('User-Agent')
+    });
+    
+    res.status(500).json({
+        success: false,
+        message: '서버 오류가 발생했습니다.',
+        error: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
+        timestamp: new Date().toISOString()
+    });
+});
+
 // 서버 시작
 async function startServer() {
     try {
