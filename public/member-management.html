@@ -360,8 +360,8 @@
         // 대시보드 통계 로드
         async function loadDashboardStats() {
             try {
-                // 회원 통계 로드 (임시로 직원 통계 사용)
-                const response = await fetch('/api/employee/login-stats', {
+                // 회원 통계 로드
+                const response = await fetch('/api/members', {
                     credentials: 'include',
                     headers: {
                         'Accept': 'application/json',
@@ -373,8 +373,10 @@
                     const data = await response.json();
                     
                     if (data.success) {
-                        document.getElementById('totalMembers').textContent = data.stats.totalEmployees || 0;
-                        document.getElementById('onlineMembers').textContent = data.stats.onlineUsers || 0;
+                        const totalMembers = data.members ? data.members.length : 0;
+                        document.getElementById('totalMembers').textContent = totalMembers;
+                        // 온라인 회원 수는 임시로 0으로 설정 (실제 구현 필요)
+                        document.getElementById('onlineMembers').textContent = '0';
                     }
                 }
             } catch (error) {
