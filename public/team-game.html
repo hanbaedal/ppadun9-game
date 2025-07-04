@@ -429,6 +429,108 @@
             font-style: italic;
         }
 
+        /* 경기 선택 컨테이너 */
+        .game-selection-container {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        /* 경기 선택 박스 스타일 */
+        .game-selection-boxes {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .game-selection-box {
+            padding: 15px;
+            background-color: #fff;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 150px;
+            width: calc(20% - 12px);
+            min-width: 180px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .game-selection-box:hover {
+            border-color: #28a745;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .game-selection-box.selected {
+            border-color: #28a745;
+            background-color: #e8f5e9;
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+        }
+
+        .game-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .game-matchup {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .game-status {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .status-before {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-ongoing {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-ended {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .game-selection-indicator {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            background-color: #e9ecef;
+            color: #6c757d;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .game-selection-box.selected .game-selection-indicator {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .game-selection-box.selected .selection-text {
+            color: white;
+        }
+
         .radio-label:has(input[type="radio"]:disabled) {
             opacity: 0.6;
             cursor: not-allowed;
@@ -675,44 +777,14 @@
 
 
 
+        <div class="game-selection-container">
+            <div class="game-selection-boxes" id="gameSelectionBoxes">
+                <!-- 경기 선택 박스들이 동적으로 생성됩니다 -->
+            </div>
+        </div>
+
         <div class="betting-section">
-            <div class="betting-item">
-                <div class="betting-title">경기선택</div>
-                <div class="radio-group" id="gameSelection">
-                    <label class="radio-label">
-                        <input type="radio" name="gameSelection" value="1">
-                        <span>1경기</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="gameSelection" value="2">
-                        <span>2경기</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="gameSelection" value="3">
-                        <span>3경기</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="gameSelection" value="4">
-                        <span>4경기</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="gameSelection" value="5">
-                        <span>5경기</span>
-                    </label>
-                </div>
-            </div>
-            <div class="betting-item">
-                <div class="betting-title">경기 내용</div>
-                <div class="game-matchup-display" id="gameMatchupDisplay">
-                    <!-- 경기 매치업이 동적으로 표시됩니다 -->
-                </div>
-            </div>
-            <div class="betting-item">
-                <div class="betting-title">경기상황</div>
-                <div class="game-status-display" id="gameStatusDisplay">
-                    <!-- 경기상황이 동적으로 표시됩니다 -->
-                </div>
-            </div>
+
             <div class="betting-item">
                 <div class="betting-title">게임형태</div>
                 <div class="radio-group">
@@ -878,70 +950,11 @@
             bettingTimer = setInterval(updateBettingTime, 1000); // 1초마다 업데이트
         }
 
-        // 선택된 경기의 정보 업데이트
-        function updateSelectedGameInfo(gameNumber) {
-            const date = currentDate.getFullYear().toString() +
-                        (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                        currentDate.getDate().toString().padStart(2, '0');
 
-            fetch(`/api/dailygames/${date}`)
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        const games = result.data.games || [];
-                        const selectedGameData = games.find(g => g.number === parseInt(gameNumber));
-                        
-                        const matchupDisplay = document.getElementById('gameMatchupDisplay');
-                        const statusDisplay = document.getElementById('gameStatusDisplay');
-                        
-                        if (selectedGameData) {
-                            // 경기 내용 표시
-                            matchupDisplay.innerHTML = `
-                                <div class="matchup-info">
-                                    <span class="team-name">${selectedGameData.homeTeam || '-'}</span>
-                                    <span class="vs">vs</span>
-                                    <span class="team-name">${selectedGameData.awayTeam || '-'}</span>
-                                </div>
-                            `;
-                            
-                            // 경기상황 표시
-                            let startTimeInMinutes = null;
-                            let endTimeInMinutes = null;
-                            
-                            if (selectedGameData.startTime) {
-                                const [startHour, startMinute] = selectedGameData.startTime.split(':').map(Number);
-                                startTimeInMinutes = startHour * 60 + startMinute;
-                            }
-                            
-                            if (selectedGameData.endTime) {
-                                const [endHour, endMinute] = selectedGameData.endTime.split(':').map(Number);
-                                endTimeInMinutes = endHour * 60 + endMinute;
-                            }
-                            
-                            const status = getGameStatus(startTimeInMinutes, endTimeInMinutes);
-                            statusDisplay.innerHTML = `
-                                <div class="status-info ${status.class}">
-                                    ${status.text}
-                                </div>
-                            `;
-                        } else {
-                            matchupDisplay.innerHTML = '<div class="no-data">경기 정보가 없습니다.</div>';
-                            statusDisplay.innerHTML = '<div class="no-data">경기상황 정보가 없습니다.</div>';
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('경기 정보 업데이트 오류:', error);
-                    const matchupDisplay = document.getElementById('gameMatchupDisplay');
-                    const statusDisplay = document.getElementById('gameStatusDisplay');
-                    matchupDisplay.innerHTML = '<div class="no-data">경기 정보를 불러올 수 없습니다.</div>';
-                    statusDisplay.innerHTML = '<div class="no-data">경기상황 정보를 불러올 수 없습니다.</div>';
-                });
-        }
 
         function displayGames(games) {
-            const gameBoxes = document.getElementById('gameBoxes');
-            gameBoxes.innerHTML = '';
+            const gameSelectionBoxes = document.getElementById('gameSelectionBoxes');
+            gameSelectionBoxes.innerHTML = '';
 
             for (let i = 1; i <= 5; i++) {
                 const game = games.find(g => g.number === i) || {
@@ -959,33 +972,27 @@
                 console.log(`${i}경기 상태:`, status);
 
                 const gameBox = document.createElement('div');
-                gameBox.className = 'game-box';
+                gameBox.className = 'game-selection-box';
                 gameBox.dataset.game = i;
                 gameBox.innerHTML = `
-                    <div class="game-number">${i} 경기</div>
+                    <div class="game-number">${i}경기</div>
                     <div class="game-matchup">
-                        <span class="team-name">${game.homeTeam || '-'}</span>
-                        <span class="vs">vs</span>
-                        <span class="team-name">${game.awayTeam || '-'}</span>
+                        ${game.homeTeam || '-'} vs ${game.awayTeam || '-'}
                     </div>
-                    <div class="game-status-display ${status.class}">${status.text}</div>
-                    <div class="game-selection-radio">
-                        <label class="selection-radio-label">
-                            <input type="radio" name="gameSelection" value="${i}">
-                        </label>
+                    <div class="game-status ${status.class}">${status.text}</div>
+                    <div class="game-selection-indicator">
+                        <span class="selection-text">선택</span>
                     </div>
                 `;
-                gameBoxes.appendChild(gameBox);
+                gameSelectionBoxes.appendChild(gameBox);
 
-                // 라디오버튼 이벤트 리스너 추가
-                const selectionRadio = gameBox.querySelector('input[type="radio"]');
-                selectionRadio.addEventListener('change', function() {
-                    const statusDisplay = gameBox.querySelector('.game-status-display');
-                    const statusText = statusDisplay.textContent.trim();
+                // 박스 클릭 이벤트 리스너 추가
+                gameBox.addEventListener('click', function() {
+                    const statusText = status.text;
                     
                     // 경기중일 때만 선택 가능
                     if (statusText === '경기중') {
-                        document.querySelectorAll('.game-box').forEach(box => {
+                        document.querySelectorAll('.game-selection-box').forEach(box => {
                             box.classList.remove('selected');
                         });
                         gameBox.classList.add('selected');
@@ -994,7 +1001,6 @@
                         console.log('선택된 경기:', selectedGame);
                     } else {
                         alert('경기중인 경기만 선택할 수 있습니다.');
-                        this.checked = false; // 선택 해제
                     }
                 });
             }
@@ -1050,11 +1056,11 @@
                 const result = await response.json();
                 if (result.success) {
                     const games = result.data.games || [];
-                    const gameBoxes = document.querySelectorAll('.game-box');
+                    const gameBoxes = document.querySelectorAll('.game-selection-box');
                     
                     gameBoxes.forEach(gameBox => {
                         const gameNumber = parseInt(gameBox.dataset.game);
-                        const statusDisplay = gameBox.querySelector('.game-status-display');
+                        const statusDisplay = gameBox.querySelector('.game-status');
                         
                         // 해당 경기 데이터 찾기
                         const game = games.find(g => g.number === gameNumber);
@@ -1077,7 +1083,7 @@
                             const status = getGameStatus(startTimeInMinutes, endTimeInMinutes);
                             
                             // 상태 표시 업데이트
-                            statusDisplay.className = `game-status-display ${status.class}`;
+                            statusDisplay.className = `game-status ${status.class}`;
                             statusDisplay.textContent = status.text;
                         }
                     });
@@ -1092,19 +1098,7 @@
             updateDate();
             fetchGames();
 
-            // 경기선택 라디오 버튼 이벤트 리스너
-            document.querySelectorAll('input[name="gameSelection"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.checked) {
-                        selectedGame = this.value;
-                        document.getElementById('startBetting').disabled = false;
-                        console.log('선택된 경기:', selectedGame);
-                        
-                        // 선택된 경기의 내용과 상황 업데이트
-                        updateSelectedGameInfo(selectedGame);
-                    }
-                });
-            });
+
 
             // 게임형태 라디오 버튼 이벤트 리스너
             document.querySelectorAll('input[name="gameType"]').forEach(radio => {
