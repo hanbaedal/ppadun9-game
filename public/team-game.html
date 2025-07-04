@@ -205,9 +205,9 @@
             color: #333;
         }
 
-        /* 컬럼 너비 조정 */
+        /* 컬럼 너비 조정 - 게임형태 섹션과 동일한 넓이 */
         th:nth-child(1), td:nth-child(1) { width: 100px; }  /* 경기번호 */
-        th:nth-child(2), td:nth-child(2) { width: 600px; } /* 매치업 */
+        th:nth-child(2), td:nth-child(2) { width: 300px; } /* 매치업 */
         th:nth-child(3), td:nth-child(3) { width: 100px; } /* 경기상황 */
         th:nth-child(4), td:nth-child(4) { width: 100px; } /* 선택버튼 */
 
@@ -435,6 +435,12 @@
             padding: 20px;
             background-color: #f8f9fa;
             border-radius: 12px;
+            display: block !important;
+            visibility: visible !important;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* 경기 선택 테이블 스타일 */
@@ -446,6 +452,8 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: table !important;
+            visibility: visible !important;
         }
 
         .game-selection-table th,
@@ -454,6 +462,8 @@
             text-align: center;
             border-bottom: 1px solid #e0e0e0;
             font-size: 14px;
+            display: table-cell !important;
+            visibility: visible !important;
         }
 
         .game-selection-table th {
@@ -780,17 +790,17 @@
 
 
 
-        <div class="game-selection-container">
-            <table class="game-selection-table" id="gameSelectionTable">
-                <thead>
-                    <tr>
-                        <th>경기번호</th>
-                        <th>매치업</th>
-                        <th>경기상황</th>
-                        <th>선택</th>
+        <div class="game-selection-container" style="display: block !important; visibility: visible !important;">
+            <table class="game-selection-table" id="gameSelectionTable" style="display: table !important; visibility: visible !important; width: 100%;">
+                <thead style="display: table-header-group !important;">
+                    <tr style="display: table-row !important;">
+                        <th style="display: table-cell !important;">경기번호</th>
+                        <th style="display: table-cell !important;">매치업</th>
+                        <th style="display: table-cell !important;">경기상황</th>
+                        <th style="display: table-cell !important;">선택</th>
                     </tr>
                 </thead>
-                <tbody id="gameSelectionTableBody">
+                <tbody id="gameSelectionTableBody" style="display: table-row-group !important;">
                     <!-- 경기 선택 행들이 동적으로 생성됩니다 -->
                 </tbody>
             </table>
@@ -967,6 +977,8 @@
 
         function displayGames(games) {
             const gameSelectionTableBody = document.getElementById('gameSelectionTableBody');
+            console.log('displayGames 호출됨, games:', games);
+            console.log('gameSelectionTableBody:', gameSelectionTableBody);
             gameSelectionTableBody.innerHTML = '';
 
             for (let i = 1; i <= 5; i++) {
@@ -1115,8 +1127,15 @@
         window.onload = function() {
             updateDate();
             
-            // 기본 경기 박스들 생성 (서버 데이터 없이도 표시)
-            displayGames([]);
+            // 기본 경기 데이터 생성 (서버 데이터 없이도 표시)
+            const defaultGames = [
+                { number: 1, homeTeam: '팀A', awayTeam: '팀B', startTime: null, endTime: null },
+                { number: 2, homeTeam: '팀C', awayTeam: '팀D', startTime: null, endTime: null },
+                { number: 3, homeTeam: '팀E', awayTeam: '팀F', startTime: null, endTime: null },
+                { number: 4, homeTeam: '팀G', awayTeam: '팀H', startTime: null, endTime: null },
+                { number: 5, homeTeam: '팀I', awayTeam: '팀J', startTime: null, endTime: null }
+            ];
+            displayGames(defaultGames);
             
             // 서버에서 데이터 가져오기
             fetchGames();
@@ -1137,7 +1156,6 @@
 
             // 1분마다 경기상황 업데이트
             setInterval(updateGameStatus, 60000);
-        };
 
             // 배팅시작 버튼 이벤트 리스너
             document.getElementById('startBetting').addEventListener('click', async function() {
