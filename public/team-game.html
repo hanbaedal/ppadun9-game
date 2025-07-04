@@ -541,28 +541,46 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            padding: 8px;
+            padding: 12px;
             background-color: #fff;
             border: 2px solid #007bff;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.2s;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
+            position: relative;
         }
 
         .selection-radio-label:hover {
             background-color: #f8f9fa;
             border-color: #0056b3;
+            transform: scale(1.05);
         }
 
         .selection-radio-label input[type="radio"] {
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             margin: 0;
         }
 
         .selection-radio-label input[type="radio"]:checked {
             accent-color: #007bff;
+        }
+
+        .selection-radio-label::after {
+            content: '선택';
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #007bff;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .selection-radio-label input[type="radio"]:checked::after {
+            content: '선택됨';
         }
 
         /* 반응형 디자인 */
