@@ -1026,12 +1026,14 @@
                 // 선택 버튼 클릭 이벤트 리스너 추가
                 const selectBtn = gameRow.querySelector('.select-game-btn');
                 selectBtn.addEventListener('click', function() {
+                    console.log('선택 버튼 클릭됨');
                     const statusElement = gameRow.querySelector('.game-status');
                     const statusText = statusElement.textContent;
                     console.log('클릭된 경기 상태:', statusText);
                     
                     // 경기중일 때만 선택 가능
                     if (statusText === '경기중') {
+                        console.log('경기중 상태 - 선택 처리 시작');
                         document.querySelectorAll('.game-row').forEach(row => {
                             row.classList.remove('selected');
                         });
@@ -1045,7 +1047,9 @@
                         selectedGame = gameRow.dataset.game;
                         document.getElementById('startBetting').disabled = false;
                         console.log('선택된 경기:', selectedGame);
+                        alert('경기가 선택되었습니다!');
                     } else {
+                        console.log('경기중이 아님 - 선택 불가');
                         alert('경기중인 경기만 선택할 수 있습니다. 현재 상태: ' + statusText);
                     }
                 });
