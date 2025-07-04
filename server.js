@@ -1235,6 +1235,346 @@ app.post('/api/system/update-employee-schema', async (req, res) => {
     }
 });
 
+// 배너광고 수익 현황 API
+app.get('/api/banner-ad-revenue', async (req, res) => {
+    try {
+        const { page = 1, limit = 20, dateRange = 'month', status = 'all', sortBy = 'date' } = req.query;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const collection = db.collection('charging');
+        
+        // 날짜 범위 설정
+        let dateFilter = {};
+        const now = new Date();
+        
+        switch (dateRange) {
+            case 'today':
+                dateFilter = {
+                    $or: [
+                        { viewDate: { $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()) } },
+                        { clickDate: { $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()) } }
+                    ]
+                };
+                break;
+            case 'week':
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                dateFilter = {
+                    $or: [
+                        { viewDate: { $gte: weekAgo } },
+                        { clickDate: { $gte: weekAgo } }
+                    ]
+                };
+                break;
+            case 'month':
+                dateFilter = {
+                    $or: [
+                        { 
+                            viewDate: {
+                                $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+                                $lt: new Date(now.getFullYear(), now.getMonth() + 1, 1)
+                            }
+                        },
+                        { 
+                            clickDate: {
+                                $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+                                $lt: new Date(now.getFullYear(), now.getMonth() + 1, 1)
+                            }
+                        }
+                    ]
+                };
+                break;
+            case 'quarter':
+                const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+                dateFilter = {
+                    $or: [
+                        { 
+                            viewDate: {
+                                $gte: quarterStart,
+                                $lt: new Date(quarterStart.getFullYear(), quarterStart.getMonth() + 3, 1)
+                            }
+                        },
+                        { 
+                            clickDate: {
+                                $gte: quarterStart,
+                                $lt: new Date(quarterStart.getFullYear(), quarterStart.getMonth() + 3, 1)
+                            }
+                        }
+                    ]
+                };
+                break;
+            case 'year':
+                dateFilter = {
+                    $or: [
+                        { 
+                            viewDate: {
+                                $gte: new Date(now.getFullYear(), 0, 1),
+                                $lt: new Date(now.getFullYear() + 1, 0, 1)
+                            }
+                        },
+                        { 
+                            clickDate: {
+                                $gte: new Date(now.getFullYear(), 0, 1),
+                                $lt: new Date(now.getFullYear() + 1, 0, 1)
+                            }
+                        }
+                    ]
+                };
+                break;
+        }
+        
+        // 상태 필터 설정
+        let statusFilter = {};
+        if (status === 'clicked') {
+            statusFilter = { clicked: true };
+        } else if (status === 'viewed') {
+            statusFilter = { clicked: false };
+        }
+        
+        // 정렬 설정
+        let sortOptions = {};
+        switch (sortBy) {
+            case 'date':
+                sortOptions = { viewDate: -1, clickDate: -1 };
+                break;
+            case 'points':
+                sortOptions = { amount: -1 };
+                break;
+            case 'clicks':
+                sortOptions = { clicked: -1 };
+                break;
+            default:
+                sortOptions = { viewDate: -1, clickDate: -1 };
+        }
+        
+        // 기본 필터 (배너광고만)
+        const baseFilter = { paymentMethod: 'banner_ad' };
+        
+        // 전체 필터 조합
+        const filter = {
+            ...baseFilter,
+            ...dateFilter,
+            ...statusFilter
+        };
+        
+        // 전체 레코드 수 계산
+        const totalRecords = await collection.countDocuments(filter);
+        
+        // 페이지네이션 적용
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const records = await collection.find(filter)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .toArray();
+        
+        // 통계 계산
+        const stats = await collection.aggregate([
+            { $match: filter },
+            {
+                $group: {
+                    _id: null,
+                    totalViews: { $sum: 1 },
+                    totalClicks: { $sum: { $cond: ['$clicked', 1, 0] } },
+                    totalPointsEarned: { $sum: '$amount' },
+                    uniqueMembers: { $addToSet: '$userId' }
+                }
+            }
+        ]).toArray();
+        
+        const statsData = stats[0] || {
+            totalViews: 0,
+            totalClicks: 0,
+            totalPointsEarned: 0,
+            uniqueMembers: []
+        };
+        
+        res.json({
+            success: true,
+            records: records,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalRecords / parseInt(limit)),
+                totalRecords: totalRecords,
+                hasNext: skip + records.length < totalRecords,
+                hasPrev: parseInt(page) > 1
+            },
+            stats: {
+                totalViews: statsData.totalViews,
+                totalClicks: statsData.totalClicks,
+                totalPointsEarned: statsData.totalPointsEarned,
+                uniqueMembers: statsData.uniqueMembers.length
+            }
+        });
+    } catch (error) {
+        console.error('배너광고 수익 현황 조회 오류:', error);
+        res.status(500).json({ 
+            success: false,
+            message: '배너광고 수익 현황을 불러오는데 실패했습니다.',
+            error: error.message 
+        });
+    }
+});
+
+// 동영상 광고 수익 현황 API
+app.get('/api/video-ad-revenue', async (req, res) => {
+    try {
+        const { page = 1, limit = 20, dateRange = 'month', status = 'all', sortBy = 'date' } = req.query;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false,
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const collection = db.collection('charging');
+        
+        // 날짜 범위 설정
+        let dateFilter = {};
+        const now = new Date();
+        
+        switch (dateRange) {
+            case 'today':
+                dateFilter = {
+                    watchDate: {
+                        $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+                        $lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+                    }
+                };
+                break;
+            case 'week':
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                dateFilter = { watchDate: { $gte: weekAgo } };
+                break;
+            case 'month':
+                dateFilter = {
+                    watchDate: {
+                        $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+                        $lt: new Date(now.getFullYear(), now.getMonth() + 1, 1)
+                    }
+                };
+                break;
+            case 'quarter':
+                const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+                dateFilter = {
+                    watchDate: {
+                        $gte: quarterStart,
+                        $lt: new Date(quarterStart.getFullYear(), quarterStart.getMonth() + 3, 1)
+                    }
+                };
+                break;
+            case 'year':
+                dateFilter = {
+                    watchDate: {
+                        $gte: new Date(now.getFullYear(), 0, 1),
+                        $lt: new Date(now.getFullYear() + 1, 0, 1)
+                    }
+                };
+                break;
+        }
+        
+        // 상태 필터 설정
+        let statusFilter = {};
+        if (status === 'completed') {
+            statusFilter = { completed: true };
+        } else if (status === 'incomplete') {
+            statusFilter = { completed: false };
+        }
+        
+        // 정렬 설정
+        let sortOptions = {};
+        switch (sortBy) {
+            case 'date':
+                sortOptions = { watchDate: -1 };
+                break;
+            case 'points':
+                sortOptions = { amount: -1 };
+                break;
+            case 'duration':
+                sortOptions = { videoDuration: -1 };
+                break;
+            default:
+                sortOptions = { watchDate: -1 };
+        }
+        
+        // 기본 필터 (동영상 광고만)
+        const baseFilter = { paymentMethod: 'video_ad' };
+        
+        // 전체 필터 조합
+        const filter = {
+            ...baseFilter,
+            ...dateFilter,
+            ...statusFilter
+        };
+        
+        // 전체 레코드 수 계산
+        const totalRecords = await collection.countDocuments(filter);
+        
+        // 페이지네이션 적용
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const records = await collection.find(filter)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .toArray();
+        
+        // 통계 계산
+        const stats = await collection.aggregate([
+            { $match: filter },
+            {
+                $group: {
+                    _id: null,
+                    totalRecords: { $sum: 1 },
+                    totalCompleted: { $sum: { $cond: ['$completed', 1, 0] } },
+                    totalPointsEarned: { $sum: '$amount' },
+                    avgWatchDuration: { $avg: '$videoDuration' },
+                    uniqueMembers: { $addToSet: '$userId' }
+                }
+            }
+        ]).toArray();
+        
+        const statsData = stats[0] || {
+            totalRecords: 0,
+            totalCompleted: 0,
+            totalPointsEarned: 0,
+            avgWatchDuration: 0,
+            uniqueMembers: []
+        };
+        
+        res.json({
+            success: true,
+            records: records,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalRecords / parseInt(limit)),
+                totalRecords: totalRecords,
+                hasNext: skip + records.length < totalRecords,
+                hasPrev: parseInt(page) > 1
+            },
+            stats: {
+                totalRecords: statsData.totalRecords,
+                totalCompleted: statsData.totalCompleted,
+                totalPointsEarned: statsData.totalPointsEarned,
+                avgWatchDuration: Math.round(statsData.avgWatchDuration || 0),
+                uniqueMembers: statsData.uniqueMembers.length
+            }
+        });
+    } catch (error) {
+        console.error('동영상 광고 수익 현황 조회 오류:', error);
+        res.status(500).json({ 
+            success: false,
+            message: '동영상 광고 수익 현황을 불러오는데 실패했습니다.',
+            error: error.message 
+        });
+    }
+});
+
 // 고객센터 페이지
 app.get('/customer-center.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'customer-center.html'));

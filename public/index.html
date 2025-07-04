@@ -773,6 +773,52 @@
                 alert('서버 오류가 발생했습니다.');
             }
         }
+        
+        // 브라우저 종료 시 로그아웃 처리 설정
+        function setupBrowserCloseLogout() {
+            // beforeunload 이벤트 (브라우저 탭/창 닫기)
+            window.addEventListener('beforeunload', function(e) {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    const user = JSON.parse(currentUser);
+                    // 로그아웃 API 호출
+                    navigator.sendBeacon('/api/employee/logout', JSON.stringify({
+                        userId: user.userId || user.id
+                    }));
+                }
+            });
+            
+            // pagehide 이벤트 (페이지 숨김, 모바일에서 더 안정적)
+            window.addEventListener('pagehide', function(e) {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    const user = JSON.parse(currentUser);
+                    // 로그아웃 API 호출
+                    navigator.sendBeacon('/api/employee/logout', JSON.stringify({
+                        userId: user.userId || user.id
+                    }));
+                }
+            });
+            
+            // visibilitychange 이벤트 (탭 전환 시)
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden') {
+                    const currentUser = localStorage.getItem('currentUser');
+                    if (currentUser) {
+                        const user = JSON.parse(currentUser);
+                        // 로그아웃 API 호출
+                        navigator.sendBeacon('/api/employee/logout', JSON.stringify({
+                            userId: user.userId || user.id
+                        }));
+                    }
+                }
+            });
+        }
+        
+        // 페이지 로드 시 브라우저 종료 로그아웃 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            setupBrowserCloseLogout();
+        });
     </script>
 </body>
 </html> 
