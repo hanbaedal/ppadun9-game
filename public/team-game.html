@@ -437,56 +437,57 @@
             border-radius: 12px;
         }
 
-        /* 경기 선택 박스 스타일 */
-        .game-selection-boxes {
-            display: flex;
-            flex-direction: row;
-            gap: 15px;
+        /* 경기 선택 테이블 스타일 */
+        .game-selection-table {
             width: 100%;
-            overflow-x: auto;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .game-selection-box {
+        .game-selection-table th,
+        .game-selection-table td {
             padding: 15px;
-            background-color: #fff;
-            border: 2px solid #dee2e6;
-            border-radius: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+
+        .game-selection-table th {
+            background-color: #f0f0f0;
+            font-weight: 600;
+            color: #333;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
+        .game-selection-table tbody tr {
             cursor: pointer;
             transition: all 0.3s ease;
-            text-align: center;
-            min-height: 150px;
-            width: calc(20% - 12px);
-            min-width: 180px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .game-selection-box:hover {
-            border-color: #28a745;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        .game-selection-table tbody tr:hover {
+            background-color: #f8f9fa;
         }
 
-        .game-selection-box.selected {
-            border-color: #28a745;
+        .game-selection-table tbody tr.selected {
             background-color: #e8f5e9;
-            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+            border-left: 4px solid #28a745;
         }
 
         .game-number {
-            font-size: 18px;
             font-weight: 600;
             color: #333;
-            margin-bottom: 10px;
+            font-size: 15px;
         }
 
         .game-matchup {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-            line-height: 1.4;
+            font-weight: 500;
+            color: #333;
         }
 
         .game-status {
@@ -512,23 +513,25 @@
             color: #721c24;
         }
 
-        .game-selection-indicator {
-            margin-top: 10px;
-            padding: 8px;
+        .select-game-btn {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
             border-radius: 6px;
-            background-color: #e9ecef;
-            color: #6c757d;
-            font-size: 12px;
+            cursor: pointer;
+            font-size: 14px;
             font-weight: 500;
+            transition: background-color 0.2s;
+            width: 100px;
         }
 
-        .game-selection-box.selected .game-selection-indicator {
+        .select-game-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .select-game-btn.selected {
             background-color: #28a745;
-            color: white;
-        }
-
-        .game-selection-box.selected .selection-text {
-            color: white;
         }
 
         .radio-label:has(input[type="radio"]:disabled) {
@@ -778,9 +781,19 @@
 
 
         <div class="game-selection-container">
-            <div class="game-selection-boxes" id="gameSelectionBoxes">
-                <!-- 경기 선택 박스들이 동적으로 생성됩니다 -->
-            </div>
+            <table class="game-selection-table" id="gameSelectionTable">
+                <thead>
+                    <tr>
+                        <th>경기번호</th>
+                        <th>매치업</th>
+                        <th>경기상황</th>
+                        <th>선택</th>
+                    </tr>
+                </thead>
+                <tbody id="gameSelectionTableBody">
+                    <!-- 경기 선택 행들이 동적으로 생성됩니다 -->
+                </tbody>
+            </table>
         </div>
 
         <div class="betting-section">
@@ -953,8 +966,8 @@
 
 
         function displayGames(games) {
-            const gameSelectionBoxes = document.getElementById('gameSelectionBoxes');
-            gameSelectionBoxes.innerHTML = '';
+            const gameSelectionTableBody = document.getElementById('gameSelectionTableBody');
+            gameSelectionTableBody.innerHTML = '';
 
             for (let i = 1; i <= 5; i++) {
                 const game = games.find(g => g.number === i) || {
@@ -971,32 +984,37 @@
                 const status = getGameStatus(game.startTime, game.endTime);
                 console.log(`${i}경기 상태:`, status);
 
-                const gameBox = document.createElement('div');
-                gameBox.className = 'game-selection-box';
-                gameBox.dataset.game = i;
-                gameBox.innerHTML = `
-                    <div class="game-number">${i}경기</div>
-                    <div class="game-matchup">
-                        ${game.homeTeam || '-'} vs ${game.awayTeam || '-'}
-                    </div>
-                    <div class="game-status ${status.class}">${status.text}</div>
-                    <div class="game-selection-indicator">
-                        <span class="selection-text">선택</span>
-                    </div>
+                const gameRow = document.createElement('tr');
+                gameRow.className = 'game-row';
+                gameRow.dataset.game = i;
+                gameRow.innerHTML = `
+                    <td class="game-number">${i}경기</td>
+                    <td class="game-matchup">${game.homeTeam || '-'} vs ${game.awayTeam || '-'}</td>
+                    <td class="game-status ${status.class}">${status.text}</td>
+                    <td>
+                        <button class="select-game-btn" data-game="${i}">선택</button>
+                    </td>
                 `;
-                gameSelectionBoxes.appendChild(gameBox);
+                gameSelectionTableBody.appendChild(gameRow);
 
-                // 박스 클릭 이벤트 리스너 추가
-                gameBox.addEventListener('click', function() {
+                // 선택 버튼 클릭 이벤트 리스너 추가
+                const selectBtn = gameRow.querySelector('.select-game-btn');
+                selectBtn.addEventListener('click', function() {
                     const statusText = status.text;
                     
                     // 경기중일 때만 선택 가능
                     if (statusText === '경기중') {
-                        document.querySelectorAll('.game-selection-box').forEach(box => {
-                            box.classList.remove('selected');
+                        document.querySelectorAll('.game-row').forEach(row => {
+                            row.classList.remove('selected');
                         });
-                        gameBox.classList.add('selected');
-                        selectedGame = gameBox.dataset.game;
+                        document.querySelectorAll('.select-game-btn').forEach(btn => {
+                            btn.classList.remove('selected');
+                            btn.textContent = '선택';
+                        });
+                        gameRow.classList.add('selected');
+                        selectBtn.classList.add('selected');
+                        selectBtn.textContent = '선택됨';
+                        selectedGame = gameRow.dataset.game;
                         document.getElementById('startBetting').disabled = false;
                         console.log('선택된 경기:', selectedGame);
                     } else {
@@ -1056,11 +1074,11 @@
                 const result = await response.json();
                 if (result.success) {
                     const games = result.data.games || [];
-                    const gameBoxes = document.querySelectorAll('.game-selection-box');
+                    const gameRows = document.querySelectorAll('.game-row');
                     
-                    gameBoxes.forEach(gameBox => {
-                        const gameNumber = parseInt(gameBox.dataset.game);
-                        const statusDisplay = gameBox.querySelector('.game-status');
+                    gameRows.forEach(gameRow => {
+                        const gameNumber = parseInt(gameRow.dataset.game);
+                        const statusDisplay = gameRow.querySelector('.game-status');
                         
                         // 해당 경기 데이터 찾기
                         const game = games.find(g => g.number === gameNumber);
@@ -1096,9 +1114,12 @@
         // 페이지 로드 시 실행
         window.onload = function() {
             updateDate();
+            
+            // 기본 경기 박스들 생성 (서버 데이터 없이도 표시)
+            displayGames([]);
+            
+            // 서버에서 데이터 가져오기
             fetchGames();
-
-
 
             // 게임형태 라디오 버튼 이벤트 리스너
             document.querySelectorAll('input[name="gameType"]').forEach(radio => {
