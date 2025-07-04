@@ -347,6 +347,44 @@ router.get('/login-stats', async (req, res) => {
             }
         ).sort({ lastLoginAt: -1 }).toArray();
         
+        // 총 로그인 시간 계산 함수
+        function calculateTotalLoginTime(member) {
+            try {
+                if (!member.lastLoginAt) {
+                    return '로그인 기록 없음';
+                }
+                
+                const loginTime = new Date(member.lastLoginAt);
+                let logoutTime = member.lastLogoutAt ? new Date(member.lastLogoutAt) : new Date();
+                
+                // 현재 로그인 중인 경우 현재 시간 사용
+                if (member.isLoggedIn) {
+                    logoutTime = new Date();
+                }
+                
+                const diffTime = Math.abs(logoutTime - loginTime);
+                const diffMinutes = Math.floor(diffTime / (1000 * 60));
+                const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffMinutes < 60) {
+                    return `${diffMinutes}분`;
+                } else if (diffHours < 24) {
+                    return `${diffHours}시간 ${diffMinutes % 60}분`;
+                } else {
+                    return `${diffDays}일 ${diffHours % 24}시간`;
+                }
+            } catch (error) {
+                console.error('총 로그인 시간 계산 오류:', error);
+                return '계산 오류';
+            }
+        }
+        
+        // 각 회원에 총 로그인 시간 추가
+        onlineMembersList.forEach(member => {
+            member.totalLoginTime = calculateTotalLoginTime(member);
+        });
+        
         res.json({
             success: true,
             stats: {

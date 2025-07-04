@@ -337,7 +337,7 @@
                                             <th>이름</th>
                                             <th>아이디</th>
                                             <th>로그인 시간</th>
-                                            <th>로그아웃 시간</th>
+                                            <th>총 로그인 시간</th>
                                             <th>상태</th>
                                             <th>관리</th>
                                         </tr>
@@ -473,7 +473,7 @@
                             <td>${member.name || '이름 없음'}</td>
                             <td>${member.userId || '아이디 없음'}</td>
                             <td>${formatDate(member.lastLoginAt)}</td>
-                            <td>${formatDate(member.lastLogoutAt)}</td>
+                            <td>${member.totalLoginTime || calculateTotalLoginTime(member)}</td>
                             <td><span class="${statusClass} font-weight-bold">${loginStatus}</span></td>
                             <td>${forceLogoutBtn}</td>
                         `;
@@ -489,6 +489,39 @@
             } catch (error) {
                 console.error('통계 표시 오류:', error);
                 showError('통계 데이터 표시 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+        
+        // 총 로그인 시간 계산
+        function calculateTotalLoginTime(member) {
+            try {
+                if (!member.lastLoginAt) {
+                    return '로그인 기록 없음';
+                }
+                
+                const loginTime = new Date(member.lastLoginAt);
+                let logoutTime = member.lastLogoutAt ? new Date(member.lastLogoutAt) : new Date();
+                
+                // 현재 로그인 중인 경우 현재 시간 사용
+                if (member.isLoggedIn) {
+                    logoutTime = new Date();
+                }
+                
+                const diffTime = Math.abs(logoutTime - loginTime);
+                const diffMinutes = Math.floor(diffTime / (1000 * 60));
+                const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffMinutes < 60) {
+                    return `${diffMinutes}분`;
+                } else if (diffHours < 24) {
+                    return `${diffHours}시간 ${diffMinutes % 60}분`;
+                } else {
+                    return `${diffDays}일 ${diffHours % 24}시간`;
+                }
+            } catch (error) {
+                console.error('총 로그인 시간 계산 오류:', error);
+                return '계산 오류';
             }
         }
         
