@@ -541,25 +541,27 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            padding: 12px;
+            padding: 15px;
             background-color: #fff;
-            border: 2px solid #007bff;
-            border-radius: 8px;
-            transition: all 0.2s;
-            width: 50px;
-            height: 50px;
+            border: 3px solid #007bff;
+            border-radius: 10px;
+            transition: all 0.3s;
+            width: 60px;
+            height: 60px;
             position: relative;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
         }
 
         .selection-radio-label:hover {
             background-color: #f8f9fa;
             border-color: #0056b3;
-            transform: scale(1.05);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
         }
 
         .selection-radio-label input[type="radio"] {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             margin: 0;
         }
 
@@ -568,19 +570,20 @@
         }
 
         .selection-radio-label::after {
-            content: '선택';
+            content: '경기선택';
             position: absolute;
-            bottom: -25px;
+            bottom: -30px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #007bff;
-            font-weight: 600;
+            font-weight: 700;
             white-space: nowrap;
         }
 
         .selection-radio-label input[type="radio"]:checked::after {
             content: '선택됨';
+            color: #28a745;
         }
 
         /* 반응형 디자인 */
@@ -645,6 +648,12 @@
         </div>
 
         <div class="betting-section">
+            <div class="betting-item">
+                <div class="betting-title">경기선택</div>
+                <div class="radio-group" id="gameSelection">
+                    <!-- 경기 선택 라디오버튼들이 동적으로 생성됩니다 -->
+                </div>
+            </div>
             <div class="betting-item">
                 <div class="betting-title">게임형태</div>
                 <div class="radio-group">
@@ -814,6 +823,10 @@
             const gameBoxes = document.getElementById('gameBoxes');
             gameBoxes.innerHTML = '';
 
+            // 경기선택 라디오버튼 생성
+            const gameSelection = document.getElementById('gameSelection');
+            gameSelection.innerHTML = '';
+
             for (let i = 1; i <= 5; i++) {
                 const game = games.find(g => g.number === i) || {
                     number: i,
@@ -828,6 +841,31 @@
 
                 const status = getGameStatus(game.startTime, game.endTime);
                 console.log(`${i}경기 상태:`, status);
+
+                // 경기선택 라디오버튼 생성
+                const gameSelectionLabel = document.createElement('label');
+                gameSelectionLabel.className = 'radio-label';
+                gameSelectionLabel.innerHTML = `
+                    <input type="radio" name="gameSelection" value="${i}">
+                    <span>${i}경기</span>
+                `;
+                gameSelection.appendChild(gameSelectionLabel);
+
+                // 경기선택 라디오버튼 이벤트 리스너
+                const gameSelectionRadio = gameSelectionLabel.querySelector('input[type="radio"]');
+                gameSelectionRadio.addEventListener('change', function() {
+                    const statusText = status.text;
+                    
+                    // 경기중일 때만 선택 가능
+                    if (statusText === '경기중') {
+                        selectedGame = i;
+                        document.getElementById('startBetting').disabled = false;
+                        console.log('선택된 경기:', selectedGame);
+                    } else {
+                        alert('경기중인 경기만 선택할 수 있습니다.');
+                        this.checked = false; // 선택 해제
+                    }
+                });
 
                 const gameBox = document.createElement('div');
                 gameBox.className = 'game-box';
