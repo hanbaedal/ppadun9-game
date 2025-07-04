@@ -383,6 +383,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadCurrentUser();
             loadDashboardStats();
+            
+            // 30초마다 온라인 회원 수 자동 새로고침
+            setInterval(() => {
+                console.log('온라인 회원 수 자동 업데이트');
+                updateOnlineMembersCount();
+            }, 30000); // 30초
         });
         
         // 현재 로그인한 사용자 정보 가져오기
@@ -436,23 +442,110 @@
                     if (data.success) {
                         const totalMembers = data.members ? data.members.length : 0;
                         document.getElementById('totalMembers').textContent = totalMembers;
-                        // 온라인 회원 수는 임시로 0으로 설정 (실제 구현 필요)
-                        document.getElementById('onlineMembers').textContent = '0';
                     }
                 }
                 
-                // 포인트 충전 통계 (임시)
-                document.getElementById('totalCharging').textContent = '0';
+                // 온라인 회원 수 로드
+                try {
+                    const onlineResponse = await fetch('/api/members/login-stats', {
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (onlineResponse.ok) {
+                        const onlineData = await onlineResponse.json();
+                        
+                        if (onlineData.success) {
+                            document.getElementById('onlineMembers').textContent = onlineData.stats.onlineMembers || 0;
+                        } else {
+                            document.getElementById('onlineMembers').textContent = '0';
+                        }
+                    } else {
+                        document.getElementById('onlineMembers').textContent = '0';
+                    }
+                } catch (onlineError) {
+                    console.error('온라인 회원 수 로드 오류:', onlineError);
+                    document.getElementById('onlineMembers').textContent = '0';
+                }
                 
-                // 친구 초대 통계 (임시)
-                document.getElementById('totalInvites').textContent = '0';
+                // 포인트 충전 통계 로드
+                try {
+                    const chargingResponse = await fetch('/api/point-charging');
+                    if (chargingResponse.ok) {
+                        const chargingData = await chargingResponse.json();
+                        if (chargingData.success) {
+                            const totalCharging = chargingData.chargings ? chargingData.chargings.length : 0;
+                            document.getElementById('totalCharging').textContent = totalCharging.toLocaleString();
+                        } else {
+                            document.getElementById('totalCharging').textContent = '0';
+                        }
+                    } else {
+                        document.getElementById('totalCharging').textContent = '0';
+                    }
+                } catch (chargingError) {
+                    console.error('포인트 충전 통계 로드 오류:', chargingError);
+                    document.getElementById('totalCharging').textContent = '0';
+                }
+                
+                // 친구 초대 통계 로드
+                try {
+                    const inviteResponse = await fetch('/api/friend-invite', {
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (inviteResponse.ok) {
+                        const inviteData = await inviteResponse.json();
+                        
+                        if (inviteData.success) {
+                            const totalInvites = inviteData.totalInvitedPeople || 0;
+                            document.getElementById('totalInvites').textContent = totalInvites.toLocaleString();
+                        } else {
+                            document.getElementById('totalInvites').textContent = '0';
+                        }
+                    } else {
+                        document.getElementById('totalInvites').textContent = '0';
+                    }
+                } catch (inviteError) {
+                    console.error('친구초대 통계 로드 오류:', inviteError);
+                    document.getElementById('totalInvites').textContent = '0';
+                }
                 
             } catch (error) {
                 console.error('대시보드 통계 로드 오류:', error);
                 document.getElementById('totalMembers').textContent = '0';
                 document.getElementById('onlineMembers').textContent = '0';
                 document.getElementById('totalCharging').textContent = '0';
-                document.getElementById('totalInvites').textContent = '0';
+                // totalInvites는 개별적으로 처리되므로 여기서는 설정하지 않음
+            }
+        }
+        
+        // 온라인 회원 수만 업데이트하는 함수
+        async function updateOnlineMembersCount() {
+            try {
+                const onlineResponse = await fetch('/api/members/login-stats', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (onlineResponse.ok) {
+                    const onlineData = await onlineResponse.json();
+                    
+                    if (onlineData.success) {
+                        document.getElementById('onlineMembers').textContent = onlineData.stats.onlineMembers || 0;
+                    }
+                }
+            } catch (error) {
+                console.error('온라인 회원 수 업데이트 오류:', error);
             }
         }
         

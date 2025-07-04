@@ -324,12 +324,31 @@
                     allChargings = data.chargings;
                     currentPage = 1;
                     displayChargings();
+                    
+                    // 동영상 광고 시청 통계도 함께 로드
+                    loadVideoAdStats();
                 } else {
                     showAlert('포인트 충전 내역을 불러오는데 실패했습니다.', 'danger');
                 }
             } catch (error) {
                 console.error('포인트 충전 리스트 로드 오류:', error);
                 showAlert('서버 오류가 발생했습니다.', 'danger');
+            }
+        }
+        
+        // 동영상 광고 시청 통계 로드
+        async function loadVideoAdStats() {
+            try {
+                const response = await fetch('/api/video-watch');
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('동영상 광고 시청 통계:', data.stats);
+                    // 통계 정보를 화면에 표시하거나 저장
+                    window.videoAdStats = data.stats;
+                }
+            } catch (error) {
+                console.error('동영상 광고 시청 통계 로드 오류:', error);
             }
         }
 
