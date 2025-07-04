@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 분석 - 회원관리 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analysis-card {
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        .analysis-card:hover {
+            transform: translateY(-2px);
+        }
+        .analysis-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .user-segment {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .segment-high { background-color: #d4edda; border-left: 4px solid #28a745; }
+        .segment-medium { background-color: #fff3cd; border-left: 4px solid #ffc107; }
+        .segment-low { background-color: #f8d7da; border-left: 4px solid #dc3545; }
+        body {
+            padding-top: 80px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid px-3">
+            <div class="d-flex align-items-center">
+                <a href="/game-admin.html" class="navbar-brand">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    게임관리자
+                </a>
+            </div>
+            <div class="navbar-nav mx-auto">
+                <span class="navbar-text" id="userName">
+                    <i class="fas fa-user-circle me-2"></i> 사용자
+                </span>
+            </div>
+            <div class="navbar-nav">
+                <div class="nav-item" id="logoutItem" style="display: none;">
+                    <a class="nav-link" href="#" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> 로그아웃
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="mb-4">사용자 분석</h2>
+        
+        <!-- 분석 요약 카드 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card analysis-card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users analysis-icon"></i>
+                        <h4 id="totalUsers">0</h4>
+                        <p class="card-text">총 사용자</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card analysis-card bg-success text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line analysis-icon"></i>
+                        <h4 id="avgBetPerUser">₩0</h4>
+                        <p class="card-text">사용자당 평균 배팅</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card analysis-card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock analysis-icon"></i>
+                        <h4 id="avgSessionTime">0분</h4>
+                        <p class="card-text">평균 세션 시간</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card analysis-card bg-info text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-repeat analysis-icon"></i>
+                        <h4 id="retentionRate">0%</h4>
+                        <p class="card-text">재방문율</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 차트 영역 -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>사용자 세그먼트 분포</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="userSegmentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>배팅 패턴 분석</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="bettingPatternChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사용자 세그먼트 상세 -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>고액 배팅 사용자</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="highValueUsers">
+                            <!-- 동적으로 로드됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>중간 배팅 사용자</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="mediumValueUsers">
+                            <!-- 동적으로 로드됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>저액 배팅 사용자</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="lowValueUsers">
+                            <!-- 동적으로 로드됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상세 분석 테이블 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>사용자 상세 분석</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>사용자 ID</th>
+                                        <th>총 배팅</th>
+                                        <th>평균 배팅</th>
+                                        <th>최대 배팅</th>
+                                        <th>방문 횟수</th>
+                                        <th>마지막 방문</th>
+                                        <th>세그먼트</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userAnalysisTableBody">
+                                    <!-- 데이터가 동적으로 로드됩니다 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 차트 초기화
+        let userSegmentChart, bettingPatternChart;
+
+        // 사용자 세그먼트 차트
+        function initUserSegmentChart() {
+            const ctx = document.getElementById('userSegmentChart').getContext('2d');
+            userSegmentChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['고액 배팅', '중간 배팅', '저액 배팅'],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.8)',
+                            'rgba(255, 193, 7, 0.8)',
+                            'rgba(220, 53, 69, 0.8)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 배팅 패턴 차트
+        function initBettingPatternChart() {
+            const ctx = document.getElementById('bettingPatternChart').getContext('2d');
+            bettingPatternChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['00-02', '02-04', '04-06', '06-08', '08-10', '10-12', 
+                            '12-14', '14-16', '16-18', '18-20', '20-22', '22-24'],
+                    datasets: [{
+                        label: '평균 배팅 금액',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // 분석 데이터 로드
+        async function loadUserAnalysis() {
+            try {
+                const response = await fetch('/api/user/analysis');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateSummaryCards(data.summary);
+                    updateCharts(data.charts);
+                    updateUserSegments(data.segments);
+                    updateAnalysisTable(data.details);
+                }
+            } catch (error) {
+                console.error('사용자 분석 데이터 로드 오류:', error);
+                // 테스트용 더미 데이터
+                loadDummyData();
+            }
+        }
+
+        // 요약 카드 업데이트
+        function updateSummaryCards(summary) {
+            document.getElementById('totalUsers').textContent = summary.totalUsers.toLocaleString();
+            document.getElementById('avgBetPerUser').textContent = '₩' + summary.avgBetPerUser.toLocaleString();
+            document.getElementById('avgSessionTime').textContent = summary.avgSessionTime + '분';
+            document.getElementById('retentionRate').textContent = summary.retentionRate + '%';
+        }
+
+        // 차트 업데이트
+        function updateCharts(charts) {
+            // 사용자 세그먼트 차트 업데이트
+            userSegmentChart.data.datasets[0].data = charts.segments;
+            userSegmentChart.update();
+
+            // 배팅 패턴 차트 업데이트
+            bettingPatternChart.data.datasets[0].data = charts.pattern;
+            bettingPatternChart.update();
+        }
+
+        // 사용자 세그먼트 업데이트
+        function updateUserSegments(segments) {
+            const highValueDiv = document.getElementById('highValueUsers');
+            const mediumValueDiv = document.getElementById('mediumValueUsers');
+            const lowValueDiv = document.getElementById('lowValueUsers');
+            
+            highValueDiv.innerHTML = '';
+            mediumValueDiv.innerHTML = '';
+            lowValueDiv.innerHTML = '';
+            
+            segments.high.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user-segment segment-high';
+                div.innerHTML = `
+                    <strong>${user.username}</strong><br>
+                    총 배팅: ₩${user.totalBet.toLocaleString()}<br>
+                    방문 횟수: ${user.visitCount}회
+                `;
+                highValueDiv.appendChild(div);
+            });
+            
+            segments.medium.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user-segment segment-medium';
+                div.innerHTML = `
+                    <strong>${user.username}</strong><br>
+                    총 배팅: ₩${user.totalBet.toLocaleString()}<br>
+                    방문 횟수: ${user.visitCount}회
+                `;
+                mediumValueDiv.appendChild(div);
+            });
+            
+            segments.low.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user-segment segment-low';
+                div.innerHTML = `
+                    <strong>${user.username}</strong><br>
+                    총 배팅: ₩${user.totalBet.toLocaleString()}<br>
+                    방문 횟수: ${user.visitCount}회
+                `;
+                lowValueDiv.appendChild(div);
+            });
+        }
+
+        // 분석 테이블 업데이트
+        function updateAnalysisTable(details) {
+            const tbody = document.getElementById('userAnalysisTableBody');
+            tbody.innerHTML = '';
+            
+            details.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.userId}</td>
+                    <td>${user.totalBets}</td>
+                    <td>₩${user.avgBet.toLocaleString()}</td>
+                    <td>₩${user.maxBet.toLocaleString()}</td>
+                    <td>${user.visitCount}</td>
+                    <td>${user.lastVisit}</td>
+                    <td><span class="badge bg-${user.segment === 'high' ? 'success' : user.segment === 'medium' ? 'warning' : 'danger'}">${user.segment}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 테스트용 더미 데이터
+        function loadDummyData() {
+            const summary = {
+                totalUsers: 1250,
+                avgBetPerUser: 15000,
+                avgSessionTime: 45,
+                retentionRate: 68
+            };
+            
+            const charts = {
+                segments: [150, 450, 650],
+                pattern: [8000, 6000, 4000, 3000, 5000, 12000, 15000, 18000, 16000, 14000, 11000, 9000]
+            };
+            
+            const segments = {
+                high: [
+                    { username: 'user001', totalBet: 500000, visitCount: 25 },
+                    { username: 'user002', totalBet: 450000, visitCount: 22 },
+                    { username: 'user003', totalBet: 400000, visitCount: 20 }
+                ],
+                medium: [
+                    { username: 'user004', totalBet: 150000, visitCount: 15 },
+                    { username: 'user005', totalBet: 120000, visitCount: 12 },
+                    { username: 'user006', totalBet: 100000, visitCount: 10 }
+                ],
+                low: [
+                    { username: 'user007', totalBet: 30000, visitCount: 5 },
+                    { username: 'user008', totalBet: 25000, visitCount: 4 },
+                    { username: 'user009', totalBet: 20000, visitCount: 3 }
+                ]
+            };
+            
+            const details = [
+                { userId: 'user001', totalBets: 50, avgBet: 10000, maxBet: 50000, visitCount: 25, lastVisit: '2024-01-15', segment: 'high' },
+                { userId: 'user002', totalBets: 45, avgBet: 10000, maxBet: 45000, visitCount: 22, lastVisit: '2024-01-14', segment: 'high' },
+                { userId: 'user003', totalBets: 40, avgBet: 10000, maxBet: 40000, visitCount: 20, lastVisit: '2024-01-13', segment: 'high' }
+            ];
+            
+            updateSummaryCards(summary);
+            updateCharts(charts);
+            updateUserSegments(segments);
+            updateAnalysisTable(details);
+        }
+
+        // 사용자 정보 로드
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/employee/current-user');
+                const data = await response.json();
+                
+                const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
+                const logoutBtn = document.getElementById('logoutBtn');
+                
+                if (data.success && data.user) {
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle me-2"></i> ${data.user.name || data.user.username}`;
+                    logoutItem.style.display = 'block';
+                    
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (confirm('로그아웃하시겠습니까?')) {
+                            logout();
+                        }
+                    });
+                } else {
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle me-2"></i> 사용자`;
+                    logoutItem.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('사용자 정보 로드 오류:', error);
+            }
+        }
+
+        // 로그아웃 처리
+        async function logout() {
+            try {
+                const response = await fetch('/api/employee/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('로그아웃되었습니다.');
+                    window.location.href = '/';
+                } else {
+                    alert('로그아웃 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
+            }
+        }
+
+        // 페이지 로드 시 실행
+        window.onload = function() {
+            loadCurrentUser();
+            initUserSegmentChart();
+            initBettingPatternChart();
+            loadUserAnalysis();
+        };
+    </script>
+</body>
+</html> 

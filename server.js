@@ -1538,6 +1538,94 @@ app.post('/api/betting/stop', async (req, res) => {
     }
 });
 
+// 게임에서 배팅 제출 API
+app.post('/api/betting/submit', async (req, res) => {
+    try {
+        const { userId, prediction, points, date, gameNumber } = req.body;
+        
+        if (!userId || !prediction || !points || !date || !gameNumber) {
+            return res.status(400).json({ 
+                success: false, 
+                message: '필수 정보가 누락되었습니다.' 
+            });
+        }
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const bettingCollection = db.collection('betting-sessions');
+        const userCollection = db.collection('game-member');
+        
+        // 활성 배팅 세션 확인
+        const activeSession = await bettingCollection.findOne({
+            date: date,
+            gameNumber: parseInt(gameNumber),
+            status: 'active'
+        });
+        
+        if (!activeSession) {
+            return res.status(400).json({
+                success: false,
+                message: '현재 배팅이 활성화되지 않았습니다.'
+            });
+        }
+        
+        // 사용자 정보 확인
+        const user = await userCollection.findOne({ userId: userId });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: '사용자를 찾을 수 없습니다.'
+            });
+        }
+        
+        // 포인트 확인
+        if (user.points < points) {
+            return res.status(400).json({
+                success: false,
+                message: '포인트가 부족합니다.'
+            });
+        }
+        
+        // 배팅 기록 추가
+        const bettingRecord = {
+            date: date,
+            gameNumber: parseInt(gameNumber),
+            gameType: activeSession.gameType,
+            inning: activeSession.inning,
+            prediction: prediction,
+            points: parseInt(points),
+            betAt: new Date()
+        };
+        
+        await userCollection.updateOne(
+            { userId: userId },
+            { 
+                $push: { bettingHistory: bettingRecord },
+                $inc: { points: -parseInt(points) }
+            }
+        );
+        
+        console.log(`배팅 제출: ${userId} - ${prediction} ${points}포인트`);
+        
+        res.json({
+            success: true,
+            message: '배팅이 완료되었습니다.',
+            remainingPoints: user.points - parseInt(points)
+        });
+    } catch (error) {
+        console.error('배팅 제출 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '배팅 제출 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 // 배팅 상태 확인 API (게임 클라이언트용)
 app.get('/api/betting/status', async (req, res) => {
     try {

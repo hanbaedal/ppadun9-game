@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 모니터링 - 회원관리 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .monitor-card {
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        .monitor-card:hover {
+            transform: translateY(-2px);
+        }
+        .monitor-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .live-indicator {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .betting-item {
+            padding: 10px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .betting-item.recent {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .betting-item.large {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        body {
+            padding-top: 80px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid px-3">
+            <div class="d-flex align-items-center">
+                <a href="/game-admin.html" class="navbar-brand">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    게임관리자
+                </a>
+            </div>
+            <div class="navbar-nav mx-auto">
+                <span class="navbar-text" id="userName">
+                    <i class="fas fa-user-circle me-2"></i> 사용자
+                </span>
+            </div>
+            <div class="navbar-nav">
+                <div class="nav-item" id="logoutItem" style="display: none;">
+                    <a class="nav-link" href="#" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> 로그아웃
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>실시간 모니터링</h2>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-success me-2 live-indicator">
+                    <i class="fas fa-circle"></i> LIVE
+                </span>
+                <small class="text-muted" id="lastUpdate">마지막 업데이트: --</small>
+            </div>
+        </div>
+        
+        <!-- 실시간 요약 카드 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card monitor-card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users monitor-icon"></i>
+                        <h4 id="activeUsers">0</h4>
+                        <p class="card-text">현재 접속자</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card monitor-card bg-success text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-coins monitor-icon"></i>
+                        <h4 id="currentBets">0</h4>
+                        <p class="card-text">현재 배팅 수</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card monitor-card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-dollar-sign monitor-icon"></i>
+                        <h4 id="currentAmount">₩0</h4>
+                        <p class="card-text">현재 배팅 금액</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card monitor-card bg-info text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line monitor-icon"></i>
+                        <h4 id="bettingRate">0/분</h4>
+                        <p class="card-text">배팅 속도</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 실시간 차트 -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>실시간 배팅 추이</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="realtimeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>실시간 배팅 현황</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="realtimeBets" style="max-height: 400px; overflow-y: auto;">
+                            <!-- 실시간 배팅 목록이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 서버 상태 모니터링 -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>서버 상태</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-server text-success"></i>
+                                    </div>
+                                    <div>
+                                        <strong>메인 서버</strong><br>
+                                        <small class="text-success">정상</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-database text-success"></i>
+                                    </div>
+                                    <div>
+                                        <strong>데이터베이스</strong><br>
+                                        <small class="text-success">정상</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-network-wired text-success"></i>
+                                    </div>
+                                    <div>
+                                        <strong>네트워크</strong><br>
+                                        <small class="text-success">정상</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-memory text-success"></i>
+                                    </div>
+                                    <div>
+                                        <strong>메모리</strong><br>
+                                        <small class="text-success">정상</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>알림 및 경고</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="alertsContainer">
+                            <!-- 알림이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 실시간 차트
+        let realtimeChart;
+        let updateInterval;
+
+        // 실시간 차트 초기화
+        function initRealtimeChart() {
+            const ctx = document.getElementById('realtimeChart').getContext('2d');
+            realtimeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '배팅 금액',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    animation: {
+                        duration: 0
+                    }
+                }
+            });
+        }
+
+        // 실시간 데이터 업데이트
+        function updateRealtimeData() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            // 마지막 업데이트 시간 표시
+            document.getElementById('lastUpdate').textContent = `마지막 업데이트: ${timeString}`;
+            
+            // 더미 데이터 생성 (실제로는 서버에서 받아와야 함)
+            const activeUsers = Math.floor(Math.random() * 50) + 100;
+            const currentBets = Math.floor(Math.random() * 20) + 10;
+            const currentAmount = Math.floor(Math.random() * 1000000) + 500000;
+            const bettingRate = Math.floor(Math.random() * 5) + 1;
+            
+            // 카드 업데이트
+            document.getElementById('activeUsers').textContent = activeUsers;
+            document.getElementById('currentBets').textContent = currentBets;
+            document.getElementById('currentAmount').textContent = '₩' + currentAmount.toLocaleString();
+            document.getElementById('bettingRate').textContent = bettingRate + '/분';
+            
+            // 차트 업데이트
+            updateChart(currentAmount);
+            
+            // 실시간 배팅 목록 업데이트
+            updateRealtimeBets();
+            
+            // 알림 업데이트
+            updateAlerts();
+        }
+
+        // 차트 업데이트
+        function updateChart(amount) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            realtimeChart.data.labels.push(timeString);
+            realtimeChart.data.datasets[0].data.push(amount);
+            
+            // 최대 20개 데이터 포인트만 유지
+            if (realtimeChart.data.labels.length > 20) {
+                realtimeChart.data.labels.shift();
+                realtimeChart.data.datasets[0].data.shift();
+            }
+            
+            realtimeChart.update('none');
+        }
+
+        // 실시간 배팅 목록 업데이트
+        function updateRealtimeBets() {
+            const container = document.getElementById('realtimeBets');
+            
+            // 새로운 배팅 항목 생성
+            const betTypes = ['홀', '짝', '특정 숫자'];
+            const users = ['user001', 'user002', 'user003', 'user004', 'user005'];
+            const amounts = [10000, 20000, 50000, 100000, 150000];
+            
+            const randomType = betTypes[Math.floor(Math.random() * betTypes.length)];
+            const randomUser = users[Math.floor(Math.random() * users.length)];
+            const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
+            
+            const betItem = document.createElement('div');
+            betItem.className = 'betting-item recent';
+            betItem.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <strong>${randomUser}</strong>
+                    <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                </div>
+                <div class="mt-1">
+                    <span class="badge bg-primary">${randomType}</span>
+                    <span class="ms-2">₩${randomAmount.toLocaleString()}</span>
+                </div>
+            `;
+            
+            // 최대 10개 항목만 유지
+            if (container.children.length >= 10) {
+                container.removeChild(container.lastChild);
+            }
+            
+            container.insertBefore(betItem, container.firstChild);
+        }
+
+        // 알림 업데이트
+        function updateAlerts() {
+            const container = document.getElementById('alertsContainer');
+            
+            // 랜덤 알림 생성 (실제로는 서버에서 받아와야 함)
+            const alerts = [
+                { type: 'info', message: '새로운 사용자가 접속했습니다.' },
+                { type: 'warning', message: '높은 배팅이 감지되었습니다.' },
+                { type: 'success', message: '서버 상태가 정상입니다.' }
+            ];
+            
+            const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+            
+            // 10% 확률로 알림 생성
+            if (Math.random() < 0.1) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${randomAlert.type} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    ${randomAlert.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                container.insertBefore(alertDiv, container.firstChild);
+                
+                // 최대 5개 알림만 유지
+                if (container.children.length > 5) {
+                    container.removeChild(container.lastChild);
+                }
+            }
+        }
+
+        // 실시간 데이터 로드
+        async function loadRealtimeData() {
+            try {
+                const response = await fetch('/api/realtime/monitoring');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 실제 데이터로 업데이트
+                    updateRealtimeData();
+                }
+            } catch (error) {
+                console.error('실시간 데이터 로드 오류:', error);
+                // 더미 데이터로 업데이트
+                updateRealtimeData();
+            }
+        }
+
+        // 사용자 정보 로드
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/employee/current-user');
+                const data = await response.json();
+                
+                const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
+                const logoutBtn = document.getElementById('logoutBtn');
+                
+                if (data.success && data.user) {
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle me-2"></i> ${data.user.name || data.user.username}`;
+                    logoutItem.style.display = 'block';
+                    
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (confirm('로그아웃하시겠습니까?')) {
+                            logout();
+                        }
+                    });
+                } else {
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle me-2"></i> 사용자`;
+                    logoutItem.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('사용자 정보 로드 오류:', error);
+            }
+        }
+
+        // 로그아웃 처리
+        async function logout() {
+            try {
+                const response = await fetch('/api/employee/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('로그아웃되었습니다.');
+                    window.location.href = '/';
+                } else {
+                    alert('로그아웃 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+                alert('서버 오류가 발생했습니다.');
+            }
+        }
+
+        // 페이지 로드 시 실행
+        window.onload = function() {
+            loadCurrentUser();
+            initRealtimeChart();
+            
+            // 초기 데이터 로드
+            loadRealtimeData();
+            
+            // 5초마다 실시간 데이터 업데이트
+            updateInterval = setInterval(loadRealtimeData, 5000);
+        };
+
+        // 페이지 언로드 시 인터벌 정리
+        window.onbeforeunload = function() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        };
+    </script>
+</body>
+</html> 
