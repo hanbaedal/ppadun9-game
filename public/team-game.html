@@ -397,6 +397,38 @@
             font-weight: 500;
         }
 
+        /* 경기 내용과 경기상황 스타일 */
+        .game-matchup-display, .game-status-display {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            margin-top: 10px;
+            flex-grow: 1;
+        }
+
+        .matchup-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .status-info {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+
         .radio-label:has(input[type="radio"]:disabled) {
             opacity: 0.6;
             cursor: not-allowed;
@@ -641,11 +673,7 @@
 
         <div class="date-display" id="dateDisplay" style="text-align: center; margin: 20px 0; font-size: 16px; color: #333;"></div>
 
-        <h2 class="section-title">경기선택</h2>
 
-        <div class="game-boxes" id="gameBoxes">
-            <!-- 경기 박스들이 동적으로 생성됩니다 -->
-        </div>
 
         <div class="betting-section">
             <div class="betting-item">
@@ -671,6 +699,18 @@
                         <input type="radio" name="gameSelection" value="5">
                         <span>5경기</span>
                     </label>
+                </div>
+            </div>
+            <div class="betting-item">
+                <div class="betting-title">경기 내용</div>
+                <div class="game-matchup-display" id="gameMatchupDisplay">
+                    <!-- 경기 매치업이 동적으로 표시됩니다 -->
+                </div>
+            </div>
+            <div class="betting-item">
+                <div class="betting-title">경기상황</div>
+                <div class="game-status-display" id="gameStatusDisplay">
+                    <!-- 경기상황이 동적으로 표시됩니다 -->
                 </div>
             </div>
             <div class="betting-item">
@@ -838,6 +878,67 @@
             bettingTimer = setInterval(updateBettingTime, 1000); // 1초마다 업데이트
         }
 
+        // 선택된 경기의 정보 업데이트
+        function updateSelectedGameInfo(gameNumber) {
+            const date = currentDate.getFullYear().toString() +
+                        (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                        currentDate.getDate().toString().padStart(2, '0');
+
+            fetch(`/api/dailygames/${date}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        const games = result.data.games || [];
+                        const selectedGameData = games.find(g => g.number === parseInt(gameNumber));
+                        
+                        const matchupDisplay = document.getElementById('gameMatchupDisplay');
+                        const statusDisplay = document.getElementById('gameStatusDisplay');
+                        
+                        if (selectedGameData) {
+                            // 경기 내용 표시
+                            matchupDisplay.innerHTML = `
+                                <div class="matchup-info">
+                                    <span class="team-name">${selectedGameData.homeTeam || '-'}</span>
+                                    <span class="vs">vs</span>
+                                    <span class="team-name">${selectedGameData.awayTeam || '-'}</span>
+                                </div>
+                            `;
+                            
+                            // 경기상황 표시
+                            let startTimeInMinutes = null;
+                            let endTimeInMinutes = null;
+                            
+                            if (selectedGameData.startTime) {
+                                const [startHour, startMinute] = selectedGameData.startTime.split(':').map(Number);
+                                startTimeInMinutes = startHour * 60 + startMinute;
+                            }
+                            
+                            if (selectedGameData.endTime) {
+                                const [endHour, endMinute] = selectedGameData.endTime.split(':').map(Number);
+                                endTimeInMinutes = endHour * 60 + endMinute;
+                            }
+                            
+                            const status = getGameStatus(startTimeInMinutes, endTimeInMinutes);
+                            statusDisplay.innerHTML = `
+                                <div class="status-info ${status.class}">
+                                    ${status.text}
+                                </div>
+                            `;
+                        } else {
+                            matchupDisplay.innerHTML = '<div class="no-data">경기 정보가 없습니다.</div>';
+                            statusDisplay.innerHTML = '<div class="no-data">경기상황 정보가 없습니다.</div>';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('경기 정보 업데이트 오류:', error);
+                    const matchupDisplay = document.getElementById('gameMatchupDisplay');
+                    const statusDisplay = document.getElementById('gameStatusDisplay');
+                    matchupDisplay.innerHTML = '<div class="no-data">경기 정보를 불러올 수 없습니다.</div>';
+                    statusDisplay.innerHTML = '<div class="no-data">경기상황 정보를 불러올 수 없습니다.</div>';
+                });
+        }
+
         function displayGames(games) {
             const gameBoxes = document.getElementById('gameBoxes');
             gameBoxes.innerHTML = '';
@@ -998,6 +1099,9 @@
                         selectedGame = this.value;
                         document.getElementById('startBetting').disabled = false;
                         console.log('선택된 경기:', selectedGame);
+                        
+                        // 선택된 경기의 내용과 상황 업데이트
+                        updateSelectedGameInfo(selectedGame);
                     }
                 });
             });
