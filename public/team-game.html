@@ -13,7 +13,7 @@
             font-family: 'Noto Sans KR', sans-serif;
             margin: 0;
             padding: 20px;
-            padding-top: 100px;
+            padding-top: 80px;
             background-color: #f5f5f5;
         }
 
@@ -758,7 +758,7 @@
 </head>
 <body>
     <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="height: 60px; background-color: #f8f9fa;">
             <div class="container-fluid px-3">
                 <!-- 왼쪽: 홈 아이콘과 제목 -->
                 <div class="d-flex align-items-center">
@@ -918,15 +918,29 @@
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
-        function getGameStatus(startTimeInMinutes, endTimeInMinutes) {
+        function getGameStatus(startTime, endTime) {
             const now = new Date();
             const currentTime = now.getHours() * 60 + now.getMinutes(); // 현재 시간을 분으로 변환
             console.log('현재 시간(분):', currentTime);
 
             // 시작시간이 없는 경우
-            if (!startTimeInMinutes) {
+            if (!startTime) {
                 console.log('시작시간 없음');
                 return { text: '경기전', class: 'status-before' };
+            }
+
+            // 시작시간을 분으로 변환
+            let startTimeInMinutes = null;
+            if (startTime) {
+                const [startHour, startMinute] = startTime.split(':').map(Number);
+                startTimeInMinutes = startHour * 60 + startMinute;
+            }
+
+            // 종료시간을 분으로 변환
+            let endTimeInMinutes = null;
+            if (endTime) {
+                const [endHour, endMinute] = endTime.split(':').map(Number);
+                endTimeInMinutes = endHour * 60 + endMinute;
             }
 
             console.log('시작시간(분):', startTimeInMinutes);
@@ -1012,7 +1026,9 @@
                 // 선택 버튼 클릭 이벤트 리스너 추가
                 const selectBtn = gameRow.querySelector('.select-game-btn');
                 selectBtn.addEventListener('click', function() {
-                    const statusText = status.text;
+                    const statusElement = gameRow.querySelector('.game-status');
+                    const statusText = statusElement.textContent;
+                    console.log('클릭된 경기 상태:', statusText);
                     
                     // 경기중일 때만 선택 가능
                     if (statusText === '경기중') {
@@ -1030,7 +1046,7 @@
                         document.getElementById('startBetting').disabled = false;
                         console.log('선택된 경기:', selectedGame);
                     } else {
-                        alert('경기중인 경기만 선택할 수 있습니다.');
+                        alert('경기중인 경기만 선택할 수 있습니다. 현재 상태: ' + statusText);
                     }
                 });
             }
@@ -1129,11 +1145,11 @@
             
             // 기본 경기 데이터 생성 (서버 데이터 없이도 표시)
             const defaultGames = [
-                { number: 1, homeTeam: '팀A', awayTeam: '팀B', startTime: null, endTime: null },
-                { number: 2, homeTeam: '팀C', awayTeam: '팀D', startTime: null, endTime: null },
-                { number: 3, homeTeam: '팀E', awayTeam: '팀F', startTime: null, endTime: null },
-                { number: 4, homeTeam: '팀G', awayTeam: '팀H', startTime: null, endTime: null },
-                { number: 5, homeTeam: '팀I', awayTeam: '팀J', startTime: null, endTime: null }
+                { number: 1, homeTeam: '팀A', awayTeam: '팀B', startTime: '14:00', endTime: '16:00' },
+                { number: 2, homeTeam: '팀C', awayTeam: '팀D', startTime: '15:00', endTime: '17:00' },
+                { number: 3, homeTeam: '팀E', awayTeam: '팀F', startTime: '16:00', endTime: '18:00' },
+                { number: 4, homeTeam: '팀G', awayTeam: '팀H', startTime: '17:00', endTime: '19:00' },
+                { number: 5, homeTeam: '팀I', awayTeam: '팀J', startTime: '18:00', endTime: '20:00' }
             ];
             displayGames(defaultGames);
             
