@@ -825,54 +825,20 @@
                     </label>
                 </div>
             </div>
-            <div class="betting-item">
-                <div class="betting-title">이닝선택</div>
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="1">
-                        <span>1이닝</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="2">
-                        <span>2이닝</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="3">
-                        <span>3이닝</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="4">
-                        <span>4이닝</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="5">
-                        <span>5이닝</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="6">
-                        <span>6이닝</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="7">
-                        <span>7이닝</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="8">
-                        <span>8이닝</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="inning" value="9">
-                        <span>9이닝</span>
-                    </label>
-                </div>
-            </div>
-            <div class="betting-item center">
+
+            <div class="betting-item center" id="bettingControlSection">
                 <button id="startBetting" class="betting-btn">배팅시작</button>
                 <div class="betting-time" id="bettingTime"></div>
             </div>
-            <div class="betting-item center">
+            <div class="betting-item center" id="stopBettingSection">
                 <button id="stopBetting" class="betting-btn" style="background-color: #dc3545;" disabled>배팅중지</button>
                 <div class="betting-time" id="stopTime"></div>
+            </div>
+            <div class="betting-item center" id="newBettingSection" style="display: none;">
+                <button id="newStartBetting" class="betting-btn">새로운 배팅 시작</button>
+                <div class="betting-time" id="newBettingTime"></div>
+            </div>
+                <div class="betting-time" id="newBettingTime"></div>
             </div>
             <div class="betting-item">
                 <div class="betting-title">예측결과</div>
@@ -902,6 +868,7 @@
                         <span>아웃</span>
                     </label>
                 </div>
+                <button id="predictionSubmitBtn" class="betting-btn" style="margin-left: 20px; background-color: #007bff;" disabled>예측 결과</button>
             </div>
         </div>
     </div>
@@ -1251,8 +1218,10 @@
                             document.querySelectorAll('input[name="prediction"]').forEach(radio => {
                                 radio.disabled = false;
                             });
+                            // 예측결과 버튼 활성화
+                            document.getElementById('predictionSubmitBtn').disabled = false;
                             console.log('배팅 중지:', selectedGame);
-                            alert('배팅이 중지되었습니다. 게임에서 배팅이 불가능합니다.');
+                            alert('배팅이 중지되었습니다. 예측결과를 선택하고 제출해주세요.');
                         } else {
                             alert('배팅 중지 실패: ' + result.message);
                         }
@@ -1304,13 +1273,32 @@
                 });
             });
 
-            // 이닝 선택 라디오 버튼 이벤트 리스너
-            document.querySelectorAll('input[name="inning"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.checked) {
-                        console.log('선택된 이닝:', this.value);
-                    }
-                });
+            // 예측결과 버튼 이벤트 리스너
+            document.getElementById('predictionSubmitBtn').addEventListener('click', function() {
+                const selectedPrediction = document.querySelector('input[name="prediction"]:checked');
+                if (selectedPrediction) {
+                    console.log('선택된 예측:', selectedPrediction.value);
+                    
+                    // 기존 배팅시작/배팅중지 버튼 숨기기
+                    document.getElementById('startBetting').disabled = true;
+                    document.getElementById('stopBetting').disabled = true;
+                    
+                    // 새로운 배팅 시작 섹션 표시
+                    document.getElementById('newBettingSection').style.display = 'flex';
+                    
+                    // 예측결과 버튼 비활성화
+                    this.disabled = true;
+                    
+                    alert('예측결과가 제출되었습니다. 새로운 배팅을 시작할 수 있습니다.');
+                } else {
+                    alert('예측결과를 선택해주세요.');
+                }
+            });
+
+            // 새로운 배팅 시작 버튼 이벤트 리스너
+            document.getElementById('newStartBetting').addEventListener('click', function() {
+                console.log('새로운 배팅 시작');
+                alert('새로운 배팅이 시작되었습니다.');
             });
         };
     </script>
