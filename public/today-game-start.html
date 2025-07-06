@@ -248,12 +248,12 @@
             color: #666;
         }
 
-        /* 컬럼 너비 조정 - 6열 구조 (종료시간은 숨김) */
+        /* 컬럼 너비 조정 - 6열 구조 */
         th:nth-child(1), td:nth-child(1) { width: 100px; }  /* 경기번호 */
-        th:nth-child(2), td:nth-child(2) { width: 250px; } /* 원정팀 */
-        th:nth-child(3), td:nth-child(3) { width: 250px; } /* 홈팀 */
-        th:nth-child(4), td:nth-child(4) { width: 250px; } /* 시작시간 */
-        th:nth-child(5), td:nth-child(5) { display: none; } /* 종료시간 (숨김) */
+        th:nth-child(2), td:nth-child(2) { width: 200px; } /* 원정팀 */
+        th:nth-child(3), td:nth-child(3) { width: 200px; } /* 홈팀 */
+        th:nth-child(4), td:nth-child(4) { width: 150px; } /* 시작시간 */
+        th:nth-child(5), td:nth-child(5) { width: 150px; } /* 종료시간 */
         th:nth-child(6), td:nth-child(6) { width: 200px; } /* 경기상황 */
 
         /* 호버 효과 */
@@ -291,7 +291,7 @@
                     <th>원정팀</th>
                     <th>홈팀</th>
                     <th>시작시간</th>
-                    <th style="display: none;">종료시간</th>
+                    <th>종료시간</th>
                     <th>경기상황</th>
                 </tr>
             </thead>
@@ -345,6 +345,10 @@
                 const isStartPM = startHour && parseInt(startHour) >= 12;
                 const displayStartHour = startHour ? (parseInt(startHour) % 12 || 12) : '';
 
+                const [endHour, endMinute] = game.endTime ? game.endTime.split(':') : ['', ''];
+                const isEndPM = endHour && parseInt(endHour) >= 12;
+                const displayEndHour = endHour ? (parseInt(endHour) % 12 || 12) : '';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="game-number game-number-${i}">${i} 경기</td>
@@ -371,10 +375,10 @@
                             </select>
                         </div>
                     </td>
-                    <td style="display: none;">
+                    <td>
                         <div class="time-input-group">
-                            <button class="am-pm-btn ${isStartPM ? 'active' : ''}" id="endAmPm${i}" 
-                                    onclick="toggleAmPm(${i}, false)">${isStartPM ? 'PM' : 'AM'}</button>
+                            <button class="am-pm-btn ${isEndPM ? 'active' : ''}" id="endAmPm${i}" 
+                                    onclick="toggleAmPm(${i}, false)">${isEndPM ? 'PM' : 'AM'}</button>
                             <select id="endHour${i}">
                                 ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
                             </select>
@@ -401,6 +405,12 @@
                 if (startHour && startMinute) {
                     document.getElementById(`startHour${i}`).value = displayStartHour;
                     document.getElementById(`startMinute${i}`).value = startMinute;
+                }
+
+                // 종료시간 설정
+                if (endHour && endMinute) {
+                    document.getElementById(`endHour${i}`).value = displayEndHour;
+                    document.getElementById(`endMinute${i}`).value = endMinute;
                 }
 
                 // 상태 설정
@@ -464,12 +474,24 @@
                         startTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
                     }
 
+                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
+                    const endHour = document.getElementById(`endHour${i}`).value;
+                    const endMinute = document.getElementById(`endMinute${i}`).value;
+                    
+                    let endTime = null;
+                    if (endHour && endMinute) {
+                        let hour = parseInt(endHour);
+                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
+                        if (endAmPm === 'AM' && hour === 12) hour = 0;
+                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
+                    }
+
                     const gameData = {
                         number: i,
                         homeTeam: document.getElementById(`homeTeam${i}`).value || null,
                         awayTeam: document.getElementById(`awayTeam${i}`).value || null,
                         startTime: startTime,
-                        endTime: null, // 종료시간은 today-game-end.html에서만 설정
+                        endTime: endTime,
                         noGame: document.getElementById(`noGame${i}`).value
                     };
 
@@ -527,6 +549,18 @@
                         gameTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
                     }
 
+                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
+                    const endHour = document.getElementById(`endHour${i}`).value;
+                    const endMinute = document.getElementById(`endMinute${i}`).value;
+                    
+                    let endTime = null;
+                    if (endHour && endMinute) {
+                        let hour = parseInt(endHour);
+                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
+                        if (endAmPm === 'AM' && hour === 12) hour = 0;
+                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
+                    }
+
                     const homeTeam = document.getElementById(`homeTeam${i}`).value;
                     const awayTeam = document.getElementById(`awayTeam${i}`).value;
                     const noGame = document.getElementById(`noGame${i}`).value;
@@ -552,17 +586,20 @@
                         }
 
                         const dailyGameData = {
-                            gameNumber: i,
+                            number: i,
                             homeTeam: homeTeam,
                             awayTeam: awayTeam,
-                            gameDate: new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString(),
-                            gameTime: gameTime,
-                            status: status,
+                            date: new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().split('T')[0].replace(/-/g, ''),
+                            startTime: gameTime,
+                            endTime: endTime,
+                            noGame: status === 'cancelled' ? '우천취소' : '정상게임',
                             isActive: true
                         };
 
                         // daily-games 컬렉션에 저장
                         try {
+                            console.log(`경기 ${i} daily-games 저장 시작:`, dailyGameData);
+                            
                             // daily-games 컬렉션에 새 레코드 생성 (기존 데이터 확인 없이)
                             const dailyGameResponse = await fetch('/api/daily-games', {
                                 method: 'POST',
@@ -572,16 +609,21 @@
                                 body: JSON.stringify(dailyGameData)
                             });
 
+                            console.log(`경기 ${i} daily-games 응답 상태:`, dailyGameResponse.status);
+
                             if (!dailyGameResponse.ok) {
                                 console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResponse.status);
                             } else {
                                 const dailyGameResult = await dailyGameResponse.json();
+                                console.log(`경기 ${i} daily-games 응답 결과:`, dailyGameResult);
                                 if (!dailyGameResult.success) {
                                     console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResult.message);
+                                } else {
+                                    console.log(`경기 ${i} daily-games 저장 성공`);
                                 }
                             }
                         } catch (error) {
-                            console.warn(`경기 ${i} daily-games 저장 오류:`, error);
+                            console.error(`경기 ${i} daily-games 저장 오류:`, error);
                         }
                     }
                 }

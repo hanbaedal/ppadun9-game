@@ -204,6 +204,7 @@ app.use(session(sessionConfig));
 // API 라우트 설정
 const gameRoutes = require('./routes/game');
 const dailygamesRoutes = require('./routes/dailygames');
+const dailyGamesRoutes = require('./routes/daily-games');
 const { router: membersRoutes, setDatabase: setMembersDatabase } = require('./routes/members');
 const noticesRoutes = require('./routes/notices');
 const gameProgressRoutes = require('./routes/game-progress');
@@ -219,6 +220,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API 라우트 사용 (순서 중요!)
 app.use('/api/game', gameRoutes);
 app.use('/api/dailygames', dailygamesRoutes);
+app.use('/api/daily-games', dailyGamesRoutes);
 app.use('/api/notices', noticesRoutes);
 app.use('/api/game-progress', gameProgressRoutes);
 app.use('/api/point-charging', pointChargingRoutes);
