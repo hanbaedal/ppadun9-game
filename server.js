@@ -1424,9 +1424,9 @@ app.get('/api/banner-ad-revenue', async (req, res) => {
 // 배팅 시작 API
 app.post('/api/betting/start', async (req, res) => {
     try {
-        const { gameNumber, gameType, inning, date } = req.body;
+        const { gameNumber, gameType, date } = req.body;
         
-        if (!gameNumber || !gameType || !inning || !date) {
+        if (!gameNumber || !gameType || !date) {
             return res.status(400).json({ 
                 success: false, 
                 message: '필수 정보가 누락되었습니다.' 
@@ -1462,7 +1462,6 @@ app.post('/api/betting/start', async (req, res) => {
             date: date,
             gameNumber: parseInt(gameNumber),
             gameType: gameType,
-            inning: parseInt(inning),
             status: 'active',
             startedAt: new Date(),
             createdAt: new Date()
@@ -1470,7 +1469,7 @@ app.post('/api/betting/start', async (req, res) => {
         
         await collection.insertOne(bettingSession);
         
-        console.log(`배팅 시작: ${date} ${gameNumber}경기 ${gameType} ${inning}이닝`);
+        console.log(`배팅 시작: ${date} ${gameNumber}경기 ${gameType}`);
         
         res.json({
             success: true,
@@ -1596,7 +1595,6 @@ app.post('/api/betting/submit', async (req, res) => {
             date: date,
             gameNumber: parseInt(gameNumber),
             gameType: activeSession.gameType,
-            inning: activeSession.inning,
             prediction: prediction,
             points: parseInt(points),
             betAt: new Date()
@@ -1711,7 +1709,6 @@ app.post('/api/betting/result', async (req, res) => {
                     date: date,
                     gameNumber: parseInt(gameNumber),
                     gameType: bettingSession.gameType,
-                    inning: bettingSession.inning,
                     prediction: prediction
                 }
             }
@@ -1724,7 +1721,6 @@ app.post('/api/betting/result', async (req, res) => {
                     date: date,
                     gameNumber: parseInt(gameNumber),
                     gameType: bettingSession.gameType,
-                    inning: bettingSession.inning,
                     prediction: { $ne: prediction }
                 }
             }
@@ -1738,8 +1734,7 @@ app.post('/api/betting/result', async (req, res) => {
             const bettingRecord = loser.bettingHistory.find(bet => 
                 bet.date === date && 
                 bet.gameNumber === parseInt(gameNumber) &&
-                bet.gameType === bettingSession.gameType &&
-                bet.inning === bettingSession.inning
+                bet.gameType === bettingSession.gameType
             );
             
             if (bettingRecord) {
