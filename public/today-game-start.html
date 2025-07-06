@@ -449,7 +449,83 @@
                             (today.getMonth() + 1).toString().padStart(2, '0') +
                             today.getDate().toString().padStart(2, '0');
 
-                // 각 경기를 개별적으로 저장
+                // 기존 dailygames 형식으로 데이터 준비
+                const games = [];
+                for (let i = 1; i <= 5; i++) {
+                    const startAmPm = document.getElementById(`startAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
+                    const startHour = document.getElementById(`startHour${i}`).value;
+                    const startMinute = document.getElementById(`startMinute${i}`).value;
+                    
+                    let startTime = null;
+                    if (startHour && startMinute) {
+                        let hour = parseInt(startHour);
+                        if (startAmPm === 'PM' && hour !== 12) hour += 12;
+                        if (startAmPm === 'AM' && hour === 12) hour = 0;
+                        startTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
+                    }
+
+                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
+                    const endHour = document.getElementById(`endHour${i}`).value;
+                    const endMinute = document.getElementById(`endMinute${i}`).value;
+
+                    let endTime = null;
+                    if (endHour && endMinute) {
+                        let hour = parseInt(endHour);
+                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
+                        if (endAmPm === 'AM' && hour === 12) hour = 0;
+                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
+                    }
+
+                    const gameData = {
+                        number: i,
+                        homeTeam: document.getElementById(`homeTeam${i}`).value || null,
+                        awayTeam: document.getElementById(`awayTeam${i}`).value || null,
+                        startTime: startTime,
+                        endTime: endTime,
+                        noGame: document.getElementById(`noGame${i}`).value
+                    };
+
+                    games.push(gameData);
+                }
+
+                // 1. 기존 dailygames API 호출 (기존 기능 유지)
+                const existingResponse = await fetch(`/api/dailygames/${date}`);
+                const existingData = await existingResponse.json();
+
+                let response;
+                if (existingData.success) {
+                    // 기존 데이터가 있으면 업데이트
+                    response = await fetch(`/api/dailygames/${date}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ games })
+                    });
+                } else {
+                    // 새 데이터 생성
+                    response = await fetch('/api/dailygames', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            date: date,
+                            games: games
+                        })
+                    });
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message || '저장 중 오류가 발생했습니다.');
+                }
+
+                // 2. 새로운 daily-games API 호출 (추가 기능)
                 for (let i = 1; i <= 5; i++) {
                     const startAmPm = document.getElementById(`startAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
                     const startHour = document.getElementById(`startHour${i}`).value;
@@ -487,7 +563,7 @@
                             }
                         }
 
-                        const gameData = {
+                        const dailyGameData = {
                             gameNumber: i,
                             homeTeam: homeTeam,
                             awayTeam: awayTeam,
@@ -497,43 +573,43 @@
                             isActive: true
                         };
 
-                        // 기존 데이터 확인 및 업데이트
+                        // daily-games 컬렉션에 저장
                         try {
+                            // 기존 데이터 확인
                             const existingResponse = await fetch(`/api/daily-games/${date}/${i}`);
                             const existingData = await existingResponse.json();
 
-                            let response;
+                            let dailyGameResponse;
                             if (existingData.success && existingData.data) {
-                                // 기존 데이터가 있으면 업데이트
-                                response = await fetch(`/api/daily-games/${date}/${i}`, {
+                                // 기존 데이터가 있으면 UPDATE
+                                dailyGameResponse = await fetch(`/api/daily-games/${date}/${i}`, {
                                     method: 'PUT',
                                     headers: {
                                         'Content-Type': 'application/json',
                                     },
-                                    body: JSON.stringify(gameData)
+                                    body: JSON.stringify(dailyGameData)
                                 });
                             } else {
                                 // 새 데이터 생성
-                                response = await fetch('/api/daily-games', {
+                                dailyGameResponse = await fetch('/api/daily-games', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
                                     },
-                                    body: JSON.stringify(gameData)
+                                    body: JSON.stringify(dailyGameData)
                                 });
                             }
 
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-
-                            const result = await response.json();
-                            if (!result.success) {
-                                throw new Error(result.message || '저장 중 오류가 발생했습니다.');
+                            if (!dailyGameResponse.ok) {
+                                console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResponse.status);
+                            } else {
+                                const dailyGameResult = await dailyGameResponse.json();
+                                if (!dailyGameResult.success) {
+                                    console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResult.message);
+                                }
                             }
                         } catch (error) {
-                            console.error(`경기 ${i} 저장 오류:`, error);
-                            throw error;
+                            console.warn(`경기 ${i} daily-games 저장 오류:`, error);
                         }
                     }
                 }
@@ -555,34 +631,19 @@
                             (today.getMonth() + 1).toString().padStart(2, '0') +
                             today.getDate().toString().padStart(2, '0');
 
-                const games = [];
+                const response = await fetch(`/api/dailygames/${date}`);
                 
-                // 각 경기별로 데이터 불러오기
-                for (let i = 1; i <= 5; i++) {
-                    try {
-                        const response = await fetch(`/api/daily-games/${date}/${i}`);
-                        
-                        if (response.ok) {
-                            const result = await response.json();
-                            if (result.success && result.data) {
-                                // 새로운 형식을 기존 형식으로 변환
-                                const game = {
-                                    number: result.data.gameNumber,
-                                    homeTeam: result.data.homeTeam,
-                                    awayTeam: result.data.awayTeam,
-                                    startTime: result.data.gameTime,
-                                    endTime: null, // 종료시간은 별도 설정
-                                    noGame: result.data.status === 'cancelled' ? '우천취소' : '정상게임'
-                                };
-                                games.push(game);
-                            }
-                        }
-                    } catch (error) {
-                        console.error(`경기 ${i} 데이터 불러오기 오류:`, error);
-                    }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                displayGames(games);
+                const result = await response.json();
+                if (result.success) {
+                    displayGames(result.data.games || []);
+                } else {
+                    // 데이터가 없으면 빈 테이블 표시
+                    displayGames([]);
+                }
             } catch (error) {
                 console.error('Error:', error);
                 // 오류 발생 시 빈 테이블 표시
