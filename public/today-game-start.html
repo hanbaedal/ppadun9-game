@@ -281,7 +281,13 @@
                 </a>
                 <h1 class="page-title">KBO 야구경기 시작시간 설정</h1>
             </div>
-            <div class="date-display" id="dateDisplay"></div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="selectedDate" style="font-weight: 500; color: #333;">날짜 선택:</label>
+                    <input type="date" id="selectedDate" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                </div>
+                <div class="date-display" id="dateDisplay"></div>
+            </div>
         </div>
 
         <table class="game-table">
@@ -454,10 +460,19 @@
         // 게임 데이터 저장
         async function saveGames() {
             try {
-                const today = new Date();
-                const date = today.getFullYear().toString() +
-                            (today.getMonth() + 1).toString().padStart(2, '0') +
-                            today.getDate().toString().padStart(2, '0');
+                // 사용자가 선택한 날짜 사용 (입력 필드가 있다면)
+                let date;
+                const dateInput = document.getElementById('selectedDate');
+                if (dateInput && dateInput.value) {
+                    // YYYY-MM-DD 형식을 YYYYMMDD 형식으로 변환
+                    date = dateInput.value.replace(/-/g, '');
+                } else {
+                    // 기본값으로 오늘 날짜 사용
+                    const today = new Date();
+                    date = today.getFullYear().toString() +
+                           (today.getMonth() + 1).toString().padStart(2, '0') +
+                           today.getDate().toString().padStart(2, '0');
+                }
 
                 // 기존 dailygames 형식으로 데이터 준비
                 const games = [];
@@ -535,7 +550,7 @@
                     throw new Error(result.message || '저장 중 오류가 발생했습니다.');
                 }
 
-                // 2. 새로운 daily-games API 호출 (추가 기능)
+                // 2. daily-games 컬렉션 업데이트 (기존 데이터 확인 후 업데이트)
                 for (let i = 1; i <= 5; i++) {
                     const startAmPm = document.getElementById(`startAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
                     const startHour = document.getElementById(`startHour${i}`).value;
@@ -589,25 +604,41 @@
                             number: i,
                             homeTeam: homeTeam,
                             awayTeam: awayTeam,
-                            date: new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().split('T')[0].replace(/-/g, ''),
+                            date: date, // 사용자가 선택한 날짜 사용
                             startTime: gameTime,
                             endTime: endTime,
                             noGame: status === 'cancelled' ? '우천취소' : '정상게임',
                             isActive: true
                         };
 
-                        // daily-games 컬렉션에 저장
+                        // daily-games 컬렉션에서 기존 데이터 확인 후 업데이트
                         try {
                             console.log(`경기 ${i} daily-games 저장 시작:`, dailyGameData);
                             
-                            // daily-games 컬렉션에 새 레코드 생성 (기존 데이터 확인 없이)
-                            const dailyGameResponse = await fetch('/api/daily-games', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(dailyGameData)
-                            });
+                            // 기존 데이터 확인
+                            const checkResponse = await fetch(`/api/daily-games/${date}/${i}`);
+                            const checkResult = await checkResponse.json();
+                            
+                            let dailyGameResponse;
+                            if (checkResult.success) {
+                                // 기존 데이터가 있으면 업데이트
+                                dailyGameResponse = await fetch(`/api/daily-games/${date}/${i}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify(dailyGameData)
+                                });
+                            } else {
+                                // 기존 데이터가 없으면 새로 생성
+                                dailyGameResponse = await fetch('/api/daily-games', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify(dailyGameData)
+                                });
+                            }
 
                             console.log(`경기 ${i} daily-games 응답 상태:`, dailyGameResponse.status);
 
@@ -640,10 +671,18 @@
         // 게임 데이터 불러오기
         async function fetchGames() {
             try {
-                const today = new Date();
-                const date = today.getFullYear().toString() +
-                            (today.getMonth() + 1).toString().padStart(2, '0') +
-                            today.getDate().toString().padStart(2, '0');
+                // 선택된 날짜 사용
+                let date;
+                const dateInput = document.getElementById('selectedDate');
+                if (dateInput && dateInput.value) {
+                    date = dateInput.value.replace(/-/g, '');
+                } else {
+                    // 기본값으로 오늘 날짜 사용
+                    const today = new Date();
+                    date = today.getFullYear().toString() +
+                           (today.getMonth() + 1).toString().padStart(2, '0') +
+                           today.getDate().toString().padStart(2, '0');
+                }
 
                 const response = await fetch(`/api/dailygames/${date}`);
                 
@@ -677,6 +716,21 @@
         // 페이지 로드 시 실행
         window.onload = function() {
             updateDate();
+            
+            // 날짜 선택 필드에 이벤트 리스너 추가
+            const dateInput = document.getElementById('selectedDate');
+            if (dateInput) {
+                // 오늘 날짜를 기본값으로 설정
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                dateInput.value = todayStr;
+                
+                // 날짜 변경 시 데이터 불러오기
+                dateInput.addEventListener('change', function() {
+                    fetchGames();
+                });
+            }
+            
             fetchGames();
         };
     </script>
