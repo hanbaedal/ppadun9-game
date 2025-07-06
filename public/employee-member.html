@@ -266,8 +266,8 @@
             border-radius: 12px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
+            }
+            
         .notice-text {
             color: #ff4444;
             font-size: 0.9rem;
@@ -276,8 +276,8 @@
             line-height: 1.3;
             animation: blink 2s infinite;
             text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
-        }
-        
+            }
+            
         @keyframes blink {
             0%, 50% {
                 opacity: 1;
@@ -450,7 +450,7 @@
                 window.history.replaceState({}, document.title, newUrl);
             }
         }
-        
+
         // 현재 로그인한 사용자 정보 가져오기
         async function loadCurrentUser() {
             try {
@@ -475,8 +475,8 @@
                     if (response.ok) {
                         const data = await response.json();
                         console.log('API 사용자 정보 응답:', data);
-                        
-                        if (data.success && data.user) {
+                
+                if (data.success && data.user) {
                             console.log('API에서 로그인된 사용자 발견:', data.user);
                             // 로컬 스토리지에 저장
                             localStorage.setItem('currentUser', JSON.stringify(data.user));
@@ -583,7 +583,7 @@
                 logout();
             }
         }
-        
+
         // 로그아웃 처리
         async function logout() {
             try {

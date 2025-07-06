@@ -247,33 +247,33 @@
                 
                 // 먼저 API 호출로 실제 로그인 상태 확인
                 try {
-                    const response = await fetch('/api/employee/current-user', {
-                        credentials: 'include',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                const response = await fetch('/api/employee/current-user', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
                     console.log('API 응답 상태:', response.status);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
+                
+                if (response.ok) {
+                    const data = await response.json();
                         console.log('API 사용자 정보 응답:', data);
-                        
-                        if (data.success && data.user) {
+                    
+                    if (data.success && data.user) {
                             console.log('API에서 로그인된 사용자 발견:', data.user);
                             // 로컬 스토리지에 저장
                             localStorage.setItem('currentUser', JSON.stringify(data.user));
                             
                             // UI 업데이트
-                            userNameElement.textContent = data.user.name || data.user.username;
-                            logoutItem.style.display = 'block';
-                            
+                        userNameElement.textContent = data.user.name || data.user.username;
+                        logoutItem.style.display = 'block';
+                        
                             // 로그아웃 버튼 이벤트 리스너
-                            logoutBtn.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                showLogoutConfirm();
-                            });
+                        logoutBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            showLogoutConfirm();
+                        });
                             return;
                         }
                     }

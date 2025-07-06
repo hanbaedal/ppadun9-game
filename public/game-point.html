@@ -101,14 +101,14 @@
                     if (response.ok) {
                         const data = await response.json();
                         console.log('API 사용자 정보 응답:', data);
-                        
-                        if (data.success && data.user) {
+                
+                if (data.success && data.user) {
                             console.log('API에서 로그인된 사용자 발견:', data.user);
                             // 로컬 스토리지에 저장
                             localStorage.setItem('currentUser', JSON.stringify(data.user));
                             
                             // UI 업데이트
-                            userNameElement.innerHTML = `<i class="fas fa-user-circle me-2"></i> ${data.user.name || data.user.username}`;
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle me-2"></i> ${data.user.name || data.user.username}`;
                             logoutItem.style.display = 'block';
                             
                             // 로그아웃 버튼 이벤트 리스너
