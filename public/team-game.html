@@ -1095,21 +1095,7 @@
                         const game = games.find(g => g.number === gameNumber);
                         
                         if (game) {
-                            // 시작시간과 종료시간을 분으로 변환
-                            let startTimeInMinutes = null;
-                            let endTimeInMinutes = null;
-                            
-                            if (game.startTime) {
-                                const [startHour, startMinute] = game.startTime.split(':').map(Number);
-                                startTimeInMinutes = startHour * 60 + startMinute;
-                            }
-                            
-                            if (game.endTime) {
-                                const [endHour, endMinute] = game.endTime.split(':').map(Number);
-                                endTimeInMinutes = endHour * 60 + endMinute;
-                            }
-                            
-                            const status = getGameStatus(startTimeInMinutes, endTimeInMinutes);
+                            const status = getGameStatus(game.startTime, game.endTime);
                             
                             // 상태 표시 업데이트
                             statusDisplay.className = `game-status ${status.class}`;
