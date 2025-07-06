@@ -870,7 +870,7 @@
                     </label>
                 </div>
                 <div style="display: flex; justify-content: center; margin-top: 8px;">
-                    <button id="nextBatterBtn" class="betting-btn" style="width: 120px; font-size: 16px; background-color: #007bff; padding: 12px 24px;">다음타자</button>
+                    <button id="nextBatterBtn" class="betting-btn" style="width: 120px; font-size: 16px; background-color: #007bff; padding: 12px 24px;" disabled>다음타자</button>
                 </div>
             </div>
         </div>
@@ -1027,7 +1027,7 @@
                         selectBtn.textContent = '선택됨';
                         selectedGame = gameRow.dataset.game;
                         document.getElementById('startBetting').disabled = false;
-                        showCustomModal(`선택한 경기번호: ${selectedGame}경기, 경기가 선택되었습니다!`);
+                        showCustomModal(`선택한 경기번호: ${selectedGame}경기가 선택되었습니다!`);
                     } else {
                         showCustomModal('경기중인 경기만 선택할 수 있습니다. 현재 상태: ' + statusText);
                     }
@@ -1240,7 +1240,7 @@
                             this.disabled = true;
                             document.getElementById('stopBetting').disabled = false;
                             console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value);
-                            alert('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
+                            showCustomModal('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
                         } else {
                             alert('배팅 시작 실패: ' + result.message);
                         }
@@ -1278,57 +1278,59 @@
                             document.querySelectorAll('input[name="prediction"]').forEach(radio => {
                                 radio.disabled = false;
                             });
-                            // 예측결과 버튼 활성화
-                            document.getElementById('predictionSubmitBtn').disabled = false;
+                            // 다음타자 버튼 초기화 (비활성화)
+                            document.getElementById('nextBatterBtn').disabled = true;
                             console.log('배팅 중지:', selectedGame);
-                            alert('배팅이 중지되었습니다. 예측결과를 선택하고 제출해주세요.');
+                            showCustomModal('배팅이 중지되었습니다. 예측결과를 선택해주세요.');
                         } else {
                             alert('배팅 중지 실패: ' + result.message);
                         }
                     } catch (error) {
                         console.error('배팅 중지 오류:', error);
-                        alert('배팅 중지 중 오류가 발생했습니다.');
+                        showCustomModal('배팅 중지 중 오류가 발생했습니다. 서버 연결을 확인해주세요.');
                     }
                 }
             });
 
             // 라디오 버튼 이벤트 리스너
             document.querySelectorAll('input[name="prediction"]').forEach(radio => {
-                radio.addEventListener('change', async function() {
+                radio.addEventListener('change', function() {
                     if (this.checked) {
                         console.log('선택된 예측:', this.value);
                         
-                        // 예측 결과 처리
-                        try {
-                            const response = await fetch('/api/betting/result', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    gameNumber: selectedGame,
-                                    prediction: this.value,
-                                    date: currentDate.getFullYear().toString() +
-                                          (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                                          currentDate.getDate().toString().padStart(2, '0')
-                                })
-                            });
+                        // 예측 결과 확인 모달 표시
+                        const predictionText = this.nextElementSibling.textContent;
+                        showCustomModal(`${predictionText} 예측 결과가 입력되었습니다. 확실합니까?`);
+                        
+                        // 모달 확인 버튼에 이벤트 리스너 추가
+                        const confirmBtn = document.querySelector('#customModal button');
+                        confirmBtn.onclick = async function() {
+                            closeCustomModal();
                             
-                            const result = await response.json();
-                            if (result.success) {
-                                if (result.winners && result.winners.length > 0) {
-                                    alert('축하합니다! 예측에 성공한 회원들에게 포인트가 분배되었습니다.');
-                                } else {
-                                    alert('예측 결과가 처리되었습니다.');
-                                }
-                                console.log('예측 결과 처리 완료:', result);
-                            } else {
-                                alert('예측 결과 처리 실패: ' + result.message);
+                            // 예측 결과 서버로 전송
+                            try {
+                                const response = await fetch('/api/betting/result', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        gameNumber: selectedGame,
+                                        prediction: radio.value,
+                                        date: currentDate.getFullYear().toString() +
+                                              (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                                              currentDate.getDate().toString().padStart(2, '0')
+                                    })
+                                });
+                                
+                                console.log('예측 결과 전송 완료:', radio.value);
+                                
+                                // 다음타자 버튼 활성화
+                                document.getElementById('nextBatterBtn').disabled = false;
+                            } catch (error) {
+                                console.error('예측 결과 전송 오류:', error);
                             }
-                        } catch (error) {
-                            console.error('예측 결과 처리 오류:', error);
-                            alert('예측 결과 처리 중 오류가 발생했습니다.');
-                        }
+                        };
                     }
                 });
             });
@@ -1373,39 +1375,30 @@
         // 다음타자 버튼 클릭 이벤트 리스너
         const nextBatterBtn = document.getElementById('nextBatterBtn');
         if (nextBatterBtn) {
-          nextBatterBtn.onclick = async function() {
-            const selectedPrediction = document.querySelector('input[name="prediction"]:checked');
-            if (!selectedPrediction) {
-              showCustomModal('예측결과를 선택해주세요.');
-              return;
-            }
-            // 예측 결과 서버로 전송(예시)
-            try {
-              const response = await fetch('/api/betting/result', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  gameNumber: selectedGame,
-                  prediction: selectedPrediction.value,
-                  date: currentDate.getFullYear().toString() +
-                        (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                        currentDate.getDate().toString().padStart(2, '0')
-                })
-              });
-              const result = await response.json();
-              if (result.success) {
-                showCustomModal('예측 결과가 처리되었습니다. 다음 타자 배팅을 준비하세요.');
-                // 라디오 버튼/버튼 비활성화
-                document.querySelectorAll('input[name="prediction"]').forEach(radio => radio.checked = false);
-                nextBatterBtn.disabled = true;
-                // 배팅시작 버튼 활성화 등 다음 배팅 준비
-                document.getElementById('startBetting').disabled = false;
-              } else {
-                showCustomModal('예측 결과 처리 실패: ' + result.message);
-              }
-            } catch (error) {
-              showCustomModal('예측 결과 처리 중 오류가 발생했습니다.');
-            }
+          nextBatterBtn.onclick = function() {
+            // 모든 상태 초기화
+            console.log('다음 타자 배팅 준비 - 상태 초기화');
+            
+            // 배팅 시작 버튼 활성화
+            document.getElementById('startBetting').disabled = false;
+            
+            // 배팅 중지 버튼 비활성화
+            document.getElementById('stopBetting').disabled = true;
+            
+            // 예측결과 라디오 버튼 초기화 및 비활성화
+            document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+              radio.checked = false;
+              radio.disabled = true;
+            });
+            
+            // 다음타자 버튼 비활성화
+            nextBatterBtn.disabled = true;
+            
+            // 배팅 시간 초기화
+            document.getElementById('bettingTime').textContent = '';
+            document.getElementById('stopTime').textContent = '';
+            
+            showCustomModal('다음 타자 배팅을 준비합니다. 배팅을 시작해주세요.');
           }
         }
     </script>

@@ -211,6 +211,7 @@ const pointChargingRoutes = require('./routes/point-charging');
 const friendInviteRoutes = require('./routes/friend-invite');
 const customerInquiriesRoutes = require('./routes/customer-inquiries');
 const videoWatchRoutes = require('./routes/video-watch');
+const bettingRoutes = require('./routes/betting');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -224,6 +225,7 @@ app.use('/api/point-charging', pointChargingRoutes);
 app.use('/api/friend-invite', friendInviteRoutes);
 app.use('/api/customer-inquiries', customerInquiriesRoutes);
 app.use('/api/video-watch', videoWatchRoutes);
+app.use('/api/betting', bettingRoutes);
 
 // members 라우트는 /api/members로 접근하도록 변경
 app.use('/api/members', membersRoutes);
@@ -2029,6 +2031,10 @@ async function startServer() {
             setMembersDatabase(db);
             console.log('[Server] Members 라우트에 기본 데이터베이스 설정 완료');
         }
+        
+        // 배팅 라우트에 데이터베이스 설정
+        app.locals.db = db;
+        console.log('[Server] Betting 라우트에 데이터베이스 설정 완료');
         
         const port = process.env.PORT || 3000;
         app.listen(port, '0.0.0.0', () => {
