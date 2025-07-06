@@ -43,34 +43,34 @@ body {
 .game-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 15px;
-    margin: 20px 0;
-    font-size: 1rem;
+    border-spacing: 0 7.5px;
+    margin: 10px 0;
+    font-size: 0.5rem;
 }
 
 .game-table th {
     background-color: var(--pastel-pink);
     color: var(--text-color);
-    padding: 15px;
+    padding: 7.5px;
     text-align: center;
-    border-radius: 10px 10px 0 0;
+    border-radius: 5px 5px 0 0;
     font-weight: bold;
 }
 
 .game-table td {
     background-color: var(--pastel-pink-light);
-    padding: 15px;
+    padding: 7.5px;
     text-align: center;
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 5px 5px;
 }
 
 /* 입력 필드 스타일 */
 .team-select {
     width: 100%;
-    padding: 10px;
+    padding: 5px;
     border: 2px solid var(--pastel-pink-border);
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: 4px;
+    font-size: 0.5rem;
     background-color: #fff;
     color: var(--text-color);
 }
@@ -84,32 +84,32 @@ body {
 /* 시간 입력 그룹 스타일 */
 .time-input-group {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     align-items: center;
     justify-content: center;
     background-color: #fff;
-    padding: 8px;
-    border-radius: 8px;
+    padding: 4px;
+    border-radius: 4px;
     border: 2px solid var(--pastel-pink-border);
 }
 
 .time-input-group select {
-    padding: 8px;
+    padding: 4px;
     border: 1px solid var(--pastel-pink-border);
-    border-radius: 6px;
+    border-radius: 3px;
     background-color: #fff;
-    font-size: 1rem;
-    min-width: 80px;
+    font-size: 0.5rem;
+    min-width: 40px;
     color: var(--text-color);
 }
 
 .time-input-group input {
-    width: 60px;
-    padding: 8px;
+    width: 30px;
+    padding: 4px;
     border: 1px solid var(--pastel-pink-border);
-    border-radius: 6px;
+    border-radius: 3px;
     text-align: center;
-    font-size: 1rem;
+    font-size: 0.5rem;
     color: var(--text-color);
 }
 
@@ -119,8 +119,8 @@ body {
 
 /* 매치업 이미지 스타일 */
 .matchup-image {
-    width: 200px;
-    height: 100px;
+    width: 100px;
+    height: 50px;
     background-color: #fff;
     border: 2px solid var(--pastel-pink-border);
     border-radius: 8px;
@@ -157,14 +157,14 @@ body {
     background-color: var(--pastel-pink);
     color: var(--text-color);
     border: 2px solid var(--pastel-pink-border);
-    padding: 12px 24px;
+    padding: 6px 12px;
     border-radius: 8px;
-    font-size: 1.1rem;
+    font-size: 0.55rem;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
     display: block;
-    margin: 20px auto;
+    margin: 10px auto;
 }
 
 .save-btn:hover {
@@ -295,62 +295,62 @@ body {
 /* 반응형 디자인 */
 @media (max-width: 1200px) {
     .container {
-        padding: 15px;
+        padding: 7.5px;
     }
     .game-table {
-        font-size: 0.9rem;
+        font-size: 0.45rem;
     }
     .team-select,
     .time-input-group select,
     .time-input-group input,
     .selected-time {
-        font-size: 0.9rem;
+        font-size: 0.45rem;
     }
     .matchup-image {
-        width: 180px;
-        height: 90px;
+        width: 90px;
+        height: 45px;
     }
 }
 
 @media (max-width: 992px) {
     .container {
-        padding: 10px;
+        padding: 5px;
     }
     .game-table {
-        font-size: 0.85rem;
+        font-size: 0.425rem;
     }
     .team-select,
     .time-input-group select,
     .time-input-group input,
     .selected-time {
-        font-size: 0.85rem;
+        font-size: 0.425rem;
     }
     .matchup-image {
-        width: 160px;
-        height: 80px;
+        width: 80px;
+        height: 40px;
     }
 }
 
 @media (max-width: 768px) {
     .container {
-        padding: 5px;
+        padding: 2.5px;
     }
     .game-table {
-        font-size: 0.8rem;
+        font-size: 0.4rem;
     }
     .game-table th,
     .game-table td {
-        padding: 10px;
+        padding: 5px;
     }
     .team-select,
     .time-input-group select,
     .time-input-group input,
     .selected-time {
-        font-size: 0.8rem;
-        padding: 6px;
+        font-size: 0.4rem;
+        padding: 3px;
     }
     .matchup-image {
-        width: 140px;
-        height: 70px;
+        width: 70px;
+        height: 35px;
     }
 } 

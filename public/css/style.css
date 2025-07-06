@@ -64,13 +64,13 @@ body {
     justify-content: center;
     background-color: white;
     border-radius: 1rem;
-    padding: 1.5rem 1rem;
+    padding: 0.75rem 0.5rem;
     text-decoration: none;
     color: var(--text-color);
     box-shadow: 0 2px 4px var(--shadow-color);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    height: 100%;
-    min-height: 120px;
+    height: 50%;
+    min-height: 60px;
 }
 
 .menu-item:active {
@@ -109,20 +109,20 @@ body {
     }
 
     .menu-item {
-        padding: 1rem 0.75rem;
-        min-height: 100px;
+        padding: 0.5rem 0.375rem;
+        min-height: 50px;
     }
 
     .menu-icon {
-        font-size: 1.75rem;
+        font-size: 0.875rem;
     }
 
     .menu-text h3 {
-        font-size: 1rem;
+        font-size: 0.5rem;
     }
 
     .menu-text p {
-        font-size: 0.8rem;
+        font-size: 0.4rem;
     }
 }
 
@@ -135,7 +135,7 @@ body {
     }
 
     .menu-item {
-        min-height: 140px;
+        min-height: 70px;
     }
 }
 
@@ -150,7 +150,7 @@ body {
     }
 
     .menu-item {
-        min-height: 160px;
+        min-height: 80px;
     }
 
     .menu-item:hover {

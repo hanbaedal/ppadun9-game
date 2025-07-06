@@ -866,11 +866,19 @@
                         <span>아웃</span>
                     </label>
                 </div>
-                <div style="display: flex; justify-content: center; margin-top: 18px;">
-                    <button id="nextBatterBtn" class="betting-btn" style="min-width: 200px; font-size: 1.2em; background-color: #007bff;">다음타자</button>
+                <div style="display: flex; justify-content: center; margin-top: 8px;">
+                    <button id="nextBatterBtn" class="betting-btn" style="min-width: 90px; font-size: 1em; background-color: #007bff; padding: 8px 18px;">다음타자</button>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 모달 추가 (body 맨 아래에 위치) -->
+    <div id="customModal" class="modal" tabindex="-1" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:9999; align-items:center; justify-content:center;">
+      <div style="background:#fff; border-radius:8px; padding:32px 24px; min-width:240px; text-align:center; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+        <div id="customModalMsg" style="font-size:1.1em; margin-bottom:18px;"></div>
+        <button onclick="closeCustomModal()" style="padding:8px 24px; border:none; background:#007bff; color:#fff; border-radius:6px; font-size:1em;">확인</button>
+      </div>
     </div>
 
     <script>
@@ -1001,14 +1009,9 @@
                 // 선택 버튼 클릭 이벤트 리스너 추가
                 const selectBtn = gameRow.querySelector('.select-game-btn');
                 selectBtn.addEventListener('click', function() {
-                    console.log('선택 버튼 클릭됨');
                     const statusElement = gameRow.querySelector('.game-status');
                     const statusText = statusElement.textContent;
-                    console.log('클릭된 경기 상태:', statusText);
-                    
-                    // 경기중일 때만 선택 가능
                     if (statusText === '경기중') {
-                        console.log('경기중 상태 - 선택 처리 시작');
                         document.querySelectorAll('.game-row').forEach(row => {
                             row.classList.remove('selected');
                         });
@@ -1021,11 +1024,9 @@
                         selectBtn.textContent = '선택됨';
                         selectedGame = gameRow.dataset.game;
                         document.getElementById('startBetting').disabled = false;
-                        console.log('선택된 경기:', selectedGame);
-                        alert('경기가 선택되었습니다!');
+                        showCustomModal(`선택한 경기번호: ${selectedGame}경기, 경기가 선택되었습니다!`);
                     } else {
-                        console.log('경기중이 아님 - 선택 불가');
-                        alert('경기중인 경기만 선택할 수 있습니다. 현재 상태: ' + statusText);
+                        showCustomModal('경기중인 경기만 선택할 수 있습니다. 현재 상태: ' + statusText);
                     }
                 });
             }
@@ -1299,6 +1300,53 @@
                 alert('새로운 배팅이 시작되었습니다.');
             });
         };
+
+        function showCustomModal(msg) {
+          document.getElementById('customModalMsg').textContent = msg;
+          document.getElementById('customModal').style.display = 'flex';
+        }
+        function closeCustomModal() {
+          document.getElementById('customModal').style.display = 'none';
+        }
+
+        // 다음타자 버튼 클릭 이벤트 리스너
+        const nextBatterBtn = document.getElementById('nextBatterBtn');
+        if (nextBatterBtn) {
+          nextBatterBtn.onclick = async function() {
+            const selectedPrediction = document.querySelector('input[name="prediction"]:checked');
+            if (!selectedPrediction) {
+              showCustomModal('예측결과를 선택해주세요.');
+              return;
+            }
+            // 예측 결과 서버로 전송(예시)
+            try {
+              const response = await fetch('/api/betting/result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  gameNumber: selectedGame,
+                  prediction: selectedPrediction.value,
+                  date: currentDate.getFullYear().toString() +
+                        (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                        currentDate.getDate().toString().padStart(2, '0')
+                })
+              });
+              const result = await response.json();
+              if (result.success) {
+                showCustomModal('예측 결과가 처리되었습니다. 다음 타자 배팅을 준비하세요.');
+                // 라디오 버튼/버튼 비활성화
+                document.querySelectorAll('input[name="prediction"]').forEach(radio => radio.checked = false);
+                nextBatterBtn.disabled = true;
+                // 배팅시작 버튼 활성화 등 다음 배팅 준비
+                document.getElementById('startBetting').disabled = false;
+              } else {
+                showCustomModal('예측 결과 처리 실패: ' + result.message);
+              }
+            } catch (error) {
+              showCustomModal('예측 결과 처리 중 오류가 발생했습니다.');
+            }
+          }
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
