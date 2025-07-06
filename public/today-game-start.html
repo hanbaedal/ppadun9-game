@@ -464,24 +464,12 @@
                         startTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
                     }
 
-                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
-                    const endHour = document.getElementById(`endHour${i}`).value;
-                    const endMinute = document.getElementById(`endMinute${i}`).value;
-
-                    let endTime = null;
-                    if (endHour && endMinute) {
-                        let hour = parseInt(endHour);
-                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
-                        if (endAmPm === 'AM' && hour === 12) hour = 0;
-                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
-                    }
-
                     const gameData = {
                         number: i,
                         homeTeam: document.getElementById(`homeTeam${i}`).value || null,
                         awayTeam: document.getElementById(`awayTeam${i}`).value || null,
                         startTime: startTime,
-                        endTime: endTime,
+                        endTime: null, // 종료시간은 today-game-end.html에서만 설정
                         noGame: document.getElementById(`noGame${i}`).value
                     };
 
@@ -575,30 +563,14 @@
 
                         // daily-games 컬렉션에 저장
                         try {
-                            // 기존 데이터 확인
-                            const existingResponse = await fetch(`/api/daily-games/${date}/${i}`);
-                            const existingData = await existingResponse.json();
-
-                            let dailyGameResponse;
-                            if (existingData.success && existingData.data) {
-                                // 기존 데이터가 있으면 UPDATE
-                                dailyGameResponse = await fetch(`/api/daily-games/${date}/${i}`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(dailyGameData)
-                                });
-                            } else {
-                                // 새 데이터 생성
-                                dailyGameResponse = await fetch('/api/daily-games', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(dailyGameData)
-                                });
-                            }
+                            // daily-games 컬렉션에 새 레코드 생성 (기존 데이터 확인 없이)
+                            const dailyGameResponse = await fetch('/api/daily-games', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(dailyGameData)
+                            });
 
                             if (!dailyGameResponse.ok) {
                                 console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResponse.status);
