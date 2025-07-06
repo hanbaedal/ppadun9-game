@@ -541,22 +541,84 @@
         // 현재 로그인한 사용자 정보 가져오기
         async function loadCurrentUser() {
             try {
-                const response = await fetch('/api/employee/current-user');
-                const data = await response.json();
+                console.log('사용자 정보 로드 시작');
                 
                 const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
+                const logoutBtn = document.getElementById('logoutBtn');
                 
-                if (data.success && data.user) {
-                    userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name || data.user.username}`;
+                // 먼저 API 호출로 실제 로그인 상태 확인
+                try {
+                    const response = await fetch('/api/employee/current-user', {
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log('API 응답 상태:', response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('API 사용자 정보 응답:', data);
+                        
+                        if (data.success && data.user) {
+                            console.log('API에서 로그인된 사용자 발견:', data.user);
+                            // 로컬 스토리지에 저장
+                            localStorage.setItem('currentUser', JSON.stringify(data.user));
+                            
+                            // UI 업데이트
+                            userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name || data.user.username}`;
+                            logoutItem.style.display = 'block';
+                            
+                            // 로그아웃 버튼 이벤트 리스너
+                            logoutBtn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                if (confirm('로그아웃하시겠습니까?')) {
+                                    logout();
+                                }
+                            });
+                            return;
+                        }
+                    }
+                } catch (apiError) {
+                    console.error('API 호출 오류:', apiError);
+                }
+                
+                // API에서 로그인 정보를 가져올 수 없는 경우, 로컬 스토리지 확인
+                const storedUser = localStorage.getItem('currentUser');
+                console.log('로컬 스토리지 사용자 정보:', storedUser);
+                
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    console.log('로컬 스토리지 사용자 정보:', user);
+                    
+                    // 로그인된 사용자가 있는 경우
+                    userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> ${user.name || user.username}`;
+                    console.log('사용자 이름 표시:', user.name || user.username);
+                    
+                    // 로그아웃 버튼 표시
+                    logoutItem.style.display = 'block';
+                    
+                    // 로그아웃 버튼 이벤트 리스너
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (confirm('로그아웃하시겠습니까?')) {
+                            logout();
+                        }
+                    });
                 } else {
-                    // 로그인되지 않은 경우 기본값 표시
+                    console.log('로그인되지 않은 상태');
+                    // 로그인되지 않은 경우
                     userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> 사용자`;
+                    logoutItem.style.display = 'none';
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                // 오류 발생 시 기본값 표시
                 const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
                 userNameElement.innerHTML = `<i class="fas fa-user-circle"></i> 사용자`;
+                logoutItem.style.display = 'none';
             }
         }
 
@@ -567,14 +629,20 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    credentials: 'include'
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
+                    // 로컬 스토리지에서 사용자 정보 제거
+                    localStorage.removeItem('currentUser');
+                    console.log('로컬 스토리지에서 사용자 정보 제거');
+                    
                     alert('로그아웃되었습니다.');
-                    window.location.href = '/';
+                    // 로그인 페이지로 이동
+                    window.location.href = '/employee-login.html';
                 } else {
                     alert('로그아웃 중 오류가 발생했습니다.');
                 }

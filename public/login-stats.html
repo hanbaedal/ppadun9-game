@@ -239,33 +239,80 @@
         // 현재 로그인한 사용자 정보 가져오기
         async function loadCurrentUser() {
             try {
+                console.log('사용자 정보 로드 시작');
+                
                 const userNameElement = document.getElementById('userName');
                 const logoutItem = document.getElementById('logoutItem');
                 const logoutBtn = document.getElementById('logoutBtn');
                 
-                const response = await fetch('/api/employee/current-user', {
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
+                // 먼저 API 호출로 실제 로그인 상태 확인
+                try {
+                    const response = await fetch('/api/employee/current-user', {
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log('API 응답 상태:', response.status);
                     
-                    if (data.success && data.user) {
-                        userNameElement.textContent = data.user.name || data.user.username;
-                        logoutItem.style.display = 'block';
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('API 사용자 정보 응답:', data);
                         
-                        logoutBtn.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            showLogoutConfirm();
-                        });
+                        if (data.success && data.user) {
+                            console.log('API에서 로그인된 사용자 발견:', data.user);
+                            // 로컬 스토리지에 저장
+                            localStorage.setItem('currentUser', JSON.stringify(data.user));
+                            
+                            // UI 업데이트
+                            userNameElement.textContent = data.user.name || data.user.username;
+                            logoutItem.style.display = 'block';
+                            
+                            // 로그아웃 버튼 이벤트 리스너
+                            logoutBtn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                showLogoutConfirm();
+                            });
+                            return;
+                        }
                     }
+                } catch (apiError) {
+                    console.error('API 호출 오류:', apiError);
+                }
+                
+                // API에서 로그인 정보를 가져올 수 없는 경우, 로컬 스토리지 확인
+                const storedUser = localStorage.getItem('currentUser');
+                console.log('로컬 스토리지 사용자 정보:', storedUser);
+                
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    console.log('로컬 스토리지 사용자 정보:', user);
+                    
+                    // 로그인된 사용자가 있는 경우
+                    userNameElement.textContent = user.name || user.username;
+                    console.log('사용자 이름 표시:', user.name || user.username);
+                    
+                    // 로그아웃 버튼 표시
+                    logoutItem.style.display = 'block';
+                    
+                    // 로그아웃 버튼 이벤트 리스너
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        showLogoutConfirm();
+                    });
+                } else {
+                    console.log('로그인되지 않은 상태');
+                    // 로그인되지 않은 경우
+                    userNameElement.textContent = '사용자';
+                    logoutItem.style.display = 'none';
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
+                const userNameElement = document.getElementById('userName');
+                const logoutItem = document.getElementById('logoutItem');
+                userNameElement.textContent = '사용자';
+                logoutItem.style.display = 'none';
             }
         }
         
