@@ -775,8 +775,11 @@
                     </span>
                 </div>
                 
-                <!-- 오른쪽: 로그아웃 버튼 -->
+                <!-- 오른쪽: 날짜와 로그아웃 버튼 -->
                 <div class="navbar-nav">
+                    <span class="navbar-text me-3" id="currentDate">
+                        <i class="fas fa-calendar me-1"></i> <span id="dateDisplay"></span>
+                    </span>
                     <div class="nav-item" id="logoutItem" style="display: none;">
                         <a class="nav-link" href="#" id="logoutBtn">
                             <i class="fas fa-sign-out-alt"></i> 로그아웃
@@ -786,7 +789,7 @@
             </div>
         </nav>
 
-        <div class="date-display" id="dateDisplay" style="text-align: center; margin: 20px 0; font-size: 16px; color: #333;"></div>
+
 
 
 
@@ -867,7 +870,7 @@
                     </label>
                 </div>
                 <div style="display: flex; justify-content: center; margin-top: 8px;">
-                    <button id="nextBatterBtn" class="betting-btn" style="min-width: 90px; font-size: 14px; background-color: #007bff; padding: 8px 18px;">다음타자</button>
+                    <button id="nextBatterBtn" class="betting-btn" style="width: 120px; font-size: 16px; background-color: #007bff; padding: 12px 24px;">다음타자</button>
                 </div>
             </div>
         </div>
