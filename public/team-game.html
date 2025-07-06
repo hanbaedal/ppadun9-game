@@ -911,18 +911,23 @@
             const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
             const kstTime = new Date(utcTime + (kstOffset * 60000));
             const currentTime = kstTime.getHours() * 60 + kstTime.getMinutes(); // 한국 시간을 분으로 변환
+            
+            console.log('=== 경기상황 디버깅 ===');
+            console.log('현재 시간:', kstTime.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }));
             console.log('한국 현재 시간(분):', currentTime);
+            console.log('시작시간:', startTime);
+            console.log('종료시간:', endTime);
 
             // 시작시간이 없는 경우
             if (!startTime) {
-                console.log('시작시간 없음');
+                console.log('시작시간 없음 → 경기전');
                 return { text: '경기전', class: 'status-before' };
             }
 
             // 시작시간을 분으로 변환
             let startTimeInMinutes = null;
             if (startTime) {
-            const [startHour, startMinute] = startTime.split(':').map(Number);
+                const [startHour, startMinute] = startTime.split(':').map(Number);
                 startTimeInMinutes = startHour * 60 + startMinute;
             }
 
@@ -934,30 +939,46 @@
             }
 
             console.log('시작시간(분):', startTimeInMinutes);
-                console.log('종료시간(분):', endTimeInMinutes);
+            console.log('종료시간(분):', endTimeInMinutes);
+            console.log('현재시간(분):', currentTime);
 
             // 종료시간이 있는 경우
             if (endTimeInMinutes) {
+                // 종료시간이 초기값(60분 = 오전 1시)인 경우는 아직 설정되지 않은 것으로 간주
+                if (endTimeInMinutes === 60) {
+                    console.log('종료시간이 초기값(60분) → 아직 설정되지 않음, 경기중으로 처리');
+                    if (currentTime >= startTimeInMinutes) {
+                        return { text: '경기중', class: 'status-ongoing' };
+                    } else {
+                        return { text: '경기전', class: 'status-before' };
+                    }
+                }
+                
+                // 종료시간이 시작시간보다 작은 경우는 다음날로 간주
+                if (endTimeInMinutes < startTimeInMinutes) {
+                    console.log('종료시간이 시작시간보다 작음 → 다음날로 간주');
+                    endTimeInMinutes += 1440; // 24시간(1440분) 추가
+                    console.log('수정된 종료시간(분):', endTimeInMinutes);
+                }
+                
                 // 현재시간이 종료시간 이후면 '경기끝'
-                if (currentTime > endTimeInMinutes) {
-                    console.log('경기끝 상태');
+                if (currentTime >= endTimeInMinutes) {
+                    console.log('현재시간 >= 종료시간 → 경기끝');
                     return { text: '경기끝', class: 'status-ended' };
                 }
+                // 시작시간 이후이고 종료시간 이전이면 '경기중'
+                else if (currentTime >= startTimeInMinutes && currentTime < endTimeInMinutes) {
+                    console.log('시작시간 <= 현재시간 < 종료시간 → 경기중');
+                    return { text: '경기중', class: 'status-ongoing' };
+                }
             }
-
-            // 현재시간이 시작시간 이전이면 '경기전'
-            if (currentTime < startTimeInMinutes) {
-                console.log('경기전 상태');
-                return { text: '경기전', class: 'status-before' };
-            }
-
-            // 시작시간 이후이고 종료시간이 없거나 현재시간이 종료시간 이전이면 '경기중'
-            if (currentTime >= startTimeInMinutes && (!endTimeInMinutes || currentTime <= endTimeInMinutes)) {
-                console.log('경기중 상태');
+            // 종료시간이 없는 경우: 시작시간 이후면 '경기중'
+            else if (currentTime >= startTimeInMinutes) {
+                console.log('종료시간 없음, 시작시간 이후 → 경기중');
                 return { text: '경기중', class: 'status-ongoing' };
             }
 
-            console.log('기본 상태');
+            console.log('기본 상태 → 경기전');
             return { text: '경기전', class: 'status-before' };
         }
 
