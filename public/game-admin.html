@@ -8,26 +8,110 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
+        body {
+            padding-top: 80px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
         .admin-card {
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
             cursor: pointer;
             margin-bottom: 20px;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            overflow: hidden;
+            position: relative;
         }
+        
+        .admin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ffb3d9, #ffcce6);
+        }
+        
         .admin-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
         }
+        
+        .admin-card:nth-child(1) .card-body {
+            background: linear-gradient(135deg, #ffe6f2 0%, #fff0f5 100%);
+        }
+        
+        .admin-card:nth-child(2) .card-body {
+            background: linear-gradient(135deg, #e6f7ff 0%, #f0f8ff 100%);
+        }
+        
+        .admin-card:nth-child(3) .card-body {
+            background: linear-gradient(135deg, #fff2e6 0%, #fff8f0 100%);
+        }
+        
+        .admin-card:nth-child(4) .card-body {
+            background: linear-gradient(135deg, #f0e6ff 0%, #f8f0ff 100%);
+        }
+        
+        .admin-card:nth-child(5) .card-body {
+            background: linear-gradient(135deg, #e6ffe6 0%, #f0fff0 100%);
+        }
+        
+        .admin-card:nth-child(6) .card-body {
+            background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
+        }
+        
+        .admin-card:nth-child(7) .card-body {
+            background: linear-gradient(135deg, #f0f0e6 0%, #f8f8f0 100%);
+        }
+        
         .admin-icon {
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
+            color: #6c757d;
         }
+        
+        .card-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-text {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
         .user-info {
             color: #fff;
             margin-right: 15px;
         }
         
-        /* Bootstrap navbar fixed-top 대응 */
-        body {
-            padding-top: 80px;
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            color: #495057 !important;
+            font-weight: 600;
+        }
+        
+        .navbar-text {
+            color: #6c757d !important;
+        }
+        
+        .nav-link {
+            color: #6c757d !important;
+        }
+        
+        .nav-link:hover {
+            color: #495057 !important;
         }
     </style>
 </head>
