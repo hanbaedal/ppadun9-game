@@ -17,7 +17,7 @@
             height: 80px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
         }
 
         .monitor-card:hover {
@@ -26,8 +26,25 @@
         }
 
         .monitor-card .card-body {
-            padding: 10px;
-            text-align: center;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            color: #1a365d;
+        }
+
+        .monitor-card .card-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a365d;
+        }
+
+        .monitor-card .card-value {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
             color: #1a365d;
         }
 
@@ -317,37 +334,33 @@
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="card monitor-card bg-primary">
-                    <div class="card-body text-center">
-                        <i class="fas fa-users monitor-icon"></i>
-                        <h4 id="totalActiveUsers">0</h4>
-                        <p class="card-text">총 접속자</p>
+                    <div class="card-body">
+                        <div class="card-title">총 접속자</div>
+                        <div class="card-value" id="totalActiveUsers">0</div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card monitor-card bg-success">
-                    <div class="card-body text-center">
-                        <i class="fas fa-user-friends monitor-icon"></i>
-                        <h4 id="totalParticipants">0</h4>
-                        <p class="card-text">총 참여자</p>
+                    <div class="card-body">
+                        <div class="card-title">총 참여자</div>
+                        <div class="card-value" id="totalParticipants">0</div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card monitor-card bg-warning">
-                    <div class="card-body text-center">
-                        <i class="fas fa-coins monitor-icon"></i>
-                        <h4 id="totalBettors">0</h4>
-                        <p class="card-text">총 배팅자</p>
+                    <div class="card-body">
+                        <div class="card-title">총 배팅자</div>
+                        <div class="card-value" id="totalBettors">0</div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card monitor-card bg-info">
-                    <div class="card-body text-center">
-                        <i class="fas fa-dollar-sign monitor-icon"></i>
-                        <h4 id="totalPoints">₩0</h4>
-                        <p class="card-text">총 배팅포인트</p>
+                    <div class="card-body">
+                        <div class="card-title">총 배팅포인트</div>
+                        <div class="card-value" id="totalPoints">₩0</div>
                     </div>
                 </div>
             </div>
