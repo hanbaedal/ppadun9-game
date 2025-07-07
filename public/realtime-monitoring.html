@@ -10,15 +10,45 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .monitor-card {
-            transition: transform 0.3s;
-            margin-bottom: 20px;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         .monitor-card:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
+
+        .monitor-card .card-body {
+            padding: 10px;
+            text-align: center;
+            color: #1a365d;
+        }
+
+        .monitor-card h4 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a365d;
+        }
+
+        .monitor-card p {
+            margin: 0;
+            font-size: 11px;
+            color: #1a365d;
+            opacity: 0.8;
+        }
+
         .monitor-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #1a365d;
         }
         .chart-container {
             position: relative;
@@ -286,7 +316,7 @@
         <!-- 실시간 요약 카드 -->
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="card monitor-card bg-primary text-white">
+                <div class="card monitor-card bg-primary">
                     <div class="card-body text-center">
                         <i class="fas fa-users monitor-icon"></i>
                         <h4 id="totalActiveUsers">0</h4>
@@ -295,7 +325,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card monitor-card bg-success text-white">
+                <div class="card monitor-card bg-success">
                     <div class="card-body text-center">
                         <i class="fas fa-user-friends monitor-icon"></i>
                         <h4 id="totalParticipants">0</h4>
@@ -304,7 +334,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card monitor-card bg-warning text-white">
+                <div class="card monitor-card bg-warning">
                     <div class="card-body text-center">
                         <i class="fas fa-coins monitor-icon"></i>
                         <h4 id="totalBettors">0</h4>
@@ -313,7 +343,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card monitor-card bg-info text-white">
+                <div class="card monitor-card bg-info">
                     <div class="card-body text-center">
                         <i class="fas fa-dollar-sign monitor-icon"></i>
                         <h4 id="totalPoints">₩0</h4>
