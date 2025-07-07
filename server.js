@@ -2073,4 +2073,348 @@ process.on('unhandledRejection', (reason, promise) => {
     process.exit(1);
 });
 
+// 실시간 모니터링 API - 총 접속자 수
+app.get('/api/monitoring/total-users', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const memberCollection = db.collection('game-member');
+        const employeeCollection = db.collection('employee-member');
+        
+        // 현재 로그인된 회원 수
+        const activeMembers = await memberCollection.countDocuments({ isLoggedIn: true });
+        
+        // 현재 로그인된 직원 수
+        const activeEmployees = await employeeCollection.countDocuments({ isLoggedIn: true });
+        
+        // 총 접속자 수 (회원 + 직원)
+        const totalActiveUsers = activeMembers + activeEmployees;
+        
+        res.json({
+            success: true,
+            data: {
+                totalActiveUsers,
+                activeMembers,
+                activeEmployees,
+                timestamp: new Date()
+            }
+        });
+    } catch (error) {
+        console.error('총 접속자 수 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '총 접속자 수 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 실시간 모니터링 API - 경기별 참여자 수
+app.get('/api/monitoring/game-participants', async (req, res) => {
+    try {
+        const { date } = req.query;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const memberCollection = db.collection('game-member');
+        const todayGamesCollection = db.collection('todaygames');
+        
+        // 오늘 날짜 (date 파라미터가 없으면 오늘 날짜 사용)
+        const targetDate = date || new Date().toISOString().split('T')[0];
+        
+        // 오늘의 경기 목록 조회
+        const todayGames = await todayGamesCollection.find({ 
+            date: targetDate 
+        }).toArray();
+        
+        // 각 경기별 참여자 수 계산
+        const gameParticipants = [];
+        
+        for (const game of todayGames) {
+            // 해당 경기에 배팅한 사용자 수
+            const participants = await memberCollection.countDocuments({
+                'bettingHistory': {
+                    $elemMatch: {
+                        date: targetDate,
+                        gameNumber: game.gameNumber
+                    }
+                }
+            });
+            
+            gameParticipants.push({
+                gameNumber: game.gameNumber,
+                homeTeam: game.homeTeam,
+                awayTeam: game.awayTeam,
+                startTime: game.startTime,
+                endTime: game.endTime,
+                participants: participants,
+                status: game.status || 'scheduled'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: {
+                date: targetDate,
+                games: gameParticipants,
+                totalParticipants: gameParticipants.reduce((sum, game) => sum + game.participants, 0),
+                timestamp: new Date()
+            }
+        });
+    } catch (error) {
+        console.error('경기별 참여자 수 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '경기별 참여자 수 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 실시간 모니터링 API - 경기별 배팅선택자 수 및 배팅포인트 합계
+app.get('/api/monitoring/game-betting-stats', async (req, res) => {
+    try {
+        const { date } = req.query;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const memberCollection = db.collection('game-member');
+        const todayGamesCollection = db.collection('todaygames');
+        
+        // 오늘 날짜 (date 파라미터가 없으면 오늘 날짜 사용)
+        const targetDate = date || new Date().toISOString().split('T')[0];
+        
+        // 오늘의 경기 목록 조회
+        const todayGames = await todayGamesCollection.find({ 
+            date: targetDate 
+        }).toArray();
+        
+        // 각 경기별 배팅 통계 계산
+        const gameBettingStats = [];
+        
+        for (const game of todayGames) {
+            // 해당 경기의 배팅 데이터 집계
+            const bettingData = await memberCollection.aggregate([
+                {
+                    $match: {
+                        'bettingHistory': {
+                            $elemMatch: {
+                                date: targetDate,
+                                gameNumber: game.gameNumber
+                            }
+                        }
+                    }
+                },
+                {
+                    $unwind: '$bettingHistory'
+                },
+                {
+                    $match: {
+                        'bettingHistory.date': targetDate,
+                        'bettingHistory.gameNumber': game.gameNumber
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$bettingHistory.prediction',
+                        count: { $sum: 1 },
+                        totalPoints: { $sum: '$bettingHistory.points' },
+                        users: { $addToSet: '$userId' }
+                    }
+                }
+            ]).toArray();
+            
+            // 배팅 선택별 통계 정리
+            const bettingChoices = {};
+            let totalBettors = 0;
+            let totalPoints = 0;
+            
+            bettingData.forEach(choice => {
+                bettingChoices[choice._id] = {
+                    count: choice.count,
+                    totalPoints: choice.totalPoints,
+                    users: choice.users
+                };
+                totalBettors += choice.count;
+                totalPoints += choice.totalPoints;
+            });
+            
+            gameBettingStats.push({
+                gameNumber: game.gameNumber,
+                homeTeam: game.homeTeam,
+                awayTeam: game.awayTeam,
+                startTime: game.startTime,
+                endTime: game.endTime,
+                status: game.status || 'scheduled',
+                totalBettors: totalBettors,
+                totalPoints: totalPoints,
+                bettingChoices: bettingChoices
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: {
+                date: targetDate,
+                games: gameBettingStats,
+                totalBettors: gameBettingStats.reduce((sum, game) => sum + game.totalBettors, 0),
+                totalPoints: gameBettingStats.reduce((sum, game) => sum + game.totalPoints, 0),
+                timestamp: new Date()
+            }
+        });
+    } catch (error) {
+        console.error('경기별 배팅 통계 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '경기별 배팅 통계 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 실시간 모니터링 API - 종합 통계
+app.get('/api/monitoring/comprehensive', async (req, res) => {
+    try {
+        const { date } = req.query;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const memberCollection = db.collection('game-member');
+        const employeeCollection = db.collection('employee-member');
+        const todayGamesCollection = db.collection('todaygames');
+        
+        // 오늘 날짜
+        const targetDate = date || new Date().toISOString().split('T')[0];
+        
+        // 1. 총 접속자 수
+        const activeMembers = await memberCollection.countDocuments({ isLoggedIn: true });
+        const activeEmployees = await employeeCollection.countDocuments({ isLoggedIn: true });
+        const totalActiveUsers = activeMembers + activeEmployees;
+        
+        // 2. 오늘의 경기 목록
+        const todayGames = await todayGamesCollection.find({ 
+            date: targetDate 
+        }).toArray();
+        
+        // 3. 각 경기별 상세 통계
+        const gameStats = [];
+        
+        for (const game of todayGames) {
+            // 참여자 수
+            const participants = await memberCollection.countDocuments({
+                'bettingHistory': {
+                    $elemMatch: {
+                        date: targetDate,
+                        gameNumber: game.gameNumber
+                    }
+                }
+            });
+            
+            // 배팅 통계
+            const bettingData = await memberCollection.aggregate([
+                {
+                    $match: {
+                        'bettingHistory': {
+                            $elemMatch: {
+                                date: targetDate,
+                                gameNumber: game.gameNumber
+                            }
+                        }
+                    }
+                },
+                {
+                    $unwind: '$bettingHistory'
+                },
+                {
+                    $match: {
+                        'bettingHistory.date': targetDate,
+                        'bettingHistory.gameNumber': game.gameNumber
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$bettingHistory.prediction',
+                        count: { $sum: 1 },
+                        totalPoints: { $sum: '$bettingHistory.points' },
+                        users: { $addToSet: '$userId' }
+                    }
+                }
+            ]).toArray();
+            
+            // 배팅 선택별 통계 정리
+            const bettingChoices = {};
+            let totalBettors = 0;
+            let totalPoints = 0;
+            
+            bettingData.forEach(choice => {
+                bettingChoices[choice._id] = {
+                    count: choice.count,
+                    totalPoints: choice.totalPoints,
+                    users: choice.users
+                };
+                totalBettors += choice.count;
+                totalPoints += choice.totalPoints;
+            });
+            
+            gameStats.push({
+                gameNumber: game.gameNumber,
+                homeTeam: game.homeTeam,
+                awayTeam: game.awayTeam,
+                startTime: game.startTime,
+                endTime: game.endTime,
+                status: game.status || 'scheduled',
+                participants: participants,
+                totalBettors: totalBettors,
+                totalPoints: totalPoints,
+                bettingChoices: bettingChoices
+            });
+        }
+        
+        // 4. 전체 통계
+        const totalParticipants = gameStats.reduce((sum, game) => sum + game.participants, 0);
+        const totalBettors = gameStats.reduce((sum, game) => sum + game.totalBettors, 0);
+        const totalPoints = gameStats.reduce((sum, game) => sum + game.totalPoints, 0);
+        
+        res.json({
+            success: true,
+            data: {
+                date: targetDate,
+                summary: {
+                    totalActiveUsers,
+                    activeMembers,
+                    activeEmployees,
+                    totalParticipants,
+                    totalBettors,
+                    totalPoints
+                },
+                games: gameStats,
+                timestamp: new Date()
+            }
+        });
+    } catch (error) {
+        console.error('종합 모니터링 통계 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '종합 모니터링 통계 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 startServer(); 
