@@ -212,14 +212,17 @@
                             <table class="table table-striped table-hover">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>경기</th>
-                                        <th>매치업</th>
-                                        <th>시간</th>
-                                        <th>상태</th>
-                                        <th>참여자</th>
-                                        <th>배팅자</th>
-                                        <th>총 배팅포인트</th>
-                                        <th>배팅 선택별 통계</th>
+                                        <th style="color: #000;">경기</th>
+                                        <th style="color: #000;">매치업</th>
+                                        <th style="color: #000;">게임선택</th>
+                                        <th style="color: #000;">배팅선택자</th>
+                                        <th style="color: #000;">1루</th>
+                                        <th style="color: #000;">2루</th>
+                                        <th style="color: #000;">3루</th>
+                                        <th style="color: #000;">홈런</th>
+                                        <th style="color: #000;">삼진</th>
+                                        <th style="color: #000;">아웃</th>
+                                        <th style="color: #000;">배팅결과</th>
                                     </tr>
                                 </thead>
                                 <tbody id="gameStatsTableBody">
@@ -274,113 +277,96 @@
             const tableBody = document.getElementById('gameStatsTableBody');
             tableBody.innerHTML = ''; // 기존 내용 지우기
 
-            games.forEach(game => {
+            // 1경기부터 5경기까지 모든 경기 표시
+            for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
+                const game = games.find(g => g.gameNumber === gameNumber) || {
+                    gameNumber: gameNumber,
+                    homeTeam: '-',
+                    awayTeam: '-',
+                    gameType: '-',
+                    totalBettors: 0,
+                    bettingChoices: {},
+                    bettingResult: '-'
+                };
+
                 const row = document.createElement('tr');
                 row.className = `game-stats-row ${game.status === 'active' ? 'active' : game.status === 'completed' ? 'completed' : ''}`;
                 
-                // 배팅 선택별 통계 생성
-                let bettingChoicesHtml = '';
-                Object.entries(game.bettingChoices).forEach(([choice, stats]) => {
-                    // 야구 경기 배팅 선택에 맞는 클래스와 표시명 매핑
-                    let choiceClass = 'number'; // 기본값
-                    let displayName = choice; // 기본 표시명
-                    
-                    switch(choice) {
-                        case '1base':
-                            choiceClass = 'base1';
-                            displayName = '1루';
+                // 각 배팅 선택별 통계 계산
+                const getBettingStats = (choice) => {
+                    const stats = game.bettingChoices[choice] || 
+                                 game.bettingChoices[choice.replace('루', 'base').replace('홈런', 'homerun').replace('삼진', 'strikeout').replace('아웃', 'out')] || 
+                                 { count: 0, totalPoints: 0 };
+                    return `${stats.count}명 (₩${stats.totalPoints.toLocaleString()})`;
+                };
+
+                // 게임선택 텍스트 설정
+                let gameTypeText = '-';
+                if (game.gameType) {
+                    switch(game.gameType) {
+                        case 'attack':
+                            gameTypeText = '타자';
                             break;
-                        case '2base':
-                            choiceClass = 'base2';
-                            displayName = '2루';
+                        case 'defense':
+                            gameTypeText = '수비';
                             break;
-                        case '3base':
-                            choiceClass = 'base3';
-                            displayName = '3루';
-                            break;
-                        case 'homerun':
-                            choiceClass = 'homerun';
-                            displayName = '홈런';
-                            break;
-                        case 'strikeout':
-                            choiceClass = 'strikeout';
-                            displayName = '삼진';
-                            break;
-                        case 'out':
-                            choiceClass = 'out';
-                            displayName = '아웃';
-                            break;
-                        case '1루':
-                            choiceClass = 'base1';
-                            displayName = '1루';
-                            break;
-                        case '2루':
-                            choiceClass = 'base2';
-                            displayName = '2루';
-                            break;
-                        case '3루':
-                            choiceClass = 'base3';
-                            displayName = '3루';
-                            break;
-                        case '홈런':
-                            choiceClass = 'homerun';
-                            displayName = '홈런';
-                            break;
-                        case '삼진':
-                            choiceClass = 'strikeout';
-                            displayName = '삼진';
-                            break;
-                        case '아웃':
-                            choiceClass = 'out';
-                            displayName = '아웃';
+                        case 'pitcher':
+                            gameTypeText = '투수';
                             break;
                         default:
-                            // 기존 홀/짝/숫자 배팅도 지원
-                            if (choice === '홀') {
-                                choiceClass = 'odd';
-                                displayName = '홀';
-                            } else if (choice === '짝') {
-                                choiceClass = 'even';
-                                displayName = '짝';
-                            }
-                            break;
+                            gameTypeText = game.gameType;
                     }
-                    
-                    bettingChoicesHtml += `
-                        <span class="betting-choice ${choiceClass}">
-                            ${displayName}: ${stats.count}명 (₩${stats.totalPoints.toLocaleString()})
-                        </span>
-                    `;
-                });
+                }
 
-                // 상태 텍스트와 클래스 설정
-                let statusText = '예정';
-                let statusClass = 'text-muted';
-                if (game.status === 'active') {
-                    statusText = '진행중';
-                    statusClass = 'text-success';
-                } else if (game.status === 'completed') {
-                    statusText = '종료';
-                    statusClass = 'text-secondary';
+                // 배팅결과 텍스트 설정
+                let bettingResultText = '-';
+                if (game.bettingResult) {
+                    switch(game.bettingResult) {
+                        case '1base':
+                        case '1루':
+                            bettingResultText = '1루';
+                            break;
+                        case '2base':
+                        case '2루':
+                            bettingResultText = '2루';
+                            break;
+                        case '3base':
+                        case '3루':
+                            bettingResultText = '3루';
+                            break;
+                        case 'homerun':
+                        case '홈런':
+                            bettingResultText = '홈런';
+                            break;
+                        case 'strikeout':
+                        case '삼진':
+                            bettingResultText = '삼진';
+                            break;
+                        case 'out':
+                        case '아웃':
+                            bettingResultText = '아웃';
+                            break;
+                        default:
+                            bettingResultText = game.bettingResult;
+                    }
                 }
 
                 row.innerHTML = `
-                    <td><strong>${game.gameNumber}경기</strong></td>
-                    <td>${game.homeTeam || '-'} vs ${game.awayTeam || '-'}</td>
-                    <td>${game.startTime || '-'} - ${game.endTime || '-'}</td>
-                    <td><span class="${statusClass}">${statusText}</span></td>
-                    <td><strong>${game.participants}</strong></td>
-                    <td><strong>${game.totalBettors}</strong></td>
-                    <td><strong>₩${game.totalPoints.toLocaleString()}</strong></td>
-                    <td>
-                        <div class="betting-choices-container">
-                            ${bettingChoicesHtml}
-                        </div>
-                    </td>
+                    <td style="color: #000;"><strong>${gameNumber}경기</strong></td>
+                    <td style="color: #000;">${game.homeTeam} vs ${game.awayTeam}</td>
+                    <td style="color: #000;">${gameTypeText}</td>
+                    <td style="color: #000;"><strong>${game.totalBettors}</strong></td>
+                    <td style="color: #000;"><strong>${getBettingStats('1루')}</strong></td>
+                    <td style="color: #000;"><strong>${getBettingStats('2루')}</strong></td>
+                    <td style="color: #000;"><strong>${getBettingStats('3루')}</strong></td>
+                    <td style="color: #000;"><strong>${getBettingStats('홈런')}</strong></td>
+                    <td style="color: #000;"><strong>${getBettingStats('삼진')}</strong></td>
+                    <td style="color: #000;"><strong>${getBettingStats('아웃')}</strong></td>
+                    <td style="color: #000;"><strong>${bettingResultText}</strong></td>
                 `;
                 
                 tableBody.appendChild(row);
-            });
+            }
         }
 
         // 페이지 로드 시 초기화
