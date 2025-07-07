@@ -13,6 +13,21 @@ router.post('/', async (req, res) => {
         const db = client.db('member-management');
         const collection = db.collection('daily-games');
 
+        const { date, number } = req.body;
+
+        // 기존 데이터 확인
+        const existingGame = await collection.findOne({ 
+            date: date, 
+            number: parseInt(number) 
+        });
+
+        if (existingGame) {
+            return res.status(400).json({
+                success: false,
+                message: '해당 날짜와 경기번호의 데이터가 이미 존재합니다.'
+            });
+        }
+
         // 요청 데이터에 타임스탬프 추가
         const gameData = {
             ...req.body,

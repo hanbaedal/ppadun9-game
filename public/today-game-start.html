@@ -459,7 +459,21 @@
 
         // 게임 데이터 저장
         async function saveGames() {
+            // 이미 저장 중이면 중복 실행 방지
+            if (window.isSaving) {
+                return;
+            }
+            window.isSaving = true;
+
             try {
+                // 저장 버튼 비활성화 (중복 클릭 방지)
+                const saveButton = document.querySelector('.save-btn');
+                const originalText = saveButton.textContent;
+                saveButton.disabled = true;
+                saveButton.textContent = '저장 중...';
+                saveButton.style.backgroundColor = '#6c757d';
+                saveButton.style.cursor = 'not-allowed';
+
                 // 사용자가 선택한 날짜 사용 (입력 필드가 있다면)
                 let date;
                 const dateInput = document.getElementById('selectedDate');
@@ -665,6 +679,16 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('저장 중 오류가 발생했습니다: ' + error.message);
+            } finally {
+                // 저장 버튼 다시 활성화
+                const saveButton = document.querySelector('.save-btn');
+                saveButton.disabled = false;
+                saveButton.textContent = '저장';
+                saveButton.style.backgroundColor = '#28a745';
+                saveButton.style.cursor = 'pointer';
+                
+                // 저장 상태 리셋
+                window.isSaving = false;
             }
         }
 

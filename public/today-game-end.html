@@ -341,7 +341,21 @@
 
         // 게임 데이터 저장
         async function saveGames() {
+            // 이미 저장 중이면 중복 실행 방지
+            if (window.isSaving) {
+                return;
+            }
+            window.isSaving = true;
+
             try {
+                // 저장 버튼 비활성화 (중복 클릭 방지)
+                const saveButton = document.querySelector('.save-btn');
+                const originalText = saveButton.textContent;
+                saveButton.disabled = true;
+                saveButton.textContent = '저장 중...';
+                saveButton.style.backgroundColor = '#6c757d';
+                saveButton.style.cursor = 'not-allowed';
+
                 const today = new Date();
                 const date = today.getFullYear().toString() +
                             (today.getMonth() + 1).toString().padStart(2, '0') +
@@ -376,7 +390,7 @@
                     }
                 }
 
-                // 기존 데이터가 있는지 확인
+                // 1. 기존 dailygames API 호출 (기존 기능 유지)
                 const checkResponse = await fetch(`/api/dailygames/${date}`);
                 const checkResult = await checkResponse.json();
                 
@@ -411,16 +425,118 @@
                 }
 
                 const result = await response.json();
-                if (result.success) {
-                    alert('게임 정보가 저장되었습니다.');
-                    // 저장 후 데이터 다시 불러오기
-                    await fetchGames();
-                } else {
+                if (!result.success) {
                     throw new Error(result.message || '저장 중 오류가 발생했습니다.');
                 }
+
+                // 2. daily-games 컬렉션 업데이트 (기존 데이터 확인 후 업데이트)
+                for (let i = 1; i <= 5; i++) {
+                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
+                    const endHour = document.getElementById(`endHour${i}`).value;
+                    const endMinute = document.getElementById(`endMinute${i}`).value;
+                    
+                    let endTime = null;
+                    if (endHour && endMinute) {
+                        let hour = parseInt(endHour);
+                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
+                        if (endAmPm === 'AM' && hour === 12) hour = 0;
+                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
+                    }
+
+                    const homeTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`).value;
+                    const awayTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`).value;
+                    const startTime = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(4) input`).value;
+                    const noGame = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(6)`).textContent;
+
+                    // 팀이 선택된 경우에만 저장
+                    if (homeTeam && awayTeam) {
+                        // 게임 상태 결정
+                        let status = 'before'; // 기본값
+                        if (noGame === '우천취소' || noGame === '기타') {
+                            status = 'cancelled';
+                        } else if (endTime) {
+                            // 종료시간이 있으면 경기 종료 상태
+                            status = 'ended';
+                        } else if (startTime) {
+                            // 시작시간이 있으면 경기 중 상태
+                            status = 'during';
+                        }
+
+                        const dailyGameData = {
+                            number: i,
+                            homeTeam: homeTeam,
+                            awayTeam: awayTeam,
+                            date: date,
+                            startTime: startTime,
+                            endTime: endTime,
+                            noGame: status === 'cancelled' ? '우천취소' : '정상게임',
+                            isActive: true
+                        };
+
+                        // daily-games 컬렉션에서 기존 데이터 확인 후 업데이트
+                        try {
+                            console.log(`경기 ${i} daily-games 저장 시작:`, dailyGameData);
+                            
+                            // 기존 데이터 확인
+                            const checkResponse = await fetch(`/api/daily-games/${date}/${i}`);
+                            const checkResult = await checkResponse.json();
+                            
+                            let dailyGameResponse;
+                            if (checkResult.success) {
+                                // 기존 데이터가 있으면 업데이트
+                                dailyGameResponse = await fetch(`/api/daily-games/${date}/${i}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify(dailyGameData)
+                                });
+                            } else {
+                                // 기존 데이터가 없으면 새로 생성
+                                dailyGameResponse = await fetch('/api/daily-games', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify(dailyGameData)
+                                });
+                            }
+
+                            console.log(`경기 ${i} daily-games 응답 상태:`, dailyGameResponse.status);
+
+                            if (!dailyGameResponse.ok) {
+                                console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResponse.status);
+                            } else {
+                                const dailyGameResult = await dailyGameResponse.json();
+                                console.log(`경기 ${i} daily-games 응답 결과:`, dailyGameResult);
+                                if (!dailyGameResult.success) {
+                                    console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResult.message);
+                                } else {
+                                    console.log(`경기 ${i} daily-games 저장 성공`);
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`경기 ${i} daily-games 저장 오류:`, error);
+                        }
+                    }
+                }
+
+                alert('게임 정보가 저장되었습니다.');
+                // 저장 후 데이터 다시 불러오기
+                await fetchGames();
             } catch (error) {
                 console.error('Error:', error);
                 alert('저장 중 오류가 발생했습니다: ' + error.message);
+            } finally {
+                // 저장 버튼 다시 활성화
+                const saveButton = document.querySelector('.save-btn');
+                saveButton.disabled = false;
+                saveButton.textContent = '저장';
+                saveButton.style.backgroundColor = '#28a745';
+                saveButton.style.cursor = 'pointer';
+                
+                // 저장 상태 리셋
+                window.isSaving = false;
             }
         }
 
