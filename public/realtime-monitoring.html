@@ -123,50 +123,6 @@
             flex-wrap: wrap;
             gap: 5px;
         }
-        .betting-choice {
-            display: inline-block;
-            margin: 2px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            background-color: #e9ecef;
-        }
-        .betting-choice.base1 {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .betting-choice.base2 {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .betting-choice.base3 {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .betting-choice.homerun {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        .betting-choice.strikeout {
-            background-color: #e2e3e5;
-            color: #383d41;
-        }
-        .betting-choice.out {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .betting-choice.odd {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .betting-choice.even {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .betting-choice.number {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
     </style>
 </head>
 <body>
@@ -244,48 +200,6 @@
             </div>
         </div>
 
-        <!-- 상세 통계 -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>접속자 상세</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="stats-grid">
-                            <div class="stats-item">
-                                <div class="stats-value" id="activeMembers">0</div>
-                                <div class="stats-label">회원 접속자</div>
-                            </div>
-                            <div class="stats-item">
-                                <div class="stats-value" id="activeEmployees">0</div>
-                                <div class="stats-label">직원 접속자</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>배팅 통계</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="stats-grid">
-                            <div class="stats-item">
-                                <div class="stats-value" id="avgBetPerUser">₩0</div>
-                                <div class="stats-label">평균 배팅</div>
-                            </div>
-                            <div class="stats-item">
-                                <div class="stats-value" id="participationRate">0%</div>
-                                <div class="stats-label">참여율</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- 경기별 상세 통계 -->
         <div class="row">
             <div class="col-12">
@@ -317,73 +231,11 @@
                 </div>
             </div>
         </div>
-
-        <!-- 실시간 차트 -->
-        <div class="row mt-4">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>실시간 배팅 추이</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="realtimeChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>실시간 배팅 현황</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="realtimeBets" style="max-height: 400px; overflow-y: auto;">
-                            <!-- 실시간 배팅 목록이 여기에 표시됩니다 -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 차트 초기화
-        let realtimeChart;
         let updateInterval;
-
-        // 차트 초기화
-        function initChart() {
-            const ctx = document.getElementById('realtimeChart').getContext('2d');
-            realtimeChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: '배팅 포인트',
-                        data: [],
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    }
-                }
-            });
-        }
 
         // 종합 모니터링 데이터 로드
         async function loadComprehensiveData() {
@@ -408,20 +260,6 @@
             document.getElementById('totalParticipants').textContent = data.summary.totalParticipants.toLocaleString();
             document.getElementById('totalBettors').textContent = data.summary.totalBettors.toLocaleString();
             document.getElementById('totalPoints').textContent = '₩' + data.summary.totalPoints.toLocaleString();
-
-            // 상세 통계 업데이트
-            document.getElementById('activeMembers').textContent = data.summary.activeMembers.toLocaleString();
-            document.getElementById('activeEmployees').textContent = data.summary.activeEmployees.toLocaleString();
-
-            // 평균 배팅 계산
-            const avgBet = data.summary.totalBettors > 0 ? 
-                Math.round(data.summary.totalPoints / data.summary.totalBettors) : 0;
-            document.getElementById('avgBetPerUser').textContent = '₩' + avgBet.toLocaleString();
-
-            // 참여율 계산
-            const participationRate = data.summary.totalActiveUsers > 0 ? 
-                Math.round((data.summary.totalParticipants / data.summary.totalActiveUsers) * 100) : 0;
-            document.getElementById('participationRate').textContent = participationRate + '%';
 
             // 경기별 통계 업데이트
             updateGameStats(data.games);
@@ -545,57 +383,6 @@
             });
         }
 
-        // 차트 업데이트
-        function updateChart(amount) {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString();
-            
-            realtimeChart.data.labels.push(timeString);
-            realtimeChart.data.datasets[0].data.push(amount);
-            
-            // 최대 20개 데이터 포인트만 유지
-            if (realtimeChart.data.labels.length > 20) {
-                realtimeChart.data.labels.shift();
-                realtimeChart.data.datasets[0].data.shift();
-            }
-            
-            realtimeChart.update('none');
-        }
-
-        // 실시간 배팅 목록 업데이트
-        function updateRealtimeBets() {
-            const container = document.getElementById('realtimeBets');
-            
-            // 새로운 배팅 항목 생성 (시뮬레이션)
-            const betTypes = ['1루', '2루', '3루', '홈런', '삼진', '아웃'];
-            const users = ['user001', 'user002', 'user003', 'user004', 'user005'];
-            const amounts = [10000, 20000, 50000, 100000, 150000];
-            
-            const randomType = betTypes[Math.floor(Math.random() * betTypes.length)];
-            const randomUser = users[Math.floor(Math.random() * users.length)];
-            const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
-            
-            const betItem = document.createElement('div');
-            betItem.className = 'betting-item recent';
-            betItem.innerHTML = `
-                <div class="d-flex justify-content-between">
-                    <strong>${randomUser}</strong>
-                    <small class="text-muted">${new Date().toLocaleTimeString()}</small>
-                </div>
-                <div class="mt-1">
-                    <span class="badge bg-primary">${randomType}</span>
-                    <span class="ms-2">₩${randomAmount.toLocaleString()}</span>
-                </div>
-            `;
-            
-            container.insertBefore(betItem, container.firstChild);
-            
-            // 최대 10개 항목만 유지
-            while (container.children.length > 10) {
-                container.removeChild(container.lastChild);
-            }
-        }
-
         // 페이지 로드 시 초기화
         window.onload = function() {
             // 사용자 정보 로드
@@ -605,20 +392,12 @@
                 document.getElementById('logoutItem').style.display = 'block';
             }
 
-            // 차트 초기화
-            initChart();
-
             // 초기 데이터 로드
             loadComprehensiveData();
 
             // 실시간 업데이트 시작 (0.1초마다)
             updateInterval = setInterval(() => {
                 loadComprehensiveData();
-                updateRealtimeBets();
-                
-                // 차트 업데이트 (시뮬레이션)
-                const randomAmount = Math.floor(Math.random() * 100000) + 10000;
-                updateChart(randomAmount);
             }, 100);
 
             // 로그아웃 이벤트 리스너
