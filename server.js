@@ -1508,10 +1508,11 @@ app.post('/api/betting/stop', async (req, res) => {
             });
         }
         
-        const collection = db.collection('betting-sessions');
+        const bettingCollection = db.collection('betting-sessions');
+        const userCollection = db.collection('game-member');
         
         // 활성 배팅 세션 중지
-        const result = await collection.updateMany(
+        const result = await bettingCollection.updateMany(
             { 
                 date: date,
                 gameNumber: parseInt(gameNumber),
@@ -1524,13 +1525,75 @@ app.post('/api/betting/stop', async (req, res) => {
                 } 
             }
         );
+
+        // 최종 집계 데이터 생성
+        const finalBettingData = await userCollection.aggregate([
+            {
+                $match: {
+                    'bettingHistory': {
+                        $elemMatch: {
+                            date: date,
+                            gameNumber: parseInt(gameNumber)
+                        }
+                    }
+                }
+            },
+            {
+                $unwind: '$bettingHistory'
+            },
+            {
+                $match: {
+                    'bettingHistory.date': date,
+                    'bettingHistory.gameNumber': parseInt(gameNumber)
+                }
+            },
+            {
+                $group: {
+                    _id: '$bettingHistory.prediction',
+                    count: { $sum: 1 },
+                    totalPoints: { $sum: '$bettingHistory.points' },
+                    users: { $addToSet: '$userId' }
+                }
+            }
+        ]).toArray();
+
+        // 최종 집계 결과를 betting-sessions에 저장
+        const finalSummary = {
+            totalBettors: finalBettingData.reduce((sum, choice) => sum + choice.count, 0),
+            totalPoints: finalBettingData.reduce((sum, choice) => sum + choice.totalPoints, 0),
+            bettingChoices: {}
+        };
+
+        finalBettingData.forEach(choice => {
+            finalSummary.bettingChoices[choice._id] = {
+                count: choice.count,
+                totalPoints: choice.totalPoints,
+                users: choice.users
+            };
+        });
+
+        // 배팅 세션에 최종 집계 결과 저장
+        await bettingCollection.updateMany(
+            { 
+                date: date,
+                gameNumber: parseInt(gameNumber),
+                status: 'stopped'
+            },
+            { 
+                $set: { 
+                    finalSummary: finalSummary,
+                    finalSummaryAt: new Date()
+                } 
+            }
+        );
         
-        console.log(`배팅 중지: ${date} ${gameNumber}경기, ${result.modifiedCount}개 세션 중지`);
+        console.log(`배팅 중지 및 최종 집계: ${date} ${gameNumber}경기, ${result.modifiedCount}개 세션 중지, 총 배팅자: ${finalSummary.totalBettors}명`);
         
         res.json({
             success: true,
             message: '배팅이 중지되었습니다.',
-            modifiedCount: result.modifiedCount
+            modifiedCount: result.modifiedCount,
+            finalSummary: finalSummary
         });
     } catch (error) {
         console.error('배팅 중지 오류:', error);
@@ -1786,6 +1849,25 @@ app.post('/api/betting/result', async (req, res) => {
                     result: prediction,
                     processedAt: new Date(),
                     winners: winners.map(w => w.userId),
+                    totalWinners: winners.length,
+                    totalLosers: losers.length,
+                    totalLostPoints: totalLostPoints,
+                    pointsPerWinner: winners.length > 0 ? Math.floor(totalLostPoints / winners.length) : 0
+                } 
+            }
+        );
+
+        // todaygames 컬렉션에 배팅결과 업데이트
+        const todayGamesCollection = db.collection('todaygames');
+        await todayGamesCollection.updateOne(
+            { 
+                date: date,
+                gameNumber: parseInt(gameNumber)
+            },
+            { 
+                $set: { 
+                    bettingResult: prediction,
+                    resultProcessedAt: new Date(),
                     totalWinners: winners.length,
                     totalLosers: losers.length,
                     totalLostPoints: totalLostPoints,
@@ -2383,7 +2465,12 @@ app.get('/api/monitoring/comprehensive', async (req, res) => {
                 participants: participants,
                 totalBettors: totalBettors,
                 totalPoints: totalPoints,
-                bettingChoices: bettingChoices
+                bettingChoices: bettingChoices,
+                bettingResult: game.bettingResult || null,
+                totalWinners: game.totalWinners || 0,
+                totalLosers: game.totalLosers || 0,
+                totalLostPoints: game.totalLostPoints || 0,
+                pointsPerWinner: game.pointsPerWinner || 0
             });
         }
         
@@ -2413,6 +2500,127 @@ app.get('/api/monitoring/comprehensive', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '종합 모니터링 통계 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 실시간 모니터링 데이터 저장 API
+app.post('/api/monitoring/save', async (req, res) => {
+    try {
+        const { date, gameNumber, monitoringData } = req.body;
+        
+        if (!date || !gameNumber || !monitoringData) {
+            return res.status(400).json({ 
+                success: false, 
+                message: '필수 정보가 누락되었습니다.' 
+            });
+        }
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const monitoringCollection = db.collection('realtime-monitoring');
+        
+        // 기존 모니터링 데이터 업데이트 또는 새로 생성
+        const result = await monitoringCollection.updateOne(
+            { 
+                date: date,
+                gameNumber: parseInt(gameNumber)
+            },
+            { 
+                $set: {
+                    ...monitoringData,
+                    updatedAt: new Date()
+                }
+            },
+            { upsert: true }
+        );
+        
+        console.log(`모니터링 데이터 저장: ${date} ${gameNumber}경기`);
+        
+        res.json({
+            success: true,
+            message: '모니터링 데이터가 저장되었습니다.',
+            result: result
+        });
+    } catch (error) {
+        console.error('모니터링 데이터 저장 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '모니터링 데이터 저장 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 실시간 모니터링 데이터 조회 API
+app.get('/api/monitoring/data', async (req, res) => {
+    try {
+        const { date, gameNumber } = req.query;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const monitoringCollection = db.collection('realtime-monitoring');
+        
+        let query = {};
+        if (date) query.date = date;
+        if (gameNumber) query.gameNumber = parseInt(gameNumber);
+        
+        const monitoringData = await monitoringCollection.find(query).toArray();
+        
+        res.json({
+            success: true,
+            data: monitoringData
+        });
+    } catch (error) {
+        console.error('모니터링 데이터 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '모니터링 데이터 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 실시간 모니터링 데이터 삭제 API
+app.delete('/api/monitoring/delete', async (req, res) => {
+    try {
+        const { date, gameNumber } = req.body;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const monitoringCollection = db.collection('realtime-monitoring');
+        
+        let query = {};
+        if (date) query.date = date;
+        if (gameNumber) query.gameNumber = parseInt(gameNumber);
+        
+        const result = await monitoringCollection.deleteMany(query);
+        
+        console.log(`모니터링 데이터 삭제: ${result.deletedCount}개 삭제됨`);
+        
+        res.json({
+            success: true,
+            message: '모니터링 데이터가 삭제되었습니다.',
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        console.error('모니터링 데이터 삭제 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '모니터링 데이터 삭제 중 오류가 발생했습니다.'
         });
     }
 });

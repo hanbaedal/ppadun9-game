@@ -226,7 +226,71 @@
                                     </tr>
                                 </thead>
                                 <tbody id="gameStatsTableBody">
-                                    <!-- 경기별 통계가 여기에 동적으로 로드됩니다 -->
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>1경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>2경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>3경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>4경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>5경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -275,9 +339,8 @@
         // 경기별 통계 업데이트
         function updateGameStats(games) {
             const tableBody = document.getElementById('gameStatsTableBody');
-            tableBody.innerHTML = ''; // 기존 내용 지우기
-
-            // 1경기부터 5경기까지 모든 경기 표시
+            
+            // 1경기부터 5경기까지 모든 경기 업데이트
             for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
                 const game = games.find(g => g.gameNumber === gameNumber) || {
                     gameNumber: gameNumber,
@@ -289,8 +352,7 @@
                     bettingResult: '-'
                 };
 
-                const row = document.createElement('tr');
-                row.className = `game-stats-row ${game.status === 'active' ? 'active' : game.status === 'completed' ? 'completed' : ''}`;
+                const row = tableBody.children[gameNumber - 1]; // 기존 행 사용
                 
                 // 각 배팅 선택별 통계 계산
                 const getBettingStats = (choice) => {
@@ -300,8 +362,18 @@
                     return `${stats.count}명 (₩${stats.totalPoints.toLocaleString()})`;
                 };
 
+                // 배팅선택자 총합 계산 (1루+2루+3루+홈런+삼진+아웃)
+                const choices = ['1루', '2루', '3루', '홈런', '삼진', '아웃'];
+                let totalBettors = 0;
+                choices.forEach(choice => {
+                    const stats = game.bettingChoices[choice] || 
+                                 game.bettingChoices[choice.replace('루', 'base').replace('홈런', 'homerun').replace('삼진', 'strikeout').replace('아웃', 'out')] || 
+                                 { count: 0, totalPoints: 0 };
+                    totalBettors += stats.count;
+                });
+
                 // 게임선택 텍스트 설정
-                let gameTypeText = '-';
+                let gameTypeText = '타자'; // 기본값
                 if (game.gameType) {
                     switch(game.gameType) {
                         case 'attack':
@@ -351,21 +423,83 @@
                     }
                 }
 
-                row.innerHTML = `
-                    <td style="color: #000;"><strong>${gameNumber}경기</strong></td>
-                    <td style="color: #000;">${game.homeTeam} vs ${game.awayTeam}</td>
-                    <td style="color: #000;">${gameTypeText}</td>
-                    <td style="color: #000;"><strong>${game.totalBettors}</strong></td>
-                    <td style="color: #000;"><strong>${getBettingStats('1루')}</strong></td>
-                    <td style="color: #000;"><strong>${getBettingStats('2루')}</strong></td>
-                    <td style="color: #000;"><strong>${getBettingStats('3루')}</strong></td>
-                    <td style="color: #000;"><strong>${getBettingStats('홈런')}</strong></td>
-                    <td style="color: #000;"><strong>${getBettingStats('삼진')}</strong></td>
-                    <td style="color: #000;"><strong>${getBettingStats('아웃')}</strong></td>
-                    <td style="color: #000;"><strong>${bettingResultText}</strong></td>
-                `;
+                // 행 업데이트
+                row.cells[0].innerHTML = `<strong>${gameNumber}경기</strong>`;
+                row.cells[1].textContent = game.homeTeam === '-' ? '-' : `${game.homeTeam} vs ${game.awayTeam}`;
+                row.cells[2].textContent = gameTypeText;
+                row.cells[3].innerHTML = `<strong>${totalBettors}</strong>`;
+                row.cells[4].innerHTML = `<strong>${getBettingStats('1루')}</strong>`;
+                row.cells[5].innerHTML = `<strong>${getBettingStats('2루')}</strong>`;
+                row.cells[6].innerHTML = `<strong>${getBettingStats('3루')}</strong>`;
+                row.cells[7].innerHTML = `<strong>${getBettingStats('홈런')}</strong>`;
+                row.cells[8].innerHTML = `<strong>${getBettingStats('삼진')}</strong>`;
+                row.cells[9].innerHTML = `<strong>${getBettingStats('아웃')}</strong>`;
+                row.cells[10].innerHTML = `<strong>${bettingResultText}</strong>`;
+
+                // 행 스타일 업데이트
+                row.className = `game-stats-row ${game.status === 'active' ? 'active' : game.status === 'completed' ? 'completed' : ''}`;
+
+                // 모니터링 데이터 저장 (주기적으로)
+                if (totalBettors > 0 || game.bettingResult) {
+                    saveMonitoringData(gameNumber, game);
+                }
+            }
+        }
+
+        // 모니터링 데이터 저장
+        async function saveMonitoringData(gameNumber, gameData) {
+            try {
+                const currentDate = new Date().toISOString().split('T')[0];
+                const monitoringData = {
+                    gameNumber: gameNumber,
+                    homeTeam: gameData.homeTeam,
+                    awayTeam: gameData.awayTeam,
+                    gameType: gameData.gameType,
+                    totalBettors: gameData.totalBettors || 0,
+                    totalPoints: gameData.totalPoints || 0,
+                    bettingChoices: gameData.bettingChoices || {},
+                    bettingResult: gameData.bettingResult || null,
+                    totalWinners: gameData.totalWinners || 0,
+                    totalLosers: gameData.totalLosers || 0,
+                    totalLostPoints: gameData.totalLostPoints || 0,
+                    pointsPerWinner: gameData.pointsPerWinner || 0,
+                    status: gameData.status || 'scheduled'
+                };
+
+                const response = await fetch('/api/monitoring/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: currentDate,
+                        gameNumber: gameNumber,
+                        monitoringData: monitoringData
+                    })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    console.error('모니터링 데이터 저장 실패:', result.message);
+                }
+            } catch (error) {
+                console.error('모니터링 데이터 저장 오류:', error);
+            }
+        }
+
+        // 저장된 모니터링 데이터 로드
+        async function loadSavedMonitoringData() {
+            try {
+                const currentDate = new Date().toISOString().split('T')[0];
+                const response = await fetch(`/api/monitoring/data?date=${currentDate}`);
+                const result = await response.json();
                 
-                tableBody.appendChild(row);
+                if (result.success && result.data.length > 0) {
+                    console.log('저장된 모니터링 데이터 로드:', result.data);
+                    // 필요시 저장된 데이터를 활용할 수 있습니다
+                }
+            } catch (error) {
+                console.error('저장된 모니터링 데이터 로드 오류:', error);
             }
         }
 
@@ -377,6 +511,9 @@
                 document.getElementById('userName').textContent = currentUser.name || currentUser.username;
                 document.getElementById('logoutItem').style.display = 'block';
             }
+
+            // 저장된 모니터링 데이터 로드
+            loadSavedMonitoringData();
 
             // 초기 데이터 로드
             loadComprehensiveData();
