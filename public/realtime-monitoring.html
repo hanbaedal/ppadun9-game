@@ -3,209 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실시간 모니터링 - 빠던나인</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <title>실시간 모니터링 - 회원관리 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background: linear-gradient(135deg, #e8f5e8 0%, #d4f0d4 100%);
-            min-height: 100vh;
+        .monitor-card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        
-        .navbar {
-            background: rgba(245, 241, 235, 0.95) !important;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+
+        .monitor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        
-        .navbar .container-fluid {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            width: 100% !important;
+
+        .monitor-card .card-body {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            color: #1a365d;
         }
-        
-        .navbar .navbar-brand {
-            flex: 0 0 auto !important;
-            margin-right: 0 !important;
-            order: 1 !important;
+
+        .monitor-card .card-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a365d;
+        }
+
+        .monitor-card .card-value {
+            margin: 0;
+            font-size: 24px;
             font-weight: 700;
-            font-size: 1.3rem;
-            color: #333 !important;
+            color: #1a365d;
         }
-        
-        .navbar .navbar-nav.mx-auto {
-            flex: 1 !important;
-            display: flex !important;
-            justify-content: center !important;
-            margin: 0 !important;
-            order: 2 !important;
-        }
-        
-        .navbar .navbar-nav:last-child {
-            flex: 0 0 auto !important;
-            margin-left: auto !important;
-            order: 3 !important;
-            position: absolute !important;
-            right: 20px !important;
-        }
-        
-        .navbar .navbar-text {
-            color: #333 !important;
-            font-weight: 500;
-            margin: 0 !important;
-        }
-        
-        .navbar .nav-link {
-            color: #333 !important;
-        }
-        
-        .navbar .nav-link:hover {
-            color: #007bff !important;
-        }
-        
-        #userInfo {
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-            display: flex !important;
-            align-items: center !important;
-        }
-        
-        #userInfo:hover {
-            background-color: rgba(0, 123, 255, 0.1);
-        }
-        
-        #logoutBtn {
-            color: #dc3545 !important;
-            font-weight: 500;
-            padding: 8px 16px !important;
-            border-radius: 6px !important;
-            background-color: rgba(220, 53, 69, 0.1) !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        #logoutBtn:hover {
-            color: #fff !important;
-            background-color: #dc3545 !important;
-            text-decoration: none !important;
-            transform: translateY(-1px) !important;
-        }
-        
-        .main-content {
-            padding-top: 80px;
-            padding-bottom: 20px;
-            min-height: calc(100vh - 100px);
-        }
-        
-        .stats-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        
-        .stats-number {
-            font-size: 2.5rem;
+
+        .monitor-card h4 {
+            margin: 0;
+            font-size: 18px;
             font-weight: 700;
-            color: #28a745;
+            color: #1a365d;
+        }
+
+        .monitor-card p {
+            margin: 0;
+            font-size: 11px;
+            color: #1a365d;
+            opacity: 0.8;
+        }
+
+        .monitor-icon {
+            font-size: 16px;
             margin-bottom: 5px;
+            color: #1a365d;
         }
-        
-        .stats-label {
-            font-size: 1rem;
-            color: #666;
-            font-weight: 500;
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
         }
-        
         .live-indicator {
             animation: pulse 2s infinite;
         }
-        
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
-        
-        .table {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        .game-stats-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
         }
-        
-        .table th {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white !important;
-            font-weight: 600;
+        .game-stats-card.active {
+            border-left-color: #28a745;
+        }
+        .game-stats-card.completed {
+            border-left-color: #6c757d;
+        }
+        .betting-choice {
+            display: inline-block;
+            margin: 2px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            background-color: #e9ecef;
+        }
+        .betting-choice.odd {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .betting-choice.even {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .betting-choice.number {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .betting-choice.base1 {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .betting-choice.base2 {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .betting-choice.base3 {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .betting-choice.homerun {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .betting-choice.strikeout {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .betting-choice.out {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        body {
+            padding-top: 80px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stats-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stats-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .game-stats-row.active {
+            background-color: #d4edda !important;
+        }
+        .game-stats-row.completed {
+            background-color: #f8f9fa !important;
+        }
+        .betting-choices-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .card {
             border: none;
-            padding: 15px 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-        
+
+        .card-header {
+            background: linear-gradient(135deg, #E8F4FD 0%, #F0F8FF 100%);
+            border-bottom: 1px solid #E1E8ED;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 15px 20px;
+        }
+
+        .card-header h5 {
+            margin: 0;
+            color: #4A5568;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .card-body {
+            padding: 20px;
+            background-color: #FAFBFC;
+        }
+
+        .table {
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, #F7FAFC 0%, #EDF2F7 100%);
+            color: #2D3748 !important;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 12px 8px;
+            border-bottom: 2px solid #E2E8F0;
+            text-align: center;
+        }
+
         .table td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #e9ecef;
+            padding: 10px 8px;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 13px;
+            text-align: center;
             vertical-align: middle;
         }
-        
+
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+
         .table tbody tr:hover {
-            background-color: rgba(40, 167, 69, 0.05);
+            background-color: #F7FAFC;
         }
-        
-        .status-online {
-            color: #28a745;
-            font-weight: 600;
+
+        /* 경기별 배경색 - 파스텔 톤 */
+        .table tbody tr:nth-child(1) { background-color: #FFF5F5; }  /* 1경기: 연한 파스텔 빨간색 */
+        .table tbody tr:nth-child(2) { background-color: #F0FFF4; }  /* 2경기: 연한 파스텔 초록색 */
+        .table tbody tr:nth-child(3) { background-color: #F0F8FF; }  /* 3경기: 연한 파스텔 파란색 */
+        .table tbody tr:nth-child(4) { background-color: #FAF5FF; }  /* 4경기: 연한 파스텔 보라색 */
+        .table tbody tr:nth-child(5) { background-color: #FFFAF0; }  /* 5경기: 연한 파스텔 주황색 */
+
+        .table tbody tr:nth-child(1):hover { background-color: #FED7D7; }
+        .table tbody tr:nth-child(2):hover { background-color: #C6F6D5; }
+        .table tbody tr:nth-child(3):hover { background-color: #BEE3F8; }
+        .table tbody tr:nth-child(4):hover { background-color: #E9D8FD; }
+        .table tbody tr:nth-child(5):hover { background-color: #FEEBC8; }
+
+        /* 경기 번호 스타일 */
+        .game-number {
+            font-weight: 700;
+            color: #2D3748;
+            font-size: 14px;
         }
-        
-        .status-offline {
-            color: #6c757d;
+
+        /* 매치업 스타일 */
+        .matchup {
+            color: #4A5568;
             font-weight: 500;
+            font-size: 13px;
         }
-        
-        .btn-sm {
-            padding: 4px 8px;
-            font-size: 0.8rem;
+
+        /* 게임선택 스타일 */
+        .game-type {
+            color: #805AD5;
+            font-weight: 600;
+            font-size: 13px;
         }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #28a745;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+
+        /* 배팅선택자 스타일 */
+        .total-bettors {
+            color: #3182CE;
+            font-weight: 700;
+            font-size: 14px;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        /* 배팅 선택별 스타일 */
+        .betting-choice {
+            color: #2D3748;
+            font-weight: 500;
+            font-size: 12px;
         }
-        
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #f5c6cb;
+
+        /* 배팅결과 스타일 */
+        .betting-result {
+            color: #E53E3E;
+            font-weight: 700;
+            font-size: 13px;
         }
-        
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
+
+        /* 활성 경기 스타일 */
+        .game-stats-row.active {
+            background-color: #EBF8FF !important;
+            border-left: 4px solid #3182CE;
+        }
+
+        /* 완료된 경기 스타일 */
+        .game-stats-row.completed {
+            background-color: #F7FAFC !important;
+            border-left: 4px solid #48BB78;
         }
     </style>
 </head>
@@ -233,92 +319,143 @@
         </div>
     </nav>
 
-    <div class="container main-content">
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>실시간 모니터링</h2>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-success me-2 live-indicator">
+                    <i class="fas fa-circle"></i> LIVE
+                </span>
+                <small class="text-muted" id="lastUpdate">마지막 업데이트: --</small>
+            </div>
+        </div>
+        
+        <!-- 실시간 요약 카드 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card monitor-card bg-primary">
+                    <div class="card-body">
+                        <div class="card-title">총 접속자</div>
+                        <div class="card-value" id="totalActiveUsers">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card monitor-card bg-success">
+                    <div class="card-body">
+                        <div class="card-title">총 참여자</div>
+                        <div class="card-value" id="totalParticipants">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card monitor-card bg-warning">
+                    <div class="card-body">
+                        <div class="card-title">총 배팅자</div>
+                        <div class="card-value" id="totalBettors">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card monitor-card bg-info">
+                    <div class="card-body">
+                        <div class="card-title">총 배팅포인트</div>
+                        <div class="card-value" id="totalPoints">₩0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 경기별 상세 통계 -->
         <div class="row">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="mb-0">
-                        <i class="fas fa-chart-line me-2"></i>
-                        실시간 모니터링
-                    </h2>
-                    <div class="d-flex align-items-center">
-                        <span class="badge badge-success mr-2 live-indicator">
-                            <i class="fas fa-circle"></i> LIVE
-                        </span>
-                        <small class="text-muted" id="lastUpdate">마지막 업데이트: --</small>
+                <div class="card">
+                    <div class="card-header">
+                        <h5>경기별 상세 통계</h5>
                     </div>
-                </div>
-
-                <!-- 오류 메시지 -->
-                <div id="errorMessage" class="error-message" style="display: none;"></div>
-                
-                <!-- 성공 메시지 -->
-                <div id="successMessage" class="success-message" style="display: none;"></div>
-
-                <!-- 로딩 메시지 -->
-                <div id="loadingMessage" class="text-center py-4">
-                    <div class="loading-spinner mb-2"></div>
-                    <p class="text-muted">실시간 데이터를 불러오는 중...</p>
-                </div>
-
-                <!-- 통계 내용 -->
-                <div id="statsContent" style="display: none;">
-                    <!-- 요약 통계 카드 -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="stats-card text-center">
-                                <div class="stats-number" id="totalMembers">0</div>
-                                <div class="stats-label">전체 회원</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stats-card text-center">
-                                <div class="stats-number" id="onlineMembers">0</div>
-                                <div class="stats-label">온라인 회원</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stats-card text-center">
-                                <div class="stats-number" id="totalEmployees">0</div>
-                                <div class="stats-label">전체 직원</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stats-card text-center">
-                                <div class="stats-number" id="onlineEmployees">0</div>
-                                <div class="stats-label">온라인 직원</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 회원 목록 테이블 -->
-                    <div class="stats-card">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">
-                                <i class="fas fa-users me-2"></i>
-                                실시간 접속자 현황
-                            </h5>
-                            <button class="btn btn-warning btn-sm" onclick="manualMemberAutoLogout()">
-                                <i class="fas fa-sign-out-alt"></i> 전체 로그아웃
-                            </button>
-                        </div>
-                        
+                    <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
                                     <tr>
-                                        <th>번호</th>
-                                        <th>이름</th>
-                                        <th>아이디</th>
-                                        <th>마지막 로그인</th>
-                                        <th>총 로그인 시간</th>
-                                        <th>상태</th>
-                                        <th>관리</th>
+                                        <th style="color: #000;">경기</th>
+                                        <th style="color: #000;">매치업</th>
+                                        <th style="color: #000;">게임</th>
+                                        <th style="color: #000;">참가자수</th>
+                                        <th style="color: #000;">1루</th>
+                                        <th style="color: #000;">2루</th>
+                                        <th style="color: #000;">3루</th>
+                                        <th style="color: #000;">홈런</th>
+                                        <th style="color: #000;">삼진</th>
+                                        <th style="color: #000;">아웃</th>
+                                        <th style="color: #000;">배팅결과</th>
                                     </tr>
                                 </thead>
-                                <tbody id="onlineMembersTable">
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted">데이터를 불러오는 중...</td>
+                                <tbody id="gameStatsTableBody">
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>1경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>2경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>3경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>4경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
+                                    </tr>
+                                    <tr class="game-stats-row">
+                                        <td style="color: #000;"><strong>5경기</strong></td>
+                                        <td style="color: #000;">-</td>
+                                        <td style="color: #000;">타자</td>
+                                        <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
+                                        <td style="color: #000;"><strong>-</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -329,376 +466,9 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let updateInterval;
-
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCurrentUser();
-            loadMemberLoginStats();
-            
-            // 30초마다 자동 새로고침 (실시간 상태 업데이트)
-            setInterval(() => {
-                console.log('자동 상태 업데이트 실행');
-                loadMemberLoginStats();
-            }, 30000); // 30초
-        });
-        
-        // 현재 로그인한 사용자 정보 가져오기
-        async function loadCurrentUser() {
-            try {
-                console.log('사용자 정보 로드 시작');
-                
-                const userNameElement = document.getElementById('userName');
-                const logoutItem = document.getElementById('logoutItem');
-                const logoutBtn = document.getElementById('logoutBtn');
-                
-                // 먼저 API 호출로 실제 로그인 상태 확인
-                try {
-                    const response = await fetch('/api/employee/current-user', {
-                        credentials: 'include',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    console.log('API 응답 상태:', response.status);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('API 사용자 정보 응답:', data);
-                        
-                        if (data.success && data.user) {
-                            console.log('API에서 로그인된 사용자 발견:', data.user);
-                            // 로컬 스토리지에 저장
-                            localStorage.setItem('currentUser', JSON.stringify(data.user));
-                            
-                            // UI 업데이트
-                            userNameElement.textContent = data.user.name || data.user.username;
-                            logoutItem.style.display = 'block';
-                            
-                            // 로그아웃 버튼 이벤트 리스너
-                            logoutBtn.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                showLogoutConfirm();
-                            });
-                            return;
-                        }
-                    }
-                } catch (apiError) {
-                    console.error('API 호출 오류:', apiError);
-                }
-                
-                // API에서 로그인 정보를 가져올 수 없는 경우, 로컬 스토리지 확인
-                const storedUser = localStorage.getItem('currentUser');
-                console.log('로컬 스토리지 사용자 정보:', storedUser);
-                
-                if (storedUser) {
-                    const user = JSON.parse(storedUser);
-                    console.log('로컬 스토리지 사용자 정보:', user);
-                    
-                    // 로그인된 사용자가 있는 경우
-                    userNameElement.textContent = user.name || user.username;
-                    console.log('사용자 이름 표시:', user.name || user.username);
-                    
-                    // 로그아웃 버튼 표시
-                    logoutItem.style.display = 'block';
-                    
-                    // 로그아웃 버튼 이벤트 리스너
-                    logoutBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        showLogoutConfirm();
-                    });
-                } else {
-                    console.log('로그인되지 않은 상태');
-                    // 로그인되지 않은 경우
-                    userNameElement.textContent = '사용자';
-                    logoutItem.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('사용자 정보 로드 오류:', error);
-                const userNameElement = document.getElementById('userName');
-                const logoutItem = document.getElementById('logoutItem');
-                userNameElement.textContent = '사용자';
-                logoutItem.style.display = 'none';
-            }
-        }
-        
-        // 회원 로그인 통계 로드
-        async function loadMemberLoginStats() {
-            try {
-                console.log('회원 로그인 통계 로드 시작');
-                
-                // 회원 로그인 통계 API 호출
-                const response = await fetch('/api/members/login-stats', {
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                console.log('응답 상태:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('응답 데이터:', data);
-                    
-                    if (data.success) {
-                        displayMemberStats(data.stats);
-                    } else {
-                        console.error('API 오류:', data.message);
-                        showError('통계 데이터를 가져올 수 없습니다: ' + (data.message || '알 수 없는 오류'));
-                    }
-                } else {
-                    const errorText = await response.text();
-                    console.error('HTTP 오류:', response.status, errorText);
-                    showError('서버 오류가 발생했습니다. (상태: ' + response.status + ')');
-                }
-            } catch (error) {
-                console.error('통계 로드 오류:', error);
-                showError('네트워크 오류가 발생했습니다: ' + error.message);
-            }
-        }
-        
-        // 회원 통계 표시
-        function displayMemberStats(stats) {
-            try {
-                // 로딩 메시지 숨기기
-                document.getElementById('loadingMessage').style.display = 'none';
-                
-                // 통계 내용 표시
-                document.getElementById('statsContent').style.display = 'block';
-                
-                // 전체 회원 수와 온라인 회원 수
-                document.getElementById('totalMembers').textContent = stats.totalMembers || 0;
-                document.getElementById('onlineMembers').textContent = stats.onlineMembers || 0;
-                
-                // 직원 통계도 함께 표시 (임시로 0으로 설정)
-                document.getElementById('totalEmployees').textContent = '0';
-                document.getElementById('onlineEmployees').textContent = '0';
-                
-                // 회원 명단 테이블
-                const onlineTable = document.getElementById('onlineMembersTable');
-                onlineTable.innerHTML = '';
-                
-                // 현재 온라인인 회원들을 우선 표시
-                if (stats.onlineMembersList && stats.onlineMembersList.length > 0) {
-                    stats.onlineMembersList.forEach((member, index) => {
-                        const row = document.createElement('tr');
-                        const loginStatus = member.isLoggedIn ? '로그인' : '로그아웃';
-                        const statusClass = member.isLoggedIn ? 'status-online' : 'status-offline';
-                        const forceLogoutBtn = member.isLoggedIn ? 
-                            `<button class="btn btn-sm btn-warning" onclick="forceLogoutMember('${member._id}', '${member.name}')">
-                                <i class="fas fa-sign-out-alt"></i> 강제 로그아웃
-                            </button>` : 
-                            '<span class="text-muted">-</span>';
-                        
-                        row.innerHTML = `
-                            <td>${index + 1}</td>
-                            <td>${member.name || '이름 없음'}</td>
-                            <td>${member.userId || '아이디 없음'}</td>
-                            <td>${formatDate(member.lastLoginAt)}</td>
-                            <td>${member.totalLoginTime || calculateTotalLoginTime(member)}</td>
-                            <td><span class="${statusClass} font-weight-bold">${loginStatus}</span></td>
-                            <td>${forceLogoutBtn}</td>
-                        `;
-                        onlineTable.appendChild(row);
-                    });
-                } else {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td colspan="7" class="text-center text-muted">현재 온라인인 회원이 없습니다.</td>
-                    `;
-                    onlineTable.appendChild(row);
-                }
-                
-                // 마지막 업데이트 시간 표시
-                document.getElementById('lastUpdate').textContent = 
-                    '마지막 업데이트: ' + new Date().toLocaleTimeString();
-                
-            } catch (error) {
-                console.error('통계 표시 오류:', error);
-                showError('통계 데이터 표시 중 오류가 발생했습니다: ' + error.message);
-            }
-        }
-        
-        // 총 로그인 시간 계산
-        function calculateTotalLoginTime(member) {
-            try {
-                if (!member.lastLoginAt) {
-                    return '로그인 기록 없음';
-                }
-                
-                const loginTime = new Date(member.lastLoginAt);
-                let logoutTime = member.lastLogoutAt ? new Date(member.lastLogoutAt) : new Date();
-                
-                // 현재 로그인 중인 경우 현재 시간 사용
-                if (member.isLoggedIn) {
-                    logoutTime = new Date();
-                }
-                
-                const diffTime = Math.abs(logoutTime - loginTime);
-                const diffMinutes = Math.floor(diffTime / (1000 * 60));
-                const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffMinutes < 60) {
-                    return `${diffMinutes}분`;
-                } else if (diffHours < 24) {
-                    return `${diffHours}시간 ${diffMinutes % 60}분`;
-                } else {
-                    return `${diffDays}일 ${diffHours % 24}시간`;
-                }
-            } catch (error) {
-                console.error('총 로그인 시간 계산 오류:', error);
-                return '계산 오류';
-            }
-        }
-        
-        // 날짜 포맷팅 (한국 시간 기준)
-        function formatDate(dateString) {
-            if (!dateString) return '로그인 기록 없음';
-            
-            try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) {
-                    return '날짜 형식 오류';
-                }
-                
-                // 한국 시간으로 변환
-                const koreanDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
-                const now = new Date();
-                const koreanNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                
-                const diffTime = Math.abs(koreanNow - koreanDate);
-                const diffMinutes = Math.ceil(diffTime / (1000 * 60));
-                const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffMinutes < 60) {
-                    return `${diffMinutes}분 전`;
-                } else if (diffHours < 24) {
-                    return `${diffHours}시간 전`;
-                } else if (diffDays === 1) {
-                    return '오늘';
-                } else if (diffDays === 2) {
-                    return '어제';
-                } else if (diffDays <= 7) {
-                    return `${diffDays - 1}일 전`;
-                } else {
-                    return koreanDate.toLocaleDateString('ko-KR');
-                }
-            } catch (error) {
-                console.error('날짜 포맷팅 오류:', error);
-                return '날짜 오류';
-            }
-        }
-        
-        // 회원 수동 자동 로그아웃
-        async function manualMemberAutoLogout() {
-            if (!confirm('정말로 모든 회원을 자동 로그아웃시키시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/members/auto-logout-all', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert(`${data.message}\n\n로그아웃된 회원 수: ${data.logoutCount}명\n실행 시간: ${data.timestamp}`);
-                    // 페이지 새로고침
-                    loadMemberLoginStats();
-                } else {
-                    alert('자동 로그아웃 중 오류가 발생했습니다: ' + (data.message || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('수동 회원 자동 로그아웃 오류:', error);
-                alert('서버 오류가 발생했습니다.');
-            }
-        }
-        
-        // 회원 강제 로그아웃
-        async function forceLogoutMember(id, name) {
-            if (!confirm(`정말로 ${name} 회원을 강제 로그아웃시키시겠습니까?\n\n이 작업은 즉시 적용되며, 해당 회원의 세션이 종료됩니다.`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/members/${id}/force-logout`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert(`${data.message}\n\n강제 로그아웃이 완료되었습니다.\n실행 시간: ${data.timestamp}\n\n페이지가 새로고침됩니다.`);
-                    
-                    // 3초 후 페이지 새로고침 (사용자가 메시지를 볼 수 있도록)
-                    setTimeout(() => {
-                        loadMemberLoginStats();
-                    }, 3000);
-                } else {
-                    alert('강제 로그아웃 중 오류가 발생했습니다: ' + (data.message || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('회원 강제 로그아웃 오류:', error);
-                alert('서버 오류가 발생했습니다.');
-            }
-        }
-        
-        // 오류 메시지 표시
-        function showError(message) {
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('errorMessage').style.display = 'block';
-        }
-        
-        // 로그아웃 확인
-        function showLogoutConfirm() {
-            if (confirm('로그아웃하시겠습니까?')) {
-                logout();
-            }
-        }
-        
-        // 로그아웃
-        async function logout() {
-            try {
-                const response = await fetch('/api/employee/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    localStorage.removeItem('currentUser');
-                    alert('로그아웃되었습니다.');
-                    window.location.href = '/employee-login.html';
-                } else {
-                    alert('로그아웃 중 오류가 발생했습니다.');
-                }
-            } catch (error) {
-                console.error('로그아웃 오류:', error);
-                alert('서버 오류가 발생했습니다.');
-            }
-        }
 
         // 종합 모니터링 데이터 로드
         async function loadComprehensiveData() {
@@ -736,6 +506,226 @@
                 console.error('API 호출 오류:', error);
             }
         }
+
+        // 대시보드 업데이트
+        function updateDashboard(data) {
+            // 요약 카드 업데이트
+            document.getElementById('totalActiveUsers').textContent = data.summary.totalActiveUsers.toLocaleString();
+            document.getElementById('totalParticipants').textContent = data.summary.totalParticipants.toLocaleString();
+            document.getElementById('totalBettors').textContent = data.summary.totalBettors.toLocaleString();
+            document.getElementById('totalPoints').textContent = '₩' + data.summary.totalPoints.toLocaleString();
+
+            // 경기별 통계 업데이트
+            updateGameStats(data.games);
+
+            // 마지막 업데이트 시간
+            document.getElementById('lastUpdate').textContent = 
+                '마지막 업데이트: ' + new Date().toLocaleTimeString();
+        }
+
+        // 경기별 통계 업데이트
+        function updateGameStats(games) {
+            const tableBody = document.getElementById('gameStatsTableBody');
+            
+            // 1경기부터 5경기까지 모든 경기 업데이트
+            for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
+                const game = games.find(g => g.gameNumber === gameNumber) || {
+                    gameNumber: gameNumber,
+                    homeTeam: '-',
+                    awayTeam: '-',
+                    gameType: '-',
+                    totalBettors: 0,
+                    bettingChoices: {},
+                    bettingResult: '-'
+                };
+
+                const row = tableBody.children[gameNumber - 1]; // 기존 행 사용
+                
+                // 각 배팅 선택별 통계 계산
+                const getBettingStats = (choice) => {
+                    const stats = game.bettingChoices[choice] || 
+                                 game.bettingChoices[choice.replace('루', 'base').replace('홈런', 'homerun').replace('삼진', 'strikeout').replace('아웃', 'out')] || 
+                                 { count: 0, totalPoints: 0 };
+                    return `${stats.count}명 (₩${stats.totalPoints.toLocaleString()})`;
+                };
+
+                // 배팅선택자 총합 계산 (1루+2루+3루+홈런+삼진+아웃)
+                const choices = ['1루', '2루', '3루', '홈런', '삼진', '아웃'];
+                let totalBettors = 0;
+                choices.forEach(choice => {
+                    const stats = game.bettingChoices[choice] || 
+                                 game.bettingChoices[choice.replace('루', 'base').replace('홈런', 'homerun').replace('삼진', 'strikeout').replace('아웃', 'out')] || 
+                                 { count: 0, totalPoints: 0 };
+                    totalBettors += stats.count;
+                });
+
+                // 게임선택 텍스트 설정
+                let gameTypeText = '타자'; // 기본값
+                if (game.gameType) {
+                    switch(game.gameType) {
+                        case 'attack':
+                            gameTypeText = '타자';
+                            break;
+                        case 'defense':
+                            gameTypeText = '수비';
+                            break;
+                        case 'pitcher':
+                            gameTypeText = '투수';
+                            break;
+                        default:
+                            gameTypeText = game.gameType;
+                    }
+                }
+
+                // 배팅결과 텍스트 설정
+                let bettingResultText = '-';
+                if (game.bettingResult) {
+                    switch(game.bettingResult) {
+                        case '1base':
+                        case '1루':
+                            bettingResultText = '1루';
+                            break;
+                        case '2base':
+                        case '2루':
+                            bettingResultText = '2루';
+                            break;
+                        case '3base':
+                        case '3루':
+                            bettingResultText = '3루';
+                            break;
+                        case 'homerun':
+                        case '홈런':
+                            bettingResultText = '홈런';
+                            break;
+                        case 'strikeout':
+                        case '삼진':
+                            bettingResultText = '삼진';
+                            break;
+                        case 'out':
+                        case '아웃':
+                            bettingResultText = '아웃';
+                            break;
+                        default:
+                            bettingResultText = game.bettingResult;
+                    }
+                }
+
+                // 행 업데이트
+                row.cells[0].innerHTML = `<strong class="game-number">${gameNumber}경기</strong>`;
+                row.cells[1].textContent = game.homeTeam === '-' ? '-' : `${game.homeTeam} vs ${game.awayTeam}`;
+                row.cells[1].className = 'matchup';
+                row.cells[2].textContent = gameTypeText;
+                row.cells[2].className = 'game-type';
+                row.cells[3].innerHTML = `<strong class="total-bettors">${totalBettors}</strong>`;
+                row.cells[4].innerHTML = `<strong class="betting-choice">${getBettingStats('1루')}</strong>`;
+                row.cells[5].innerHTML = `<strong class="betting-choice">${getBettingStats('2루')}</strong>`;
+                row.cells[6].innerHTML = `<strong class="betting-choice">${getBettingStats('3루')}</strong>`;
+                row.cells[7].innerHTML = `<strong class="betting-choice">${getBettingStats('홈런')}</strong>`;
+                row.cells[8].innerHTML = `<strong class="betting-choice">${getBettingStats('삼진')}</strong>`;
+                row.cells[9].innerHTML = `<strong class="betting-choice">${getBettingStats('아웃')}</strong>`;
+                row.cells[10].innerHTML = `<strong class="betting-result">${bettingResultText}</strong>`;
+
+                // 행 스타일 업데이트
+                row.className = `game-stats-row ${game.status === 'active' ? 'active' : game.status === 'completed' ? 'completed' : ''}`;
+
+                // 모니터링 데이터 저장 (주기적으로)
+                if (totalBettors > 0 || game.bettingResult) {
+                    saveMonitoringData(gameNumber, game);
+                }
+            }
+        }
+
+        // 모니터링 데이터 저장
+        async function saveMonitoringData(gameNumber, gameData) {
+            try {
+                const currentDate = new Date().toISOString().split('T')[0];
+                const monitoringData = {
+                    gameNumber: gameNumber,
+                    homeTeam: gameData.homeTeam,
+                    awayTeam: gameData.awayTeam,
+                    gameType: gameData.gameType,
+                    totalBettors: gameData.totalBettors || 0,
+                    totalPoints: gameData.totalPoints || 0,
+                    bettingChoices: gameData.bettingChoices || {},
+                    bettingResult: gameData.bettingResult || null,
+                    totalWinners: gameData.totalWinners || 0,
+                    totalLosers: gameData.totalLosers || 0,
+                    totalLostPoints: gameData.totalLostPoints || 0,
+                    pointsPerWinner: gameData.pointsPerWinner || 0,
+                    status: gameData.status || 'scheduled'
+                };
+
+                const response = await fetch('/api/monitoring/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: currentDate,
+                        gameNumber: gameNumber,
+                        monitoringData: monitoringData
+                    })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    console.error('모니터링 데이터 저장 실패:', result.message);
+                }
+            } catch (error) {
+                console.error('모니터링 데이터 저장 오류:', error);
+            }
+        }
+
+        // 저장된 모니터링 데이터 로드
+        async function loadSavedMonitoringData() {
+            try {
+                const currentDate = new Date().toISOString().split('T')[0];
+                const response = await fetch(`/api/monitoring/data?date=${currentDate}`);
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    console.log('저장된 모니터링 데이터 로드:', result.data);
+                    // 필요시 저장된 데이터를 활용할 수 있습니다
+                }
+            } catch (error) {
+                console.error('저장된 모니터링 데이터 로드 오류:', error);
+            }
+        }
+
+        // 페이지 로드 시 초기화
+        window.onload = function() {
+            // 사용자 정보 로드
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.name || currentUser.username;
+                document.getElementById('logoutItem').style.display = 'block';
+            }
+
+            // 저장된 모니터링 데이터 로드
+            loadSavedMonitoringData();
+
+            // 초기 데이터 로드
+            loadComprehensiveData();
+
+            // 실시간 업데이트 시작 (0.1초마다)
+            updateInterval = setInterval(() => {
+                loadComprehensiveData();
+            }, 100);
+
+            // 로그아웃 이벤트 리스너
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('currentUser');
+                window.location.href = '/employee-login.html';
+            });
+        };
+
+        // 페이지 언로드 시 인터벌 정리
+        window.onbeforeunload = function() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        };
     </script>
 </body>
 </html> 
