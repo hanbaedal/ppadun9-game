@@ -473,7 +473,10 @@
         // 종합 모니터링 데이터 로드
         async function loadComprehensiveData() {
             try {
+                console.log('=== 실시간 모니터링 데이터 로드 시작 ===');
+                
                 // 회원 로그인 통계 먼저 가져오기
+                console.log('회원 로그인 통계 API 호출 중...');
                 const memberStatsResponse = await fetch('/api/members/login-stats', {
                     credentials: 'include',
                     headers: {
@@ -482,26 +485,40 @@
                     }
                 });
                 
+                console.log('회원 로그인 통계 응답 상태:', memberStatsResponse.status);
+                
                 let totalActiveUsers = 0;
                 if (memberStatsResponse.ok) {
                     const memberStatsData = await memberStatsResponse.json();
+                    console.log('회원 로그인 통계 응답 데이터:', memberStatsData);
+                    
                     if (memberStatsData.success) {
                         totalActiveUsers = memberStatsData.stats.onlineMembers || 0;
-                        console.log('회원 로그인 통계:', memberStatsData.stats);
+                        console.log('총 접속자 수 (회원):', totalActiveUsers);
+                    } else {
+                        console.error('회원 로그인 통계 API 오류:', memberStatsData.message);
                     }
+                } else {
+                    console.error('회원 로그인 통계 API HTTP 오류:', memberStatsResponse.status);
                 }
                 
                 // 기존 모니터링 데이터 가져오기
+                console.log('종합 모니터링 데이터 API 호출 중...');
                 const response = await fetch('/api/monitoring/comprehensive');
                 const result = await response.json();
+                
+                console.log('종합 모니터링 데이터 응답:', result);
                 
                 if (result.success) {
                     // totalActiveUsers를 회원 로그인 통계로 덮어쓰기
                     result.data.summary.totalActiveUsers = totalActiveUsers;
+                    console.log('최종 총 접속자 수:', totalActiveUsers);
                     updateDashboard(result.data);
                 } else {
                     console.error('데이터 로드 실패:', result.message);
                 }
+                
+                console.log('=== 실시간 모니터링 데이터 로드 완료 ===');
             } catch (error) {
                 console.error('API 호출 오류:', error);
             }
