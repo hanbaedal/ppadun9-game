@@ -2385,10 +2385,22 @@ app.get('/api/monitoring/comprehensive', async (req, res) => {
         // 오늘 날짜
         const targetDate = date || new Date().toISOString().split('T')[0];
         
-        // 1. 총 접속자 수
+        // 1. 총 접속자 수 (디버깅 로그 추가)
         const activeMembers = await memberCollection.countDocuments({ isLoggedIn: true });
         const activeEmployees = await employeeCollection.countDocuments({ isLoggedIn: true });
         const totalActiveUsers = activeMembers + activeEmployees;
+        
+        // 디버깅: 실제 로그인된 사용자들 조회
+        const loggedInMembers = await memberCollection.find({ isLoggedIn: true }, { userId: 1, name: 1, isLoggedIn: 1, lastLoginAt: 1 }).toArray();
+        const loggedInEmployees = await employeeCollection.find({ isLoggedIn: true }, { username: 1, name: 1, isLoggedIn: 1, lastLoginAt: 1 }).toArray();
+        
+        console.log('=== 실시간 모니터링 디버깅 ===');
+        console.log('로그인된 회원 수:', activeMembers);
+        console.log('로그인된 직원 수:', activeEmployees);
+        console.log('총 접속자 수:', totalActiveUsers);
+        console.log('로그인된 회원 목록:', loggedInMembers);
+        console.log('로그인된 직원 목록:', loggedInEmployees);
+        console.log('=============================');
         
         // 2. 오늘의 경기 목록
         const todayGames = await todayGamesCollection.find({ 
@@ -2492,6 +2504,10 @@ app.get('/api/monitoring/comprehensive', async (req, res) => {
                     totalPoints
                 },
                 games: gameStats,
+                debug: {
+                    loggedInMembers: loggedInMembers,
+                    loggedInEmployees: loggedInEmployees
+                },
                 timestamp: new Date()
             }
         });
@@ -2621,6 +2637,73 @@ app.delete('/api/monitoring/delete', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '모니터링 데이터 삭제 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 로그인 상태 디버깅 API
+app.get('/api/debug/login-status', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const memberCollection = db.collection('game-member');
+        const employeeCollection = db.collection('employee-member');
+        
+        // 모든 회원의 로그인 상태 조회
+        const allMembers = await memberCollection.find({}, { 
+            userId: 1, 
+            name: 1, 
+            isLoggedIn: 1, 
+            lastLoginAt: 1,
+            lastLogoutAt: 1
+        }).toArray();
+        
+        // 모든 직원의 로그인 상태 조회
+        const allEmployees = await employeeCollection.find({}, { 
+            username: 1, 
+            name: 1, 
+            isLoggedIn: 1, 
+            lastLoginAt: 1,
+            lastLogoutAt: 1
+        }).toArray();
+        
+        // 로그인된 사용자들만 필터링
+        const loggedInMembers = allMembers.filter(member => member.isLoggedIn === true);
+        const loggedInEmployees = allEmployees.filter(employee => employee.isLoggedIn === true);
+        
+        console.log('=== 로그인 상태 디버깅 ===');
+        console.log('전체 회원 수:', allMembers.length);
+        console.log('전체 직원 수:', allEmployees.length);
+        console.log('로그인된 회원 수:', loggedInMembers.length);
+        console.log('로그인된 직원 수:', loggedInEmployees.length);
+        console.log('로그인된 회원 목록:', loggedInMembers);
+        console.log('로그인된 직원 목록:', loggedInEmployees);
+        console.log('=============================');
+        
+        res.json({
+            success: true,
+            data: {
+                totalMembers: allMembers.length,
+                totalEmployees: allEmployees.length,
+                loggedInMembers: loggedInMembers.length,
+                loggedInEmployees: loggedInEmployees.length,
+                totalActiveUsers: loggedInMembers.length + loggedInEmployees.length,
+                allMembers: allMembers,
+                allEmployees: allEmployees,
+                loggedInMembersList: loggedInMembers,
+                loggedInEmployeesList: loggedInEmployees
+            }
+        });
+    } catch (error) {
+        console.error('로그인 상태 디버깅 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '로그인 상태 디버깅 중 오류가 발생했습니다.'
         });
     }
 });
