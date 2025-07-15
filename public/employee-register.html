@@ -674,7 +674,12 @@
                         <div class="form-group">
                             <label for="confirmPassword" class="form-label">비밀번호 확인 *</label>
                             <div class="form-control-wrap">
-                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                <div class="password-input-container">
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                    <button type="button" class="password-toggle">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                                 <div id="passwordMessage" class="message"></div>
                             </div>
                         </div>
@@ -822,6 +827,22 @@
             updateSubmitButton();
         });
 
+        // 비밀번호 보기/숨기기 토글 기능
+        document.querySelectorAll('.password-toggle').forEach(function(toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'fas fa-eye-slash';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'fas fa-eye';
+                }
+            });
+        });
+
         // 전화번호 인증번호 발송
         document.getElementById('phoneVerifyBtn').addEventListener('click', function() {
             const phone = document.getElementById('phone').value.trim();
@@ -838,6 +859,9 @@
             
             messageDiv.textContent = `인증번호가 발송되었습니다. (테스트용: ${verificationCode})`;
             messageDiv.className = 'message success';
+            
+            // 인증번호 자동 입력
+            document.getElementById('verificationCode').value = verificationCode;
             
             document.getElementById('verificationSection').style.display = 'block';
             this.disabled = true;
