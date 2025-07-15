@@ -494,10 +494,37 @@
         let employees = [];
         let filteredEmployees = [];
 
+        // 사용자 활동 갱신
+        async function updateActivity() {
+            try {
+                const response = await fetch('/api/employee/update-activity', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    console.log('활동 시간이 갱신되었습니다.');
+                } else {
+                    console.log('활동 갱신 실패 (로그인되지 않음)');
+                }
+            } catch (error) {
+                console.error('활동 갱신 오류:', error);
+            }
+        }
+
         // 페이지 로드 시 직원 목록 불러오기
         document.addEventListener('DOMContentLoaded', function() {
             loadEmployees();
             loadCurrentUser();
+            
+            // 주기적으로 활동 갱신 (5분마다)
+            setInterval(updateActivity, 5 * 60 * 1000);
+            // 페이지 로드 시 즉시 활동 갱신
+            updateActivity();
             
             // 로그아웃 버튼 이벤트 리스너
             document.getElementById('logoutBtn').addEventListener('click', function(e) {
