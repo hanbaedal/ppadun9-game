@@ -234,8 +234,8 @@
             loadCurrentUser();
             checkSessionStatus().then(() => {
                 loadLoginStats();
-                // 주기적으로 활동 갱신 (5분마다)
-                setInterval(updateActivity, 5 * 60 * 1000);
+                // 실제 사용 활동 감지 설정
+                setupActivityTracking();
                 // 페이지 로드 시 즉시 활동 갱신
                 updateActivity();
             });
@@ -362,6 +362,53 @@
             } catch (error) {
                 console.error('활동 갱신 오류:', error);
             }
+        }
+
+        // 실제 사용 활동 감지 설정
+        function setupActivityTracking() {
+            let activityTimeout;
+            const ACTIVITY_DELAY = 1000; // 1초 지연 후 활동 갱신
+            
+            // 활동 감지 함수
+            function detectActivity() {
+                clearTimeout(activityTimeout);
+                activityTimeout = setTimeout(() => {
+                    updateActivity();
+                }, ACTIVITY_DELAY);
+            }
+            
+            // 마우스 움직임 감지
+            document.addEventListener('mousemove', detectActivity);
+            
+            // 키보드 입력 감지
+            document.addEventListener('keydown', detectActivity);
+            document.addEventListener('keyup', detectActivity);
+            
+            // 클릭 감지
+            document.addEventListener('click', detectActivity);
+            
+            // 스크롤 감지
+            document.addEventListener('scroll', detectActivity);
+            
+            // 터치 감지 (모바일)
+            document.addEventListener('touchstart', detectActivity);
+            document.addEventListener('touchmove', detectActivity);
+            
+            // 페이지 가시성 변경 감지
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    // 페이지가 다시 보일 때 활동 갱신
+                    updateActivity();
+                }
+            });
+            
+            // 창 포커스 감지
+            window.addEventListener('focus', updateActivity);
+            
+            // 주기적 활동 갱신 (백업용, 5분마다)
+            setInterval(updateActivity, 5 * 60 * 1000);
+            
+            console.log('실제 사용 활동 감지가 설정되었습니다.');
         }
 
         // 로그인 통계 로드
