@@ -250,7 +250,7 @@
         // 로그 추가
         function addLog(event, status) {
             const logTable = document.getElementById('logTable');
-            const now = new Date().toLocaleString();
+            const now = KoreanTime.formatKoreanTime(KoreanTime.getKoreanTime(), 'datetime');
             const row = `
                 <tr>
                     <td>${now}</td>

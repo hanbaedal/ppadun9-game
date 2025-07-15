@@ -49,7 +49,7 @@ async function autoLogoutAllEmployees() {
                 $set: { 
                     isLoggedIn: false,
                     lastLogoutAt: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -82,7 +82,7 @@ async function autoLogoutAllMembers() {
                 $set: { 
                     isLoggedIn: false,
                     lastLogoutAt: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -367,7 +367,7 @@ app.post('/api/employee/register', async (req, res) => {
             lastLoginAt: null, // 마지막 로그인 시간 필드 추가
             lastLogoutAt: null, // 마지막 로그아웃 시간 필드 추가
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: getKoreanTime()
         };
 
         const result = await collection.insertOne(newEmployee);
@@ -553,7 +553,7 @@ app.put('/api/employee/:id', async (req, res) => {
         const collection = db.collection(COLLECTION_NAME);
         
         // 업데이트 시간 추가
-        updateData.updatedAt = new Date();
+        updateData.updatedAt = getKoreanTime();
         
         const result = await collection.updateOne(
             { _id: new ObjectId(id) },
@@ -644,7 +644,7 @@ app.post('/api/employee/login', async (req, res) => {
                     loginCount: newLoginCount,
                     lastLoginAt: lastLoginAt,
                     isLoggedIn: true,
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -725,7 +725,7 @@ app.post('/api/employee/logout', async (req, res) => {
                     $set: { 
                         lastLogoutAt: new Date(),
                         isLoggedIn: false,
-                        updatedAt: new Date()
+                        updatedAt: getKoreanTime()
                     } 
                 }
             );
@@ -771,7 +771,7 @@ app.get('/api/employee/check-session-status', async (req, res) => {
                     $set: { 
                         isLoggedIn: false,
                         lastLogoutAt: new Date(),
-                        updatedAt: new Date()
+                        updatedAt: getKoreanTime()
                     } 
                 }
             );
@@ -813,7 +813,7 @@ app.post('/api/employee/force-logout', async (req, res) => {
                 $set: { 
                     isLoggedIn: false,
                     lastLogoutAt: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -851,7 +851,7 @@ app.post('/api/system/auto-logout-all', async (req, res) => {
                 $set: { 
                     isLoggedIn: false,
                     lastLogoutAt: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -1041,7 +1041,7 @@ app.post('/api/employee/reset-password', async (req, res) => {
             { 
                 $set: { 
                     password: newPassword, // 실제로는 해시화해야 함
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -1147,7 +1147,7 @@ app.post('/api/system/update-employee-schema', async (req, res) => {
             { 
                 $set: { 
                     isLoggedIn: false,
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -1159,7 +1159,7 @@ app.post('/api/system/update-employee-schema', async (req, res) => {
             { 
                 $set: { 
                     loginCount: 0,
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -1171,7 +1171,7 @@ app.post('/api/system/update-employee-schema', async (req, res) => {
             { 
                 $set: { 
                     lastLoginAt: null,
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -1183,7 +1183,7 @@ app.post('/api/system/update-employee-schema', async (req, res) => {
             { 
                 $set: { 
                     lastLogoutAt: null,
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -2219,7 +2219,7 @@ app.post('/api/monitoring/save', async (req, res) => {
             { 
                 $set: {
                     ...monitoringData,
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 }
             },
             { upsert: true }
@@ -2570,7 +2570,7 @@ app.post('/api/system/initialize-collections', async (req, res) => {
                     lastLoginAt: null,
                     lastLogoutAt: null,
                     createdAt: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 };
                 
                 await employeeCollection.insertOne(sampleEmployee);
@@ -2607,7 +2607,7 @@ app.post('/api/system/initialize-collections', async (req, res) => {
                     author: '시스템',
                     isActive: true,
                     createdAt: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 };
                 
                 await noticesCollection.insertOne(sampleNotice);

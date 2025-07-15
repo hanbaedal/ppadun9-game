@@ -34,15 +34,7 @@ function loadSystemStatus() {
 
 // 현재 시간 업데이트
 function updateDateTime() {
-    const now = new Date();
-    const dateTimeString = now.toLocaleString('ko-KR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
+    const dateTimeString = KoreanTime.formatKoreanTime(KoreanTime.getKoreanTime(), 'datetime');
     
     // 시간 표시 요소가 있다면 업데이트
     const timeElement = document.getElementById('current-time');

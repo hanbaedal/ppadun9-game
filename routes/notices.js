@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
+const { getKoreanTime } = require('../utils/timeUtils');
 
 // 공지사항 목록 조회
 router.get('/', async (req, res) => {
@@ -74,8 +75,8 @@ router.post('/', async (req, res) => {
             title: title,
             content: content,
             isImportant: isImportant,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: getKoreanTime(),
+            updatedAt: getKoreanTime()
         };
         
         const result = await collection.insertOne(newNotice);
@@ -115,7 +116,7 @@ router.put('/:id', async (req, res) => {
                 title: title,
                 content: content,
                 isImportant: isImportant,
-                updatedAt: new Date()
+                updatedAt: getKoreanTime()
             }
         };
         

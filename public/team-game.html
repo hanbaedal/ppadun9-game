@@ -901,9 +901,8 @@
 
         // 날짜 표시 업데이트
         function updateDate() {
-            const dateStr = currentDate.getFullYear() + '년 ' +
-                           (currentDate.getMonth() + 1) + '월 ' +
-                           currentDate.getDate() + '일';
+            let currentDate = KoreanTime.getKoreanTime();
+            const dateStr = KoreanTime.formatKoreanTime(currentDate, 'date');
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 

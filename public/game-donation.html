@@ -268,7 +268,7 @@
                 item.innerHTML = `
                     <div class="d-flex w-100 justify-content-between">
                         <h6 class="mb-1">${donation.donorName}</h6>
-                        <small class="text-muted">${new Date(donation.date).toLocaleDateString()}</small>
+                        <small class="text-muted">${KoreanTime.formatKoreanTime(donation.date, 'date')}</small>
                     </div>
                     <p class="mb-1">${donation.message || '메시지 없음'}</p>
                     <small class="text-success">${donation.amount.toLocaleString()}점 기부</small>

@@ -776,8 +776,7 @@
         }
 
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ko-KR') + ' ' + date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            return KoreanTime.formatKoreanTime(dateString, 'datetime');
         }
 
         // 이벤트 리스너

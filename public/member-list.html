@@ -133,9 +133,9 @@
             
             members.forEach(function(member, index) {
                 console.log('회원 데이터:', member);
-                const createdAt = member.createdAt ? new Date(member.createdAt).toLocaleDateString() : '-';
-                const lastLoginAt = member.lastLoginAt ? new Date(member.lastLoginAt).toLocaleString() : '-';
-                const lastLogoutAt = member.lastLogoutAt ? new Date(member.lastLogoutAt).toLocaleString() : '-';
+                const createdAt = member.createdAt ? KoreanTime.formatKoreanTime(member.createdAt, 'date') : '-';
+                const lastLoginAt = member.lastLoginAt ? KoreanTime.formatKoreanTime(member.lastLoginAt, 'datetime') : '-';
+                const lastLogoutAt = member.lastLogoutAt ? KoreanTime.formatKoreanTime(member.lastLogoutAt, 'datetime') : '-';
                 const isLoggedIn = member.isLoggedIn ? '온라인' : '오프라인';
                 const loginStatusClass = member.isLoggedIn ? 'text-success' : 'text-muted';
                 

@@ -568,7 +568,7 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">최근 초대일</span>
-                                <span class="detail-value">${invite.lastInviteDate ? new Date(invite.lastInviteDate).toLocaleDateString() : '미지정'}</span>
+                                <span class="detail-value">${invite.lastInviteDate ? KoreanTime.formatKoreanTime(invite.lastInviteDate, 'date') : '미지정'}</span>
                             </div>
                         </div>
                         <div class="invited-phones-section">

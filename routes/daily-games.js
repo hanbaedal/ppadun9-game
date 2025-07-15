@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
+const { getKoreanTime } = require('../utils/korean-time');
 
 // 일일 게임 목록 조회
 router.get('/', async (req, res) => {
@@ -53,7 +54,7 @@ router.post('/', async (req, res) => {
         
         const result = await collection.findOneAndUpdate(
             { date },
-            { $set: { date, games, updatedAt: new Date() } },
+            { $set: { date, games, updatedAt: getKoreanTime() } },
             { upsert: true, returnDocument: 'after' }
         );
         

@@ -547,7 +547,7 @@
             
             tbody.innerHTML = records.map(record => `
                 <tr>
-                    <td>${new Date(record.viewDate || record.clickDate).toLocaleDateString('ko-KR')}</td>
+                    <td>${KoreanTime.formatKoreanTime(record.viewDate || record.clickDate, 'date')}</td>
                     <td>${record.userId}</td>
                     <td>${record.bannerPosition || '메인 배너'}</td>
                     <td>${record.clicked ? '클릭' : '노출'}</td>
