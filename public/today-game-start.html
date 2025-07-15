@@ -281,13 +281,7 @@
                 </a>
                 <h1 class="page-title">KBO 야구경기 시작시간 설정</h1>
             </div>
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <label for="selectedDate" style="font-weight: 500; color: #333;">날짜 선택:</label>
-                    <input type="date" id="selectedDate" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
-                </div>
-                <div class="date-display" id="dateDisplay"></div>
-            </div>
+
         </div>
 
         <table class="game-table">
@@ -474,19 +468,11 @@
                 saveButton.style.backgroundColor = '#6c757d';
                 saveButton.style.cursor = 'not-allowed';
 
-                // 사용자가 선택한 날짜 사용 (입력 필드가 있다면)
-                let date;
-                const dateInput = document.getElementById('selectedDate');
-                if (dateInput && dateInput.value) {
-                    // YYYY-MM-DD 형식을 YYYYMMDD 형식으로 변환
-                    date = dateInput.value.replace(/-/g, '');
-                } else {
-                    // 기본값으로 오늘 날짜 사용
-                    const today = new Date();
-                    date = today.getFullYear().toString() +
+                // 오늘 날짜 사용
+                const today = new Date();
+                const date = today.getFullYear().toString() +
                            (today.getMonth() + 1).toString().padStart(2, '0') +
                            today.getDate().toString().padStart(2, '0');
-                }
 
                 // 기존 dailygames 형식으로 데이터 준비
                 const games = [];
@@ -695,18 +681,11 @@
         // 게임 데이터 불러오기
         async function fetchGames() {
             try {
-                // 선택된 날짜 사용
-                let date;
-                const dateInput = document.getElementById('selectedDate');
-                if (dateInput && dateInput.value) {
-                    date = dateInput.value.replace(/-/g, '');
-                } else {
-                    // 기본값으로 오늘 날짜 사용
-                    const today = new Date();
-                    date = today.getFullYear().toString() +
+                // 오늘 날짜 사용
+                const today = new Date();
+                const date = today.getFullYear().toString() +
                            (today.getMonth() + 1).toString().padStart(2, '0') +
                            today.getDate().toString().padStart(2, '0');
-                }
 
                 const response = await fetch(`/api/dailygames/${date}`);
                 
@@ -728,33 +707,10 @@
             }
         }
 
-        // 날짜 표시 업데이트
-        function updateDate() {
-            const today = new Date();
-            const dateStr = today.getFullYear() + '년 ' +
-                           (today.getMonth() + 1) + '월 ' +
-                           today.getDate() + '일';
-            document.getElementById('dateDisplay').textContent = dateStr;
-        }
+
 
         // 페이지 로드 시 실행
         window.onload = function() {
-            updateDate();
-            
-            // 날짜 선택 필드에 이벤트 리스너 추가
-            const dateInput = document.getElementById('selectedDate');
-            if (dateInput) {
-                // 오늘 날짜를 기본값으로 설정
-                const today = new Date();
-                const todayStr = today.toISOString().split('T')[0];
-                dateInput.value = todayStr;
-                
-                // 날짜 변경 시 데이터 불러오기
-                dateInput.addEventListener('change', function() {
-                    fetchGames();
-                });
-            }
-            
             fetchGames();
         };
     </script>
