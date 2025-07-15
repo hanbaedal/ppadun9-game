@@ -357,63 +357,7 @@
                             (today.getMonth() + 1).toString().padStart(2, '0') +
                             today.getDate().toString().padStart(2, '0');
 
-                const games = [];
-                for (let i = 1; i <= 5; i++) {
-                    const gameData = {
-                        number: i,
-                        homeTeam: document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`).value || null,
-                        awayTeam: document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`).value || null,
-                        startTime: document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(4) input`).value || null,
-                        endTime: document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(5) input`).value || null,
-                        noGame: document.getElementById(`gameStatus${i}`).value
-                    };
-
-                    // null 값이 아닌 경우에만 추가
-                    if (gameData.homeTeam || gameData.awayTeam || gameData.startTime || gameData.endTime) {
-                        games.push(gameData);
-                    }
-                }
-
-                // 1. 기존 dailygames API 호출 (기존 기능 유지)
-                const checkResponse = await fetch(`/api/dailygames/${date}`);
-                const checkResult = await checkResponse.json();
-                
-                let response;
-                if (checkResult.success && checkResult.data) {
-                    // 기존 데이터가 있으면 PUT으로 업데이트
-                    response = await fetch(`/api/dailygames/${date}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            games: games
-                        })
-                    });
-                } else {
-                    // 기존 데이터가 없으면 POST로 생성
-                    response = await fetch('/api/dailygames', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            date: date,
-                            games: games
-                        })
-                    });
-                }
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.message || '저장 중 오류가 발생했습니다.');
-                }
-
-                // 2. daily-games 컬렉션 업데이트 (기존 데이터 확인 후 업데이트)
+                // daily-games 컬렉션 업데이트
                 for (let i = 1; i <= 5; i++) {
                     const homeTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`).value;
                     const awayTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`).value;
@@ -520,42 +464,37 @@
         // 게임 데이터 불러오기
         async function fetchGames() {
             try {
-                let date;
-                // KoreanTime 유틸리티 확인
-                if (typeof KoreanTime === 'undefined') {
-                    console.error('KoreanTime 유틸리티가 로드되지 않음');
-                    // 기본 날짜 사용
-                    const today = new Date();
-                    date = today.getFullYear().toString() +
+                // daily-games 콜렉션 사용
+                const today = new Date();
+                const date = today.getFullYear().toString() +
                            (today.getMonth() + 1).toString().padStart(2, '0') +
                            today.getDate().toString().padStart(2, '0');
-                    console.log('기본 날짜 사용:', date);
-                } else {
-                    const today = KoreanTime.getKoreanTime();
-                    date = KoreanTime.getKoreanDateString();
-                    console.log('한국 시간 사용, 날짜:', date);
-                }
                 
                 console.log('데이터 불러오기 시작, 날짜:', date);
 
-                const response = await fetch(`/api/dailygames/${date}`);
-                console.log('API 응답 상태:', response.status);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // daily-games API에서 모든 경기 데이터 가져오기
+                const games = [];
+                for (let i = 1; i <= 5; i++) {
+                    try {
+                        const response = await fetch(`/api/daily-games/${date}/${i}`);
+                        console.log(`경기 ${i} API 응답 상태:`, response.status);
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log(`경기 ${i} API 응답 결과:`, result);
+                            
+                            if (result.success && result.data) {
+                                games.push(result.data);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`경기 ${i} 데이터 불러오기 오류:`, error);
+                    }
                 }
-
-                const result = await response.json();
-                console.log('API 응답 결과:', result);
                 
-                if (result.success && result.data && result.data.games) {
-                    console.log('게임 데이터 발견:', result.data.games);
-                    displayGames(result.data.games);
-                } else {
-                    // 데이터가 없거나 오류인 경우 기본 데이터 표시
-                    console.log('데이터가 없거나 오류 발생, 기본 데이터 표시');
-                    displayGames([]);
-                }
+                console.log('수집된 게임 데이터:', games);
+                displayGames(games);
+                
             } catch (error) {
                 console.error('데이터 불러오기 오류:', error);
                 // 오류 발생 시 기본 데이터 표시
