@@ -279,6 +279,7 @@
 
         // 게임 데이터 표시
         function displayGames(games) {
+            console.log('displayGames 호출됨, 게임 데이터:', games);
             const tbody = document.getElementById('gameTableBody');
             tbody.innerHTML = '';
 
@@ -291,6 +292,8 @@
                     endTime: '',
                     noGame: '정상게임'
                 };
+
+                console.log(`경기 ${i} 데이터:`, game);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -313,7 +316,13 @@
 
         // 경기상황 옵션을 동적으로 생성하는 함수
         function populateStatusOptions(gameNumber, selectedStatus) {
+            console.log(`경기 ${gameNumber} 상황 옵션 생성, 선택된 상황:`, selectedStatus);
             const statusSelect = document.getElementById(`gameStatus${gameNumber}`);
+            
+            if (!statusSelect) {
+                console.error(`경기 ${gameNumber} 상황 선택 요소를 찾을 수 없음`);
+                return;
+            }
             
             gameStatusOptions.forEach(option => {
                 const optionElement = document.createElement('option');
@@ -511,17 +520,36 @@
         // 게임 데이터 불러오기
         async function fetchGames() {
             try {
-                const today = KoreanTime.getKoreanTime();
-                const date = KoreanTime.getKoreanDateString();
+                let date;
+                // KoreanTime 유틸리티 확인
+                if (typeof KoreanTime === 'undefined') {
+                    console.error('KoreanTime 유틸리티가 로드되지 않음');
+                    // 기본 날짜 사용
+                    const today = new Date();
+                    date = today.getFullYear().toString() +
+                           (today.getMonth() + 1).toString().padStart(2, '0') +
+                           today.getDate().toString().padStart(2, '0');
+                    console.log('기본 날짜 사용:', date);
+                } else {
+                    const today = KoreanTime.getKoreanTime();
+                    date = KoreanTime.getKoreanDateString();
+                    console.log('한국 시간 사용, 날짜:', date);
+                }
+                
+                console.log('데이터 불러오기 시작, 날짜:', date);
 
                 const response = await fetch(`/api/dailygames/${date}`);
+                console.log('API 응답 상태:', response.status);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const result = await response.json();
+                console.log('API 응답 결과:', result);
+                
                 if (result.success && result.data && result.data.games) {
+                    console.log('게임 데이터 발견:', result.data.games);
                     displayGames(result.data.games);
                 } else {
                     // 데이터가 없거나 오류인 경우 기본 데이터 표시
@@ -529,7 +557,7 @@
                     displayGames([]);
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('데이터 불러오기 오류:', error);
                 // 오류 발생 시 기본 데이터 표시
                 displayGames([]);
             }
@@ -537,15 +565,36 @@
 
         // 날짜 표시 업데이트
         function updateDate() {
-            const today = KoreanTime.getKoreanTime();
-            const dateStr = KoreanTime.formatKoreanTime(today, 'date');
-            document.getElementById('dateDisplay').textContent = dateStr;
+            try {
+                if (typeof KoreanTime === 'undefined') {
+                    console.error('KoreanTime 유틸리티가 로드되지 않음');
+                    const today = new Date();
+                    const dateStr = today.getFullYear() + '년 ' + 
+                                   (today.getMonth() + 1) + '월 ' + 
+                                   today.getDate() + '일';
+                    document.getElementById('dateDisplay').textContent = dateStr;
+                } else {
+                    const today = KoreanTime.getKoreanTime();
+                    const dateStr = KoreanTime.formatKoreanTime(today, 'date');
+                    document.getElementById('dateDisplay').textContent = dateStr;
+                }
+            } catch (error) {
+                console.error('날짜 표시 오류:', error);
+                const today = new Date();
+                const dateStr = today.getFullYear() + '년 ' + 
+                               (today.getMonth() + 1) + '월 ' + 
+                               today.getDate() + '일';
+                document.getElementById('dateDisplay').textContent = dateStr;
+            }
         }
 
         // 페이지 로드 시 실행
         window.onload = function() {
+            console.log('페이지 로드 시작');
             updateDate();
+            console.log('날짜 업데이트 완료');
             fetchGames();
+            console.log('데이터 불러오기 요청 완료');
         };
     </script>
 </body>
