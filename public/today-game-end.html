@@ -102,7 +102,7 @@
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #e0e0e0;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         th {
@@ -110,7 +110,7 @@
             font-weight: 600;
             color: #333;
             text-transform: uppercase;
-            font-size: 13px;
+            font-size: 16px;
             letter-spacing: 0.5px;
         }
 
@@ -119,13 +119,13 @@
         tr:nth-child(2) td { background-color: #E5FFE5; }  /* 2경기: 연한 초록색 */
         tr:nth-child(3) td { background-color: #E5E5FF; }  /* 3경기: 연한 파란색 */
         tr:nth-child(4) td { background-color: #FFE5FF; }  /* 4경기: 연한 보라색 */
-        tr:nth-child(5) td { background-color: #E5FFE5; }  /* 5경기: 연한 초록색 */
+        tr:nth-child(5) td { background-color: #FFFFE5; }  /* 5경기: 연한 노란색 */
 
         .game-number {
             font-weight: 600;
             width: 100px;
             color: #333;
-            font-size: 15px;
+            font-size: 16px;
         }
 
         .time-input-group {
@@ -137,39 +137,49 @@
         }
 
         .am-pm-btn {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            background-color: white;
-            cursor: pointer;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-            height: 40px;
+            padding: 6px 12px !important;
+            border: 1px solid #ddd !important;
+            background-color: white !important;
+            cursor: pointer !important;
+            border-radius: 6px !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            transition: all 0.2s !important;
+            height: 40px !important;
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 60px !important;
+            min-width: 60px !important;
         }
 
         .am-pm-btn.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
         }
 
         .am-pm-btn:disabled {
-            background-color: #f5f5f5;
-            cursor: not-allowed;
-            opacity: 0.7;
+            background-color: #f5f5f5 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
         }
 
         select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background-color: white;
-            font-size: 14px;
-            color: #333;
-            min-width: 80px;
-            height: 40px;
-            transition: border-color 0.2s;
+            padding: 8px !important;
+            border: 1px solid #ddd !important;
+            border-radius: 6px !important;
+            background-color: white !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            color: #333 !important;
+            width: 60px !important;
+            min-width: 60px !important;
+            height: 40px !important;
+            transition: border-color 0.2s !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
         }
 
         select:focus {
@@ -190,7 +200,7 @@
             border: 1px solid #ddd;
             border-radius: 6px;
             background-color: white;
-            font-size: 14px;
+            font-size: 16px;
             color: #333;
             transition: border-color 0.2s;
             height: 40px;
@@ -376,74 +386,6 @@
                         endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
                     }
 
-                    const gameData = {
-                        number: i,
-                        homeTeam: document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`).value || null,
-                        awayTeam: document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`).value || null,
-                        startTime: document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(4) input`).value || null,
-                        endTime: endTime,
-                        noGame: document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(6)`).textContent
-                    };
-
-                    // null 값이 아닌 경우에만 추가
-                    if (gameData.homeTeam || gameData.awayTeam || gameData.startTime || gameData.endTime) {
-                        games.push(gameData);
-                    }
-                }
-
-                // 1. 기존 dailygames API 호출 (기존 기능 유지)
-                const checkResponse = await fetch(`/api/dailygames/${date}`);
-                const checkResult = await checkResponse.json();
-                
-                let response;
-                if (checkResult.success && checkResult.data) {
-                    // 기존 데이터가 있으면 PUT으로 업데이트
-                    response = await fetch(`/api/dailygames/${date}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            games: games
-                        })
-                    });
-                } else {
-                    // 기존 데이터가 없으면 POST로 생성
-                    response = await fetch('/api/dailygames', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            date: date,
-                            games: games
-                        })
-                    });
-                }
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.message || '저장 중 오류가 발생했습니다.');
-                }
-
-                // 2. daily-games 컬렉션 업데이트 (기존 데이터 확인 후 업데이트)
-                for (let i = 1; i <= 5; i++) {
-                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
-                    const endHour = document.getElementById(`endHour${i}`).value;
-                    const endMinute = document.getElementById(`endMinute${i}`).value;
-                    
-                    let endTime = null;
-                    if (endHour && endMinute) {
-                        let hour = parseInt(endHour);
-                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
-                        if (endAmPm === 'AM' && hour === 12) hour = 0;
-                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
-                    }
-
                     const homeTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`).value;
                     const awayTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`).value;
                     const startTime = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(4) input`).value;
@@ -588,4 +530,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
