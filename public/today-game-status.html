@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/common.css">
+    <script src="/js/korean-time.js"></script>
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -494,10 +495,8 @@
         // 게임 데이터 불러오기
         async function fetchGames() {
             try {
-                const today = new Date();
-                const date = today.getFullYear().toString() +
-                            (today.getMonth() + 1).toString().padStart(2, '0') +
-                            today.getDate().toString().padStart(2, '0');
+                const today = KoreanTime.getKoreanTime();
+                const date = KoreanTime.getKoreanDateString();
 
                 const response = await fetch(`/api/dailygames/${date}`);
                 
@@ -520,7 +519,7 @@
 
         // 날짜 표시 업데이트
         function updateDate() {
-            const today = new Date();
+            const today = KoreanTime.getKoreanTime();
             const dateStr = today.getFullYear() + '년 ' +
                            (today.getMonth() + 1) + '월 ' +
                            today.getDate() + '일';

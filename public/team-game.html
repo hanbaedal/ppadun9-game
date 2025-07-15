@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/common.css">
+    <script src="/js/korean-time.js"></script>
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -887,7 +888,7 @@
     </div>
 
     <script>
-        let currentDate = new Date();
+        let currentDate = KoreanTime.getKoreanTime();
         let selectedGame = null;
         let bettingTimer = null;
 
@@ -907,15 +908,12 @@
         }
 
         function getGameStatus(startTime, endTime) {
-            // 한국 시간(KST, UTC+9)으로 현재 시간 계산
-            const now = new Date();
-            const kstOffset = 9 * 60; // UTC+9 (분 단위)
-            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const kstTime = new Date(utcTime + (kstOffset * 60000));
-            const currentTime = kstTime.getHours() * 60 + kstTime.getMinutes(); // 한국 시간을 분으로 변환
+            // 한국 시간으로 현재 시간 계산
+            const now = KoreanTime.getKoreanTime();
+            const currentTime = now.getHours() * 60 + now.getMinutes(); // 한국 시간을 분으로 변환
             
             console.log('=== 경기상황 디버깅 ===');
-            console.log('현재 시간:', kstTime.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }));
+            console.log('현재 시간:', KoreanTime.formatKoreanTime(now, 'datetime'));
             console.log('한국 현재 시간(분):', currentTime);
             console.log('시작시간:', startTime);
             console.log('종료시간:', endTime);
@@ -985,7 +983,7 @@
         }
 
         function updateBettingTime() {
-            const now = new Date();
+            const now = KoreanTime.getKoreanTime();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');

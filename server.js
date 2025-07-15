@@ -6,6 +6,7 @@ const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
 const cron = require('node-cron');
 const { connectDB } = require('./config/db');
+const { getKoreanTime, toKoreanTime, formatKoreanTime, getKoreanDateString } = require('./utils/korean-time');
 
 // 환경 변수 설정
 dotenv.config();
@@ -68,7 +69,7 @@ async function autoLogoutAllEmployees() {
             }
         );
         
-        const koreanTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        const koreanTime = formatKoreanTime(getKoreanTime(), 'datetime');
         console.log(`[${koreanTime}] 자동 로그아웃 완료: ${result.modifiedCount}명의 직원이 로그아웃되었습니다.`);
         
         // 로그 파일에 기록 (선택사항)
@@ -101,7 +102,7 @@ async function autoLogoutAllMembers() {
             }
         );
         
-        const koreanTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        const koreanTime = formatKoreanTime(getKoreanTime(), 'datetime');
         console.log(`[${koreanTime}] 회원 자동 로그아웃 완료: ${result.modifiedCount}명의 회원이 로그아웃되었습니다.`);
         
         // 로그 파일에 기록
@@ -881,7 +882,7 @@ app.post('/api/system/auto-logout-all', async (req, res) => {
             }
         );
         
-        const koreanTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        const koreanTime = formatKoreanTime(getKoreanTime(), 'datetime');
         console.log(`[${koreanTime}] 수동 자동 로그아웃 완료: ${result.modifiedCount}명의 직원이 로그아웃되었습니다.`);
         
         res.json({
@@ -2404,6 +2405,278 @@ app.get('/api/debug/login-status', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '로그인 상태 디버깅 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// MongoDB Atlas 콜렉션 구조 확인 및 생성 API
+app.get('/api/system/check-collections', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        console.log('=== MongoDB Atlas 콜렉션 구조 확인 ===');
+        console.log('데이터베이스:', db.databaseName);
+        
+        // 현재 존재하는 콜렉션 목록 조회
+        const collections = await db.listCollections().toArray();
+        const collectionNames = collections.map(col => col.name);
+        
+        console.log('현재 존재하는 콜렉션:', collectionNames);
+        
+        // 필요한 콜렉션 목록
+        const requiredCollections = [
+            'employee-member',
+            'game-member', 
+            'todaygames',
+            'dailygames',
+            'daily-games',
+            'game-charging',
+            'charging',
+            'notices',
+            'game-progress',
+            'game-invite',
+            'customer-inquiries',
+            'betting-sessions',
+            'betting-predictions',
+            'betting-results',
+            'realtime-monitoring',
+            'video-watch'
+        ];
+        
+        // 누락된 콜렉션 확인
+        const missingCollections = requiredCollections.filter(name => 
+            !collectionNames.includes(name)
+        );
+        
+        console.log('누락된 콜렉션:', missingCollections);
+        
+        res.json({
+            success: true,
+            database: db.databaseName,
+            existingCollections: collectionNames,
+            requiredCollections: requiredCollections,
+            missingCollections: missingCollections,
+            totalExisting: collectionNames.length,
+            totalRequired: requiredCollections.length,
+            totalMissing: missingCollections.length
+        });
+    } catch (error) {
+        console.error('콜렉션 구조 확인 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '콜렉션 구조 확인 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 누락된 콜렉션 생성 API
+app.post('/api/system/create-missing-collections', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        console.log('=== 누락된 콜렉션 생성 시작 ===');
+        
+        // 현재 존재하는 콜렉션 목록 조회
+        const collections = await db.listCollections().toArray();
+        const collectionNames = collections.map(col => col.name);
+        
+        // 필요한 콜렉션 목록
+        const requiredCollections = [
+            'employee-member',
+            'game-member', 
+            'todaygames',
+            'dailygames',
+            'daily-games',
+            'game-charging',
+            'charging',
+            'notices',
+            'game-progress',
+            'game-invite',
+            'customer-inquiries',
+            'betting-sessions',
+            'betting-predictions',
+            'betting-results',
+            'realtime-monitoring',
+            'video-watch'
+        ];
+        
+        // 누락된 콜렉션 확인
+        const missingCollections = requiredCollections.filter(name => 
+            !collectionNames.includes(name)
+        );
+        
+        const createdCollections = [];
+        const failedCollections = [];
+        
+        // 누락된 콜렉션들 생성
+        for (const collectionName of missingCollections) {
+            try {
+                // 빈 문서를 삽입하여 콜렉션 생성
+                const collection = db.collection(collectionName);
+                await collection.insertOne({
+                    _createdAt: new Date(),
+                    _description: '시스템에 의해 자동 생성된 콜렉션'
+                });
+                
+                // 생성된 문서 삭제 (초기화 문서이므로)
+                await collection.deleteOne({
+                    _createdAt: { $exists: true },
+                    _description: '시스템에 의해 자동 생성된 콜렉션'
+                });
+                
+                createdCollections.push(collectionName);
+                console.log(`콜렉션 생성 완료: ${collectionName}`);
+            } catch (error) {
+                console.error(`콜렉션 생성 실패: ${collectionName}`, error);
+                failedCollections.push({
+                    name: collectionName,
+                    error: error.message
+                });
+            }
+        }
+        
+        console.log('=== 콜렉션 생성 결과 ===');
+        console.log('생성된 콜렉션:', createdCollections);
+        console.log('실패한 콜렉션:', failedCollections);
+        
+        res.json({
+            success: true,
+            message: '누락된 콜렉션 생성이 완료되었습니다.',
+            createdCollections: createdCollections,
+            failedCollections: failedCollections,
+            totalCreated: createdCollections.length,
+            totalFailed: failedCollections.length
+        });
+    } catch (error) {
+        console.error('콜렉션 생성 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '콜렉션 생성 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 콜렉션 데이터 초기화 API
+app.post('/api/system/initialize-collections', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        console.log('=== 콜렉션 데이터 초기화 시작 ===');
+        
+        const initializationResults = [];
+        
+        // employee-member 콜렉션 초기화
+        try {
+            const employeeCollection = db.collection('employee-member');
+            const employeeCount = await employeeCollection.countDocuments();
+            
+            if (employeeCount === 0) {
+                // 샘플 직원 데이터 생성
+                const sampleEmployee = {
+                    name: '관리자',
+                    email: 'admin@example.com',
+                    username: 'admin',
+                    password: 'admin123',
+                    position: '관리자',
+                    department: 'IT',
+                    phone: '010-0000-0000',
+                    isLoggedIn: false,
+                    loginCount: 0,
+                    lastLoginAt: null,
+                    lastLogoutAt: null,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                await employeeCollection.insertOne(sampleEmployee);
+                initializationResults.push({
+                    collection: 'employee-member',
+                    status: 'initialized',
+                    message: '샘플 관리자 계정이 생성되었습니다.'
+                });
+            } else {
+                initializationResults.push({
+                    collection: 'employee-member',
+                    status: 'exists',
+                    message: `${employeeCount}개의 직원 데이터가 이미 존재합니다.`
+                });
+            }
+        } catch (error) {
+            initializationResults.push({
+                collection: 'employee-member',
+                status: 'error',
+                error: error.message
+            });
+        }
+        
+        // notices 콜렉션 초기화
+        try {
+            const noticesCollection = db.collection('notices');
+            const noticesCount = await noticesCollection.countDocuments();
+            
+            if (noticesCount === 0) {
+                // 샘플 공지사항 생성
+                const sampleNotice = {
+                    title: '시스템 초기화 완료',
+                    content: 'MongoDB Atlas 데이터베이스가 성공적으로 초기화되었습니다.',
+                    author: '시스템',
+                    isActive: true,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                await noticesCollection.insertOne(sampleNotice);
+                initializationResults.push({
+                    collection: 'notices',
+                    status: 'initialized',
+                    message: '샘플 공지사항이 생성되었습니다.'
+                });
+            } else {
+                initializationResults.push({
+                    collection: 'notices',
+                    status: 'exists',
+                    message: `${noticesCount}개의 공지사항이 이미 존재합니다.`
+                });
+            }
+        } catch (error) {
+            initializationResults.push({
+                collection: 'notices',
+                status: 'error',
+                error: error.message
+            });
+        }
+        
+        console.log('=== 콜렉션 초기화 결과 ===');
+        console.log(initializationResults);
+        
+        res.json({
+            success: true,
+            message: '콜렉션 데이터 초기화가 완료되었습니다.',
+            results: initializationResults
+        });
+    } catch (error) {
+        console.error('콜렉션 초기화 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '콜렉션 초기화 중 오류가 발생했습니다.',
+            error: error.message
         });
     }
 });

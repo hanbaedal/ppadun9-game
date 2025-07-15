@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/korean-time.js"></script>
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -546,12 +547,12 @@
                     return '로그인 기록 없음';
                 }
                 
-                const loginTime = new Date(member.lastLoginAt);
-                let logoutTime = member.lastLogoutAt ? new Date(member.lastLogoutAt) : new Date();
+                const loginTime = KoreanTime.toKoreanTime(member.lastLoginAt);
+                let logoutTime = member.lastLogoutAt ? KoreanTime.toKoreanTime(member.lastLogoutAt) : KoreanTime.getKoreanTime();
                 
                 // 현재 로그인 중인 경우 현재 시간 사용
                 if (member.isLoggedIn) {
-                    logoutTime = new Date();
+                    logoutTime = KoreanTime.getKoreanTime();
                 }
                 
                 const diffTime = Math.abs(logoutTime - loginTime);
@@ -577,17 +578,16 @@
             if (!dateString) return '로그인 기록 없음';
             
             try {
-                const date = new Date(dateString);
+                const date = KoreanTime.toKoreanTime(dateString);
                 if (isNaN(date.getTime())) {
                     return '날짜 형식 오류';
                 }
                 
                 // 한국 시간으로 변환
-                const koreanDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
-                const now = new Date();
-                const koreanNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const koreanDate = KoreanTime.toKoreanTime(dateString);
+                const now = KoreanTime.getKoreanTime();
                 
-                const diffTime = Math.abs(koreanNow - koreanDate);
+                const diffTime = Math.abs(now - koreanDate);
                 const diffMinutes = Math.ceil(diffTime / (1000 * 60));
                 const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
