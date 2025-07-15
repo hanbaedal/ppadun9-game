@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
+const { getKoreanTime } = require('../utils/korean-time');
 
 // 포인트 충전 리스트 조회
 router.get('/', async (req, res) => {
@@ -66,13 +67,13 @@ router.put('/:id/status', async (req, res) => {
         const updateDoc = {
             $set: {
                 status: status,
-                updatedAt: new Date()
+                updatedAt: getKoreanTime()
             }
         };
         
         // 완료 상태인 경우 완료 시간 추가
         if (status === 'completed') {
-            updateDoc.$set.completedAt = new Date();
+            updateDoc.$set.completedAt = getKoreanTime();
         }
         
         // 비고가 있는 경우 추가

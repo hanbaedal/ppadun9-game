@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
+const { getKoreanTime } = require('../utils/korean-time');
 
 // 배팅 세션 컬렉션
 const BETTING_SESSIONS_COLLECTION = 'betting-sessions';
@@ -44,7 +45,7 @@ router.post('/start', async (req, res) => {
             status: 'active',
             startTime: new Date(),
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: getKoreanTime()
         };
 
         await collection.insertOne(newSession);
@@ -102,7 +103,7 @@ router.post('/stop', async (req, res) => {
                 $set: { 
                     status: 'stopped',
                     stopTime: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             }
         );

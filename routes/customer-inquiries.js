@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
+const { getKoreanTime } = require('../utils/korean-time');
 
 // 고객 문의 목록 조회
 router.get('/', async (req, res) => {
@@ -79,7 +80,7 @@ router.post('/', async (req, res) => {
             category: category,
             status: 'pending',
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: getKoreanTime()
         };
         
         const result = await collection.insertOne(newInquiry);
@@ -117,7 +118,7 @@ router.put('/:id/status', async (req, res) => {
         const updateDoc = {
             $set: {
                 status: status,
-                updatedAt: new Date()
+                updatedAt: getKoreanTime()
             }
         };
         

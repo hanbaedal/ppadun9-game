@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
+const { getKoreanTime } = require('../utils/korean-time');
 
 // 게임 진행 상태 조회
 router.get('/status', async (req, res) => {
@@ -52,7 +53,7 @@ router.post('/status', async (req, res) => {
         const updateData = {
             date,
             status,
-            updatedAt: new Date()
+            updatedAt: getKoreanTime()
         };
         
         if (currentGame) {
@@ -108,7 +109,7 @@ router.post('/start', async (req, res) => {
                     currentGame: gameNumber,
                     gameNumber,
                     startTime: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             },
             { upsert: true, returnDocument: 'after' }
@@ -150,7 +151,7 @@ router.post('/end', async (req, res) => {
                 $set: { 
                     status: 'completed',
                     endTime: new Date(),
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 } 
             },
             { returnDocument: 'after' }

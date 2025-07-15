@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
+const { getKoreanTime } = require('../utils/korean-time');
 
 // 데이터베이스 컬렉션 목록 확인 (디버깅용)
 router.get('/debug/collections', async (req, res) => {
@@ -186,7 +187,7 @@ router.post('/login', async (req, res) => {
                     loginCount: loginCount,
                     lastLoginAt: lastLoginAt,
                     isLoggedIn: true,
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 }
             }
         );
@@ -235,8 +236,8 @@ router.post('/logout', async (req, res) => {
             {
                 $set: {
                     isLoggedIn: false,
-                    lastLogoutAt: new Date(),
-                    updatedAt: new Date()
+                    lastLogoutAt: getKoreanTime(),
+                    updatedAt: getKoreanTime()
                 }
             }
         );
@@ -371,8 +372,8 @@ router.post('/:id/force-logout', async (req, res) => {
             { 
                 $set: { 
                     isLoggedIn: false,
-                    lastLogoutAt: new Date(),
-                    updatedAt: new Date()
+                    lastLogoutAt: getKoreanTime(),
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -425,8 +426,8 @@ router.post('/auto-logout-all', async (req, res) => {
             { 
                 $set: { 
                     isLoggedIn: false,
-                    lastLogoutAt: new Date(),
-                    updatedAt: new Date()
+                    lastLogoutAt: getKoreanTime(),
+                    updatedAt: getKoreanTime()
                 } 
             }
         );
@@ -467,7 +468,7 @@ router.post('/update-schema', async (req, res) => {
                         loginCount: 0,
                         isLoggedIn: false,
                         lastLogoutAt: null,
-                        updatedAt: new Date()
+                        updatedAt: getKoreanTime()
                     } 
                 }
             },
@@ -476,7 +477,7 @@ router.post('/update-schema', async (req, res) => {
                 filter: { updatedAt: { $exists: false } },
                 update: { 
                     $set: { 
-                        updatedAt: new Date()
+                        updatedAt: getKoreanTime()
                     } 
                 }
             }
