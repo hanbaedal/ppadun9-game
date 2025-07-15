@@ -1,37 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require('mongodb');
-
-// MongoDB 연결 설정
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/?retryWrites=true&w=majority&appName=member-management';
-
-let client;
-let db;
-
-// 데이터베이스 연결 함수
-async function connectDB() {
-    try {
-        if (!client || !client.topology || !client.topology.isConnected()) {
-            client = new MongoClient(MONGODB_URI, {
-                serverSelectionTimeoutMS: 60000,
-                socketTimeoutMS: 45000,
-                connectTimeoutMS: 60000,
-                maxPoolSize: 10,
-                minPoolSize: 1,
-                maxIdleTimeMS: 30000,
-                retryWrites: true,
-                w: 'majority'
-            });
-            
-            await client.connect();
-            db = client.db('member-management');
-            console.log('MongoDB 연결 성공:', db.databaseName);
-        }
-    } catch (error) {
-        console.error('MongoDB 연결 실패:', error);
-        throw error;
-    }
-}
+const { getDb } = require('../config/db');
 
 // 오늘의 게임 정보 조회
 router.get('/today-game', async (req, res) => {
@@ -48,7 +17,7 @@ router.get('/today-game', async (req, res) => {
             });
         }
 
-        await connectDB();
+        const db = getDb();
         console.log('[Game Routes] todaygames 컬렉션 접근');
         const collection = db.collection('todaygames');
         const dailyGame = await collection.findOne({ date });
@@ -83,7 +52,7 @@ router.post('/today-game', async (req, res) => {
             });
         }
 
-        await connectDB();
+        const db = getDb();
         console.log('[Game Routes] todaygames 컬렉션에 저장 시도');
         const collection = db.collection('todaygames');
         

@@ -1,42 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require('mongodb');
-
-// MongoDB 연결 설정
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/?retryWrites=true&w=majority&appName=member-management';
-
-let client;
-let db;
-
-// 데이터베이스 연결 함수
-async function connectDB() {
-    try {
-        if (!client || !client.topology || !client.topology.isConnected()) {
-            client = new MongoClient(MONGODB_URI, {
-                serverSelectionTimeoutMS: 60000,
-                socketTimeoutMS: 45000,
-                connectTimeoutMS: 60000,
-                maxPoolSize: 10,
-                minPoolSize: 1,
-                maxIdleTimeMS: 30000,
-                retryWrites: true,
-                w: 'majority'
-            });
-            
-            await client.connect();
-            db = client.db('member-management'); // member-management 데이터베이스 사용
-            console.log('MongoDB 연결 성공:', db.databaseName);
-        }
-    } catch (error) {
-        console.error('MongoDB 연결 실패:', error);
-        throw error;
-    }
-}
+const { ObjectId } = require('mongodb');
+const { getDb } = require('../config/db');
 
 // 포인트 충전 리스트 조회
 router.get('/', async (req, res) => {
     try {
-        await connectDB();
+        const db = getDb();
         const collection = db.collection('game-charging');
         
         // 모든 충전 내역 조회 (최신순으로 정렬)
@@ -58,9 +28,8 @@ router.get('/', async (req, res) => {
 
 // 포인트 충전 상세 조회
 router.get('/:id', async (req, res) => {
-    const { ObjectId } = require('mongodb');
     try {
-        await connectDB();
+        const db = getDb();
         const collection = db.collection('game-charging');
         
         const charging = await collection.findOne({ _id: new ObjectId(req.params.id) });
@@ -88,9 +57,8 @@ router.get('/:id', async (req, res) => {
 
 // 포인트 충전 상태 업데이트
 router.put('/:id/status', async (req, res) => {
-    const { ObjectId } = require('mongodb');
     try {
-        await connectDB();
+        const db = getDb();
         const collection = db.collection('game-charging');
         
         const { status, note } = req.body;
@@ -141,7 +109,7 @@ router.put('/:id/status', async (req, res) => {
 // 포인트 충전 통계 조회
 router.get('/stats/summary', async (req, res) => {
     try {
-        await connectDB();
+        const db = getDb();
         const collection = db.collection('game-charging');
         
         // 전체 통계

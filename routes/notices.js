@@ -1,121 +1,176 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require('mongodb');
-
-// MongoDB 연결 설정
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ppadun_user:ppadun8267@member-management.bppicvz.mongodb.net/?retryWrites=true&w=majority&appName=member-management';
-const DB_NAME = 'member-management';
-
-let client;
-let db;
-
-// 데이터베이스 연결 함수
-async function connectDB() {
-    try {
-        if (!client || !client.topology || !client.topology.isConnected()) {
-            client = new MongoClient(MONGODB_URI, {
-                serverSelectionTimeoutMS: 60000,
-                socketTimeoutMS: 45000,
-                connectTimeoutMS: 60000,
-                maxPoolSize: 10,
-                minPoolSize: 1,
-                maxIdleTimeMS: 30000,
-                retryWrites: true,
-                w: 'majority'
-            });
-            
-            await client.connect();
-            db = client.db(DB_NAME);
-            console.log('MongoDB 연결 성공:', db.databaseName);
-        }
-    } catch (error) {
-        console.error('MongoDB 연결 실패:', error);
-        throw error;
-    }
-}
+const { ObjectId } = require('mongodb');
+const { getDb } = require('../config/db');
 
 // 공지사항 목록 조회
 router.get('/', async (req, res) => {
     try {
-        await connectDB();
-        const notices = await db.collection('notices').find({}).sort({ createdAt: -1 }).toArray();
-        res.json({ success: true, notices });
-    } catch (err) {
-        console.error('공지사항 목록 조회 오류:', err);
-        res.json({ success: false, message: '공지사항 목록 조회 실패', error: err.message });
+        const db = getDb();
+        const collection = db.collection('notices');
+        
+        // 모든 공지사항 조회 (최신순으로 정렬)
+        const notices = await collection.find({}).sort({ createdAt: -1 }).toArray();
+        
+        res.json({ 
+            success: true, 
+            notices: notices 
+        });
+    } catch (error) {
+        console.error('공지사항 목록 조회 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '공지사항을 불러오는데 실패했습니다.',
+            error: error.message 
+        });
     }
 });
 
-// 공지사항 단일 조회
+// 공지사항 상세 조회
 router.get('/:id', async (req, res) => {
-    const { ObjectId } = require('mongodb');
     try {
-        await connectDB();
-        const notice = await db.collection('notices').findOne({ _id: new ObjectId(req.params.id) });
-        if (!notice) return res.json({ success: false, message: '공지사항을 찾을 수 없습니다.' });
-        res.json({ success: true, notice });
-    } catch (err) {
-        console.error('공지사항 조회 오류:', err);
-        res.json({ success: false, message: '공지사항 조회 실패', error: err.message });
+        const db = getDb();
+        const collection = db.collection('notices');
+        
+        const notice = await collection.findOne({ _id: new ObjectId(req.params.id) });
+        
+        if (!notice) {
+            return res.status(404).json({ 
+                success: false, 
+                message: '공지사항을 찾을 수 없습니다.' 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            notice: notice 
+        });
+    } catch (error) {
+        console.error('공지사항 상세 조회 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '공지사항 조회에 실패했습니다.',
+            error: error.message 
+        });
     }
 });
 
 // 공지사항 생성
 router.post('/', async (req, res) => {
     try {
-        await connectDB();
-        const { title, content, priority, isActive } = req.body;
+        const db = getDb();
+        const collection = db.collection('notices');
+        
+        const { title, content, isImportant = false } = req.body;
+        
+        if (!title || !content) {
+            return res.status(400).json({ 
+                success: false, 
+                message: '제목과 내용은 필수입니다.' 
+            });
+        }
+        
         const newNotice = {
-            title,
-            content,
-            priority: priority || 'medium',
-            isActive: isActive === true || isActive === 'true',
+            title: title,
+            content: content,
+            isImportant: isImportant,
             createdAt: new Date(),
             updatedAt: new Date()
         };
-        const result = await db.collection('notices').insertOne(newNotice);
-        res.json({ success: true, notice: { ...newNotice, _id: result.insertedId } });
-    } catch (err) {
-        console.error('공지사항 등록 오류:', err);
-        res.json({ success: false, message: '공지사항 등록 실패', error: err.message });
+        
+        const result = await collection.insertOne(newNotice);
+        
+        res.status(201).json({ 
+            success: true, 
+            message: '공지사항이 생성되었습니다.',
+            noticeId: result.insertedId
+        });
+    } catch (error) {
+        console.error('공지사항 생성 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '공지사항 생성에 실패했습니다.',
+            error: error.message 
+        });
     }
 });
 
 // 공지사항 수정
 router.put('/:id', async (req, res) => {
-    const { ObjectId } = require('mongodb');
     try {
-        await connectDB();
-        const { title, content, priority, isActive } = req.body;
+        const db = getDb();
+        const collection = db.collection('notices');
+        
+        const { title, content, isImportant } = req.body;
+        
+        if (!title || !content) {
+            return res.status(400).json({ 
+                success: false, 
+                message: '제목과 내용은 필수입니다.' 
+            });
+        }
+        
         const updateDoc = {
             $set: {
-                title,
-                content,
-                priority: priority || 'medium',
-                isActive: isActive === true || isActive === 'true',
+                title: title,
+                content: content,
+                isImportant: isImportant,
                 updatedAt: new Date()
             }
         };
-        const result = await db.collection('notices').updateOne({ _id: new ObjectId(req.params.id) }, updateDoc);
-        if (result.matchedCount === 0) return res.json({ success: false, message: '공지사항을 찾을 수 없습니다.' });
-        res.json({ success: true });
-    } catch (err) {
-        console.error('공지사항 수정 오류:', err);
-        res.json({ success: false, message: '공지사항 수정 실패', error: err.message });
+        
+        const result = await collection.updateOne(
+            { _id: new ObjectId(req.params.id) }, 
+            updateDoc
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: '공지사항을 찾을 수 없습니다.' 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: '공지사항이 수정되었습니다.' 
+        });
+    } catch (error) {
+        console.error('공지사항 수정 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '공지사항 수정에 실패했습니다.',
+            error: error.message 
+        });
     }
 });
 
 // 공지사항 삭제
 router.delete('/:id', async (req, res) => {
-    const { ObjectId } = require('mongodb');
     try {
-        await connectDB();
-        const result = await db.collection('notices').deleteOne({ _id: new ObjectId(req.params.id) });
-        if (result.deletedCount === 0) return res.json({ success: false, message: '공지사항을 찾을 수 없습니다.' });
-        res.json({ success: true });
-    } catch (err) {
-        console.error('공지사항 삭제 오류:', err);
-        res.json({ success: false, message: '공지사항 삭제 실패', error: err.message });
+        const db = getDb();
+        const collection = db.collection('notices');
+        
+        const result = await collection.deleteOne({ _id: new ObjectId(req.params.id) });
+        
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: '공지사항을 찾을 수 없습니다.' 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: '공지사항이 삭제되었습니다.' 
+        });
+    } catch (error) {
+        console.error('공지사항 삭제 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '공지사항 삭제에 실패했습니다.',
+            error: error.message 
+        });
     }
 });
 

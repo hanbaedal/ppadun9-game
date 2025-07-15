@@ -5,7 +5,7 @@ const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
 const cron = require('node-cron');
-const { connectDB } = require('./config/db');
+const { connectDB, getDb } = require('./config/db');
 const { getKoreanTime, toKoreanTime, formatKoreanTime, getKoreanDateString } = require('./utils/korean-time');
 
 // 환경 변수 설정
@@ -24,24 +24,9 @@ console.log('- DB_NAME:', process.env.DB_NAME || '기본값 사용');
 console.log('- SESSION_SECRET:', process.env.SESSION_SECRET ? '설정됨' : '설정되지 않음');
 console.log('- PORT:', process.env.PORT || 3000);
 
-// 환경 변수 검증
-if (!process.env.MONGODB_URI) {
-    console.error('[Config] MONGODB_URI가 설정되지 않았습니다.');
-    process.exit(1);
-}
-
-console.log('[Config] 환경변수 확인:');
-console.log('- NODE_ENV:', process.env.NODE_ENV);
-console.log('- MONGODB_URI:', process.env.MONGODB_URI ? '설정됨' : '설정되지 않음');
-console.log('- DB_NAME:', process.env.DB_NAME || '기본값 사용');
-console.log('- SESSION_SECRET:', process.env.SESSION_SECRET ? '설정됨' : '설정되지 않음');
-console.log('- PORT:', process.env.PORT || 3000);
-
 const app = express();
 
 // MongoDB 연결 설정
-const MONGODB_URI = process.env.MONGODB_URI;
-const DB_NAME = process.env.DB_NAME || 'member-management';
 const COLLECTION_NAME = 'employee-member';
 const TODAYGAMES_COLLECTION = 'todaygames';
 
@@ -116,20 +101,9 @@ async function autoLogoutAllMembers() {
 // MongoDB 연결
 async function connectToMongoDB() {
     try {
-        console.log('MongoDB 연결 시도:', MONGODB_URI);
-        const client = new MongoClient(MONGODB_URI, {
-            serverSelectionTimeoutMS: 60000,
-            socketTimeoutMS: 45000,
-            connectTimeoutMS: 60000,
-            maxPoolSize: 10,
-            minPoolSize: 1,
-            maxIdleTimeMS: 30000,
-            retryWrites: true,
-            w: 'majority'
-        });
-        await client.connect();
-        db = client.db(DB_NAME);
-        console.log(`MongoDB에 성공적으로 연결되었습니다. (DB: ${DB_NAME})`);
+        console.log('MongoDB 연결 시도...');
+        db = await connectDB();
+        console.log(`MongoDB에 성공적으로 연결되었습니다.`);
         
         // 데이터베이스 연결 후 cron job 설정
         setupAutoLogoutCron();
@@ -206,7 +180,7 @@ app.use(session(sessionConfig));
 const gameRoutes = require('./routes/game');
 const dailygamesRoutes = require('./routes/dailygames');
 const dailyGamesRoutes = require('./routes/daily-games');
-const { router: membersRoutes, setDatabase: setMembersDatabase } = require('./routes/members');
+const membersRoutes = require('./routes/members');
 const noticesRoutes = require('./routes/notices');
 const gameProgressRoutes = require('./routes/game-progress');
 const pointChargingRoutes = require('./routes/point-charging');
@@ -1808,14 +1782,8 @@ async function startServer() {
         const additionalDb = await connectDB();
         console.log('[Server] 추가 데이터베이스 연결 성공');
         
-        // members 라우트에 올바른 데이터베이스 전달
-        if (additionalDb) {
-            setMembersDatabase(additionalDb);
-            console.log('[Server] Members 라우트에 데이터베이스 설정 완료');
-        } else {
-            setMembersDatabase(db);
-            console.log('[Server] Members 라우트에 기본 데이터베이스 설정 완료');
-        }
+        // members 라우트는 이제 config/db.js의 getDb() 함수를 사용합니다
+        console.log('[Server] Members 라우트 데이터베이스 설정 완료');
         
         // 배팅 라우트에 데이터베이스 설정
         app.locals.db = db;

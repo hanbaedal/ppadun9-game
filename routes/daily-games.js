@@ -1,151 +1,103 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require('mongodb');
+const { ObjectId } = require('mongodb');
+const { getDb } = require('../config/db');
 
-// MongoDB 연결 설정
-const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-const client = new MongoClient(uri);
-
-// daily-games 컬렉션에 새 레코드 생성
-router.post('/', async (req, res) => {
+// 일일 게임 목록 조회
+router.get('/', async (req, res) => {
     try {
-        await client.connect();
-        const db = client.db('member-management');
+        const db = getDb();
         const collection = db.collection('daily-games');
-
-        const { date, number } = req.body;
-
-        // 기존 데이터 확인
-        const existingGame = await collection.findOne({ 
-            date: date, 
-            number: parseInt(number) 
-        });
-
-        if (existingGame) {
-            return res.status(400).json({
-                success: false,
-                message: '해당 날짜와 경기번호의 데이터가 이미 존재합니다.'
+        
+        const { date } = req.query;
+        
+        if (date) {
+            // 특정 날짜의 게임 조회
+            const games = await collection.findOne({ date });
+            res.json({
+                success: true,
+                games: games ? games.games : []
+            });
+        } else {
+            // 모든 게임 조회 (최신순)
+            const allGames = await collection.find({}).sort({ date: -1 }).toArray();
+            res.json({
+                success: true,
+                games: allGames
             });
         }
+    } catch (error) {
+        console.error('일일 게임 목록 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '일일 게임 목록을 불러오는데 실패했습니다.',
+            error: error.message
+        });
+    }
+});
 
-        // 요청 데이터에 타임스탬프 추가
-        const gameData = {
-            ...req.body,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
-
-        const result = await collection.insertOne(gameData);
+// 일일 게임 생성/수정
+router.post('/', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('daily-games');
+        
+        const { date, games } = req.body;
+        
+        if (!date || !games) {
+            return res.status(400).json({
+                success: false,
+                message: '날짜와 게임 정보가 필요합니다.'
+            });
+        }
+        
+        const result = await collection.findOneAndUpdate(
+            { date },
+            { $set: { date, games, updatedAt: new Date() } },
+            { upsert: true, returnDocument: 'after' }
+        );
         
         res.json({
             success: true,
-            message: '게임 데이터가 성공적으로 저장되었습니다.',
-            data: result
+            message: '일일 게임이 저장되었습니다.',
+            data: result.value
         });
     } catch (error) {
-        console.error('daily-games 저장 오류:', error);
+        console.error('일일 게임 저장 오류:', error);
         res.status(500).json({
             success: false,
-            message: '서버 오류가 발생했습니다.',
+            message: '일일 게임 저장에 실패했습니다.',
             error: error.message
         });
     }
 });
 
-// 특정 날짜와 경기번호로 데이터 조회
-router.get('/:date/:gameNumber', async (req, res) => {
+// 일일 게임 삭제
+router.delete('/:date', async (req, res) => {
     try {
-        const { date, gameNumber } = req.params;
-        await client.connect();
-        const db = client.db('member-management');
+        const db = getDb();
         const collection = db.collection('daily-games');
-
-        const game = await collection.findOne({ 
-            date: date, 
-            number: parseInt(gameNumber) 
-        });
-
-        if (!game) {
-            res.json({
-                success: false,
-                message: '해당 경기 데이터를 찾을 수 없습니다.'
-            });
-        } else {
-            res.json({
-                success: true,
-                data: game
-            });
-        }
-    } catch (error) {
-        console.error('daily-games 조회 오류:', error);
-        res.status(500).json({
-            success: false,
-            message: '서버 오류가 발생했습니다.',
-            error: error.message
-        });
-    }
-});
-
-// 특정 날짜와 경기번호로 데이터 업데이트
-router.put('/:date/:gameNumber', async (req, res) => {
-    try {
-        const { date, gameNumber } = req.params;
-        await client.connect();
-        const db = client.db('member-management');
-        const collection = db.collection('daily-games');
-
-        // 요청 데이터에 updatedAt 추가
-        const updateData = {
-            ...req.body,
-            updatedAt: new Date()
-        };
-
-        const result = await collection.updateOne(
-            { date: date, number: parseInt(gameNumber) },
-            { $set: updateData }
-        );
-
-        if (result.matchedCount === 0) {
-            res.status(404).json({
-                success: false,
-                message: '업데이트할 경기 데이터를 찾을 수 없습니다.'
-            });
-        } else {
-            res.json({
-                success: true,
-                message: '게임 데이터가 성공적으로 업데이트되었습니다.',
-                data: result
-            });
-        }
-    } catch (error) {
-        console.error('daily-games 업데이트 오류:', error);
-        res.status(500).json({
-            success: false,
-            message: '서버 오류가 발생했습니다.',
-            error: error.message
-        });
-    }
-});
-
-// 특정 날짜의 모든 경기 데이터 조회
-router.get('/:date', async (req, res) => {
-    try {
+        
         const { date } = req.params;
-        await client.connect();
-        const db = client.db('member-management');
-        const collection = db.collection('daily-games');
-
-        const games = await collection.find({ date: date }).sort({ number: 1 }).toArray();
-
+        
+        const result = await collection.deleteOne({ date });
+        
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 날짜의 게임을 찾을 수 없습니다.'
+            });
+        }
+        
         res.json({
             success: true,
-            data: games
+            message: '일일 게임이 삭제되었습니다.'
         });
     } catch (error) {
-        console.error('daily-games 날짜별 조회 오류:', error);
+        console.error('일일 게임 삭제 오류:', error);
         res.status(500).json({
             success: false,
-            message: '서버 오류가 발생했습니다.',
+            message: '일일 게임 삭제에 실패했습니다.',
             error: error.message
         });
     }

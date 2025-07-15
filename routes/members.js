@@ -1,27 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
-
-// server.js에서 전달받은 데이터베이스 연결 사용
-let db = null;
-
-// 데이터베이스 연결 설정 함수
-function setDatabase(database) {
-    db = database;
-}
-
-// 모든 회원 조회
+const { getDb } = require('../config/db');
 
 // 데이터베이스 컬렉션 목록 확인 (디버깅용)
 router.get('/debug/collections', async (req, res) => {
     try {
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
+        const db = getDb();
         const collections = await db.listCollections().toArray();
         const collectionNames = collections.map(col => col.name);
         
@@ -45,14 +30,7 @@ router.get('/', async (req, res) => {
     try {
         console.log('회원 목록 조회 요청 받음');
         
-        if (!db) {
-            console.error('데이터베이스 연결이 없음');
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
+        const db = getDb();
         console.log('game-member 컬렉션 접근 시도');
         const collection = db.collection('game-member');
         
@@ -96,13 +74,7 @@ router.put('/:id', async (req, res) => {
             return res.status(400).json({ error: '올바르지 않은 회원 ID 형식입니다.' });
         }
         
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
+        const db = getDb();
         const collection = db.collection('game-member');
         
         const updateData = {};
@@ -145,13 +117,7 @@ router.delete('/:id', async (req, res) => {
             return res.status(400).json({ error: '올바르지 않은 회원 ID 형식입니다.' });
         }
         
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
+        const db = getDb();
         const collection = db.collection('game-member');
         
         const result = await collection.deleteOne({ _id: new ObjectId(id) });
@@ -188,13 +154,7 @@ router.post('/login', async (req, res) => {
             });
         }
         
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
+        const db = getDb();
         const collection = db.collection('game-member');
         
         // 회원 검색
@@ -266,13 +226,7 @@ router.post('/logout', async (req, res) => {
             });
         }
         
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
+        const db = getDb();
         const collection = db.collection('game-member');
         
         // 로그아웃 정보 업데이트
@@ -303,24 +257,17 @@ router.post('/logout', async (req, res) => {
 // 회원 로그인 통계 API
 router.get('/login-stats', async (req, res) => {
     try {
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
-        const collection = db.collection('game-member');
+        const db = getDb();
         
         // 전체 회원 수
-        const totalMembers = await collection.countDocuments();
+        const totalMembers = await db.collection('game-member').countDocuments();
         
         // 현재 로그인한 회원 수
-        const onlineMembers = await collection.countDocuments({ isLoggedIn: true });
+        const onlineMembers = await db.collection('game-member').countDocuments({ isLoggedIn: true });
         
         // 최근 로그인한 회원들 (24시간 이내) - 더 많은 정보 포함
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const recentLoginMembers = await collection.find(
+        const recentLoginMembers = await db.collection('game-member').find(
             { lastLoginAt: { $gte: oneDayAgo } },
             { 
                 userId: 1, 
@@ -334,7 +281,7 @@ router.get('/login-stats', async (req, res) => {
         ).sort({ lastLoginAt: -1 }).toArray();
         
         // 로그인한 회원들 (현재 온라인)
-        const onlineMembersList = await collection.find(
+        const onlineMembersList = await db.collection('game-member').find(
             { isLoggedIn: true },
             { 
                 userId: 1, 
@@ -415,13 +362,7 @@ router.post('/:id/force-logout', async (req, res) => {
             });
         }
         
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
+        const db = getDb();
         const collection = db.collection('game-member');
         
         // 회원을 강제 로그아웃 상태로 변경
@@ -476,17 +417,10 @@ router.post('/:id/force-logout', async (req, res) => {
 // 회원 수동 자동 로그아웃 API (관리자용)
 router.post('/auto-logout-all', async (req, res) => {
     try {
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
-        
-        const collection = db.collection('game-member');
+        const db = getDb();
         
         // 현재 로그인된 모든 회원을 로그아웃 처리
-        const result = await collection.updateMany(
+        const result = await db.collection('game-member').updateMany(
             { isLoggedIn: true },
             { 
                 $set: { 
@@ -518,12 +452,7 @@ router.post('/auto-logout-all', async (req, res) => {
 // 회원 데이터베이스 스키마 업데이트 API
 router.post('/update-schema', async (req, res) => {
     try {
-        if (!db) {
-            return res.status(503).json({
-                success: false,
-                message: '데이터베이스 연결이 준비되지 않았습니다.'
-            });
-        }
+        const db = getDb();
         
         const collection = db.collection('game-member');
         
@@ -583,4 +512,4 @@ router.post('/update-schema', async (req, res) => {
     }
 });
 
-module.exports = { router, setDatabase }; 
+module.exports = router;
