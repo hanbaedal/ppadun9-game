@@ -313,8 +313,11 @@
         // 게임 데이터 불러오기
         async function fetchGames() {
             try {
-                const today = KoreanTime.getKoreanTime();
-                const date = KoreanTime.getKoreanDateString();
+                // 오늘 날짜 사용 (시작시간 설정 페이지와 동일)
+                const today = new Date();
+                const date = today.getFullYear().toString() +
+                           (today.getMonth() + 1).toString().padStart(2, '0') +
+                           today.getDate().toString().padStart(2, '0');
 
                 const response = await fetch(`/api/dailygames/${date}`);
                 
@@ -323,16 +326,15 @@
                 }
 
                 const result = await response.json();
-                if (result.success && result.data && result.data.games) {
-                    displayGames(result.data.games);
+                if (result.success) {
+                    displayGames(result.data.games || []);
                 } else {
-                    // 데이터가 없거나 오류인 경우 기본 데이터 표시
-                    console.log('데이터가 없거나 오류 발생, 기본 데이터 표시');
+                    // 데이터가 없으면 빈 테이블 표시
                     displayGames([]);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                // 오류 발생 시 기본 데이터 표시
+                // 오류 발생 시 빈 테이블 표시
                 displayGames([]);
             }
         }

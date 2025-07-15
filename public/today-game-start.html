@@ -426,24 +426,10 @@
                         </div>
                     </td>
                     <td>
-                        <div class="time-input-group">
-                            <button class="am-pm-btn ${isEndPM ? 'active' : ''}" id="endAmPm${i}" 
-                                    onclick="toggleAmPm(${i}, false)">${isEndPM ? 'PM' : 'AM'}</button>
-                            <select id="endHour${i}">
-                                ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
-                            </select>
-                            <span>:</span>
-                            <select id="endMinute${i}">
-                                ${Array.from({length: 60}, (_, i) => `<option value="${i.toString().padStart(2, '0')}">${i.toString().padStart(2, '0')}</option>`).join('')}
-                            </select>
-                        </div>
+                        <input type="text" value="${game.endTime || ''}" readonly style="background-color: #f8f9fa; color: #666;">
                     </td>
                     <td>
-                        <select id="noGame${i}">
-                            <option value="정상게임">정상게임</option>
-                            <option value="우천취소">우천취소</option>
-                            <option value="기타">기타</option>
-                        </select>
+                        <input type="text" value="${game.noGame || '정상게임'}" readonly style="background-color: #f8f9fa; color: #666;">
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -457,14 +443,7 @@
                     document.getElementById(`startMinute${i}`).value = startMinute;
                 }
 
-                // 종료시간 설정
-                if (endHour && endMinute) {
-                    document.getElementById(`endHour${i}`).value = displayEndHour;
-                    document.getElementById(`endMinute${i}`).value = endMinute;
-                }
 
-                // 상태 설정
-                document.getElementById(`noGame${i}`).value = game.noGame || '정상게임';
             }
         }
 
@@ -614,21 +593,8 @@
                         gameTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
                     }
 
-                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
-                    const endHour = document.getElementById(`endHour${i}`).value;
-                    const endMinute = document.getElementById(`endMinute${i}`).value;
-                    
-                    let endTime = null;
-                    if (endHour && endMinute) {
-                        let hour = parseInt(endHour);
-                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
-                        if (endAmPm === 'AM' && hour === 12) hour = 0;
-                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
-                    }
-
                     const homeTeam = document.getElementById(`homeTeam${i}`).value;
                     const awayTeam = document.getElementById(`awayTeam${i}`).value;
-                    const noGame = document.getElementById(`noGame${i}`).value;
 
                     // 팀이 선택된 경우에만 저장
                     if (homeTeam && awayTeam) {
