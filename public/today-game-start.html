@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/common.css">
+    <script src="/js/korean-time.js"></script>
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -281,7 +282,9 @@
                 </a>
                 <h1 class="page-title">KBO 야구경기 시작시간 설정</h1>
             </div>
-
+            <div class="date-display" id="koreanDateDisplay">
+                <!-- 한국 날짜가 여기에 표시됩니다 -->
+            </div>
         </div>
 
         <table class="game-table">
@@ -305,6 +308,28 @@
     </div>
 
     <script>
+        // 한국 날짜 표시 업데이트
+        function updateKoreanDate() {
+            const dateDisplay = document.getElementById('koreanDateDisplay');
+            if (dateDisplay && window.KoreanTime) {
+                const koreanTime = KoreanTime.getKoreanTime();
+                const dateString = koreanTime.toLocaleDateString('ko-KR', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    timeZone: 'Asia/Seoul'
+                });
+                dateDisplay.textContent = dateString;
+            }
+        }
+
+        // 페이지 로드 시 날짜 표시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            updateKoreanDate();
+            // 1분마다 날짜 업데이트 (날짜가 바뀔 때를 위해)
+            setInterval(updateKoreanDate, 60000);
+        });
+
         // KBO 팀 정보
         const kboTeams = [
             '두산',
