@@ -36,6 +36,38 @@ router.get('/', async (req, res) => {
     }
 });
 
+// 특정 날짜의 게임 조회
+router.get('/:date', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('daily-games');
+        
+        const { date } = req.params;
+        
+        const games = await collection.findOne({ date });
+        
+        if (!games) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 날짜의 게임을 찾을 수 없습니다.',
+                data: { games: [] }
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: games
+        });
+    } catch (error) {
+        console.error('특정 날짜 게임 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '게임 조회에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
 // 일일 게임 생성/수정
 router.post('/', async (req, res) => {
     try {
@@ -67,6 +99,50 @@ router.post('/', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '일일 게임 저장에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 특정 날짜의 게임 수정
+router.put('/:date', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('daily-games');
+        
+        const { date } = req.params;
+        const { games } = req.body;
+        
+        if (!games) {
+            return res.status(400).json({
+                success: false,
+                message: '게임 정보가 필요합니다.'
+            });
+        }
+        
+        const result = await collection.findOneAndUpdate(
+            { date },
+            { $set: { games, updatedAt: new Date() } },
+            { returnDocument: 'after' }
+        );
+        
+        if (!result.value) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 날짜의 게임을 찾을 수 없습니다.'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: '게임이 수정되었습니다.',
+            data: result.value
+        });
+    } catch (error) {
+        console.error('게임 수정 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '게임 수정에 실패했습니다.',
             error: error.message
         });
     }
