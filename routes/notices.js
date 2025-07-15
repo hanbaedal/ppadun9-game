@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
-const { getKoreanTime } = require('../utils/timeUtils');
+const { getKoreanTime } = require('../utils/korean-time');
 
 // 공지사항 목록 조회
 router.get('/', async (req, res) => {
