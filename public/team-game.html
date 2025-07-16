@@ -1006,7 +1006,7 @@
             try {
                 // 경기상황이 '정상게임'이 아니면 '경기취소' 반환
                 if (noGame && noGame !== '정상게임') {
-                    console.log('경기상황이 정상게임이 아님 → 경기취소');
+                    console.log('경기상황이 정상게임이 아님 → 경기취소, noGame:', noGame);
                     return { text: '경기취소', class: 'status-cancelled' };
                 }
 
@@ -1257,17 +1257,8 @@
                 const today = new Date().toISOString().split('T')[0];
                 console.log('[TeamGame] 오늘 날짜:', today);
                 
-                // 먼저 team-games에서 데이터 확인
-                const teamResponse = await fetch(`/api/team-games/${today}`);
-                const teamData = await teamResponse.json();
-                
-                if (teamData.success && teamData.data && teamData.data.length > 0) {
-                    console.log('[TeamGame] team-games에서 데이터 발견:', teamData.data.length, '개');
-                    return teamData.data;
-                }
-                
-                // team-games에 데이터가 없으면 daily-games에서 복사
-                console.log('[TeamGame] team-games에 데이터 없음, daily-games에서 복사 시도');
+                // 먼저 daily-games에서 team-games로 자동 변환 수행
+                console.log('[TeamGame] daily-games에서 team-games로 자동 변환 시작');
                 const copyResponse = await fetch(`/api/team-games/import-from-daily/${today}`, {
                     method: 'POST',
                     headers: {
@@ -1275,12 +1266,46 @@
                     }
                 });
                 
+                console.log('[TeamGame] 변환 API 응답 상태:', copyResponse.status);
+                
                 if (copyResponse.ok) {
                     const copyData = await copyResponse.json();
-                    console.log('[TeamGame] daily-games에서 복사 성공:', copyData.data.length, '개');
+                    console.log('[TeamGame] daily-games에서 team-games로 변환 성공:', copyData.data.length, '개');
+                    console.log('[TeamGame] 변환된 첫 번째 경기 데이터:', copyData.data[0]);
                     return copyData.data;
                 } else {
-                    console.log('[TeamGame] daily-games에서 복사 실패');
+                    console.log('[TeamGame] 변환 실패');
+                    try {
+                        const errorData = await copyResponse.json();
+                        console.log('[TeamGame] 변환 실패 상세:', errorData);
+                    } catch (e) {
+                        console.log('[TeamGame] 변환 실패 - 응답 파싱 불가');
+                    }
+                    
+                    // 변환 실패 시 daily-games에서 직접 데이터 가져오기
+                    console.log('[TeamGame] daily-games에서 직접 데이터 가져오기 시도');
+                    const dailyResponse = await fetch(`/api/dailygames/${today.replace(/-/g, '')}`);
+                    if (dailyResponse.ok) {
+                        const dailyData = await dailyResponse.json();
+                        if (dailyData.success && dailyData.data && dailyData.data.games) {
+                            console.log('[TeamGame] daily-games에서 데이터 가져옴:', dailyData.data.games.length, '개');
+                            // daily-games 형식을 team-games 형식으로 변환
+                            const convertedGames = dailyData.data.games.map(game => ({
+                                gameNumber: game.number,
+                                matchup: `${game.homeTeam || '-'} vs ${game.awayTeam || '-'}`,
+                                startTime: game.startTime || '-',
+                                endTime: game.endTime || '-',
+                                gameStatus: game.noGame || '정상게임',
+                                progressStatus: '경기전',
+                                gameType: '타자',
+                                bettingStart: '중지',
+                                bettingStop: '중지',
+                                predictionResult: ''
+                            }));
+                            console.log('[TeamGame] 변환된 첫 번째 경기 데이터:', convertedGames[0]);
+                            return convertedGames;
+                        }
+                    }
                     return [];
                 }
             } catch (error) {
@@ -1333,11 +1358,8 @@
         // 진행상태(시간기준) 실시간 업데이트 함수
         async function updateGameStatus() {
             try {
-                const date = currentDate.getFullYear().toString() +
-                            (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                            currentDate.getDate().toString().padStart(2, '0');
-
-                const response = await fetch(`/api/dailygames/${date}`);
+                const today = new Date().toISOString().split('T')[0];
+                const response = await fetch(`/api/team-games/${today}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -1345,7 +1367,7 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    const games = result.data.games || [];
+                    const games = result.data || [];
                     const gameRows = document.querySelectorAll('.game-row');
                     
                     gameRows.forEach(gameRow => {
@@ -1353,10 +1375,10 @@
                         const progressDisplay = gameRow.querySelector('.game-progress');
                         
                         // 해당 경기 데이터 찾기
-                        const game = games.find(g => g.number === gameNumber);
+                        const game = games.find(g => g.gameNumber === gameNumber);
                         
                         if (game) {
-                            const status = getGameStatus(game.startTime, game.endTime, game.noGame);
+                            const status = getGameStatus(game.startTime, game.endTime, game.gameStatus);
                             
                             // 진행상태(시간기준) 표시 업데이트
                             progressDisplay.className = `game-progress ${status.class}`;
