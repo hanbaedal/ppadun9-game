@@ -46,7 +46,16 @@
             overflow: hidden;
         }
         .btn-action {
-            margin: 2px;
+            margin: 1px;
+            font-size: 11px;
+            padding: 4px 6px;
+            min-width: 50px;
+        }
+        
+        /* 관리 컬럼 버튼 정렬 */
+        .table td:nth-child(9) {
+            text-align: center;
+            white-space: nowrap;
         }
         
         /* 테이블 헤더 스타일 */
@@ -70,15 +79,15 @@
         }
         
         /* 컬럼 너비 조정 */
-        .table th:nth-child(1), .table td:nth-child(1) { width: 8%; }  /* ID */
-        .table th:nth-child(2), .table td:nth-child(2) { width: 12%; } /* 이름 */
-        .table th:nth-child(3), .table td:nth-child(3) { width: 20%; } /* 이메일 */
-        .table th:nth-child(4), .table td:nth-child(4) { width: 8%; }  /* 포인트 */
-        .table th:nth-child(5), .table td:nth-child(5) { width: 12%; } /* 가입일 */
-        .table th:nth-child(6), .table td:nth-child(6) { width: 10%; } /* 로그인 상태 */
-        .table th:nth-child(7), .table td:nth-child(7) { width: 15%; } /* 마지막 로그인 */
-        .table th:nth-child(8), .table td:nth-child(8) { width: 15%; } /* 마지막 로그아웃 */
-        .table th:nth-child(9), .table td:nth-child(9) { width: 10%; } /* 관리 */
+        .table th:nth-child(1), .table td:nth-child(1) { width: 7%; }   /* ID */
+        .table th:nth-child(2), .table td:nth-child(2) { width: 10%; }  /* 이름 */
+        .table th:nth-child(3), .table td:nth-child(3) { width: 18%; }  /* 이메일 */
+        .table th:nth-child(4), .table td:nth-child(4) { width: 7%; }   /* 포인트 */
+        .table th:nth-child(5), .table td:nth-child(5) { width: 10%; }  /* 가입일 */
+        .table th:nth-child(6), .table td:nth-child(6) { width: 8%; }   /* 로그인 상태 */
+        .table th:nth-child(7), .table td:nth-child(7) { width: 12%; }  /* 마지막 로그인 */
+        .table th:nth-child(8), .table td:nth-child(8) { width: 12%; }  /* 마지막 로그아웃 */
+        .table th:nth-child(9), .table td:nth-child(9) { width: 16%; }  /* 관리 */
         
         /* 긴 텍스트 처리 */
         .table td {
