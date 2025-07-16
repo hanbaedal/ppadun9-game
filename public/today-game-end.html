@@ -376,7 +376,90 @@
                             (today.getMonth() + 1).toString().padStart(2, '0') +
                             today.getDate().toString().padStart(2, '0');
 
+                // 1. dailygames API용 데이터 준비
                 const games = [];
+                for (let i = 1; i <= 5; i++) {
+                    const endAmPmElement = document.getElementById(`endAmPm${i}`);
+                    const endAmPm = endAmPmElement && endAmPmElement.classList.contains('active') ? 'PM' : 'AM';
+                    const endHourElement = document.getElementById(`endHour${i}`);
+                    const endMinuteElement = document.getElementById(`endMinute${i}`);
+                    const endHour = endHourElement ? endHourElement.value : '';
+                    const endMinute = endMinuteElement ? endMinuteElement.value : '';
+                    
+                    let endTime = null;
+                    if (endHour && endMinute) {
+                        let hour = parseInt(endHour);
+                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
+                        if (endAmPm === 'AM' && hour === 12) hour = 0;
+                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
+                    }
+
+                    const homeTeamElement = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`);
+                    const awayTeamElement = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`);
+                    const startTimeElement = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(4) input`);
+                    const noGameElement = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(6)`);
+                    
+                    const homeTeam = homeTeamElement ? homeTeamElement.value : '';
+                    const awayTeam = awayTeamElement ? awayTeamElement.value : '';
+                    const startTime = startTimeElement ? startTimeElement.value : '';
+                    const noGame = noGameElement ? noGameElement.textContent : '정상게임';
+
+                    const gameData = {
+                        number: i,
+                        homeTeam: homeTeam || null,
+                        awayTeam: awayTeam || null,
+                        startTime: startTime,
+                        endTime: endTime,
+                        noGame: noGame
+                    };
+
+                    games.push(gameData);
+                }
+
+                // 2. dailygames API 업데이트
+                try {
+                    const existingResponse = await fetch(`/api/dailygames/${date}`);
+                    const existingData = await existingResponse.json();
+
+                    let response;
+                    if (existingData.success) {
+                        // 기존 데이터가 있으면 업데이트
+                        response = await fetch(`/api/dailygames/${date}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ games })
+                        });
+                    } else {
+                        // 새 데이터 생성
+                        response = await fetch('/api/dailygames', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                date: date,
+                                games: games
+                            })
+                        });
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error(result.message || '저장 중 오류가 발생했습니다.');
+                    }
+
+                    console.log('dailygames API 업데이트 성공');
+                } catch (error) {
+                    console.error('dailygames API 업데이트 오류:', error);
+                }
+
+                // 3. daily-games 컬렉션 업데이트
                 for (let i = 1; i <= 5; i++) {
                     const endAmPmElement = document.getElementById(`endAmPm${i}`);
                     const endAmPm = endAmPmElement && endAmPmElement.classList.contains('active') ? 'PM' : 'AM';
