@@ -1084,16 +1084,18 @@
                     return { text: '경기전', class: 'status-before' };
                 }
 
+                // 현재시간이 시작시간보다 이전이면 '경기전'
+                if (currentTime < startTimeInMinutes) {
+                    console.log('현재시간 < 시작시간 → 경기전');
+                    return { text: '경기전', class: 'status-before' };
+                }
+
                 // 종료시간이 있는 경우
                 if (endTimeInMinutes !== null) {
                     // 종료시간이 초기값(60분 = 오전 1시)인 경우는 아직 설정되지 않은 것으로 간주
                     if (endTimeInMinutes === 60) {
                         console.log('종료시간이 초기값(60분) → 아직 설정되지 않음, 경기중으로 처리');
-                        if (currentTime >= startTimeInMinutes) {
-                            return { text: '경기중', class: 'status-ongoing' };
-                        } else {
-                            return { text: '경기전', class: 'status-before' };
-                        }
+                        return { text: '경기중', class: 'status-ongoing' };
                     }
                     
                     // 종료시간이 시작시간보다 작은 경우는 다음날로 간주
@@ -1109,19 +1111,16 @@
                         return { text: '경기끝', class: 'status-ended' };
                     }
                     // 시작시간 이후이고 종료시간 이전이면 '경기중'
-                    else if (currentTime >= startTimeInMinutes && currentTime < endTimeInMinutes) {
+                    else {
                         console.log('시작시간 <= 현재시간 < 종료시간 → 경기중');
                         return { text: '경기중', class: 'status-ongoing' };
                     }
                 }
                 // 종료시간이 없는 경우: 시작시간 이후면 '경기중'
-                else if (currentTime >= startTimeInMinutes) {
+                else {
                     console.log('종료시간 없음, 시작시간 이후 → 경기중');
                     return { text: '경기중', class: 'status-ongoing' };
                 }
-
-                console.log('기본 상태 → 경기전');
-                return { text: '경기전', class: 'status-before' };
             } catch (error) {
                 console.error('getGameStatus 오류:', error);
                 return { text: '경기전', class: 'status-before' };
