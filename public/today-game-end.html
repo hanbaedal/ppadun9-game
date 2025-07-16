@@ -293,8 +293,10 @@
         // AM/PM 토글
         function toggleAmPm(gameNumber, isStartTime) {
             const btn = document.getElementById(`${isStartTime ? 'start' : 'end'}AmPm${gameNumber}`);
-            btn.classList.toggle('active');
-            btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
+            if (btn) {
+                btn.classList.toggle('active');
+                btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
+            }
         }
 
         // 게임 데이터 표시
@@ -374,9 +376,12 @@
 
                 const games = [];
                 for (let i = 1; i <= 5; i++) {
-                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
-                    const endHour = document.getElementById(`endHour${i}`).value;
-                    const endMinute = document.getElementById(`endMinute${i}`).value;
+                    const endAmPmElement = document.getElementById(`endAmPm${i}`);
+                    const endAmPm = endAmPmElement && endAmPmElement.classList.contains('active') ? 'PM' : 'AM';
+                    const endHourElement = document.getElementById(`endHour${i}`);
+                    const endMinuteElement = document.getElementById(`endMinute${i}`);
+                    const endHour = endHourElement ? endHourElement.value : '';
+                    const endMinute = endMinuteElement ? endMinuteElement.value : '';
                     
                     let endTime = null;
                     if (endHour && endMinute) {

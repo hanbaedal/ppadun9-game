@@ -372,8 +372,10 @@
         // AM/PM 토글
         function toggleAmPm(gameNumber, isStartTime) {
             const btn = document.getElementById(`${isStartTime ? 'start' : 'end'}AmPm${gameNumber}`);
-            btn.classList.toggle('active');
-            btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
+            if (btn) {
+                btn.classList.toggle('active');
+                btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
+            }
         }
 
         // 게임 데이터 표시
@@ -506,9 +508,12 @@
                 // 기존 dailygames 형식으로 데이터 준비
                 const games = [];
                 for (let i = 1; i <= 5; i++) {
-                    const startAmPm = document.getElementById(`startAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
-                    const startHour = document.getElementById(`startHour${i}`).value;
-                    const startMinute = document.getElementById(`startMinute${i}`).value;
+                    const startAmPmElement = document.getElementById(`startAmPm${i}`);
+                    const startAmPm = startAmPmElement && startAmPmElement.classList.contains('active') ? 'PM' : 'AM';
+                    const startHourElement = document.getElementById(`startHour${i}`);
+                    const startMinuteElement = document.getElementById(`startMinute${i}`);
+                    const startHour = startHourElement ? startHourElement.value : '';
+                    const startMinute = startMinuteElement ? startMinuteElement.value : '';
                     
                     let startTime = null;
                     if (startHour && startMinute) {
@@ -518,16 +523,11 @@
                         startTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
                     }
 
-                    const endAmPm = document.getElementById(`endAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
-                    const endHour = document.getElementById(`endHour${i}`).value;
-                    const endMinute = document.getElementById(`endMinute${i}`).value;
-                    
+                    // 종료시간은 읽기 전용이므로 기존 데이터에서 가져오거나 기본값 사용
                     let endTime = null;
-                    if (endHour && endMinute) {
-                        let hour = parseInt(endHour);
-                        if (endAmPm === 'PM' && hour !== 12) hour += 12;
-                        if (endAmPm === 'AM' && hour === 12) hour = 0;
-                        endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
+                    const endTimeInput = document.querySelector(`tr:nth-child(${i}) td:nth-child(5) input`);
+                    if (endTimeInput && endTimeInput.value) {
+                        endTime = endTimeInput.value;
                     }
 
                     const gameData = {
@@ -581,9 +581,12 @@
 
                 // 2. daily-games 컬렉션 업데이트 (기존 데이터 확인 후 업데이트)
                 for (let i = 1; i <= 5; i++) {
-                    const startAmPm = document.getElementById(`startAmPm${i}`).classList.contains('active') ? 'PM' : 'AM';
-                    const startHour = document.getElementById(`startHour${i}`).value;
-                    const startMinute = document.getElementById(`startMinute${i}`).value;
+                    const startAmPmElement = document.getElementById(`startAmPm${i}`);
+                    const startAmPm = startAmPmElement && startAmPmElement.classList.contains('active') ? 'PM' : 'AM';
+                    const startHourElement = document.getElementById(`startHour${i}`);
+                    const startMinuteElement = document.getElementById(`startMinute${i}`);
+                    const startHour = startHourElement ? startHourElement.value : '';
+                    const startMinute = startMinuteElement ? startMinuteElement.value : '';
                     
                     let gameTime = null;
                     if (startHour && startMinute) {
@@ -600,6 +603,9 @@
                     if (homeTeam && awayTeam) {
                         // 게임 상태 결정
                         let status = 'before'; // 기본값
+                        const noGameInput = document.querySelector(`tr:nth-child(${i}) td:nth-child(6) input`);
+                        const noGame = noGameInput ? noGameInput.value : '정상게임';
+                        
                         if (noGame === '우천취소' || noGame === '기타') {
                             status = 'cancelled';
                         } else if (gameTime) {
@@ -614,6 +620,13 @@
                             } else if (currentTime >= gameTimeInMinutes) {
                                 status = 'during';
                             }
+                        }
+
+                        // 종료시간은 읽기 전용이므로 기존 데이터에서 가져오거나 기본값 사용
+                        let endTime = null;
+                        const endTimeInput = document.querySelector(`tr:nth-child(${i}) td:nth-child(5) input`);
+                        if (endTimeInput && endTimeInput.value) {
+                            endTime = endTimeInput.value;
                         }
 
                         const dailyGameData = {
