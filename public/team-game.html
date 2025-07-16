@@ -888,7 +888,7 @@
     </div>
 
     <script>
-        let currentDate = KoreanTime.getKoreanTime();
+        let currentDate = new Date();
         let selectedGame = null;
         let bettingTimer = null;
 
@@ -901,7 +901,6 @@
 
         // 날짜 표시 업데이트
         function updateDate() {
-            let currentDate = KoreanTime.getKoreanTime();
             const dateStr = KoreanTime.formatKoreanTime(currentDate, 'date');
             document.getElementById('dateDisplay').textContent = dateStr;
         }
@@ -1066,7 +1065,7 @@
                             (currentDate.getMonth() + 1).toString().padStart(2, '0') +
                             currentDate.getDate().toString().padStart(2, '0');
 
-                const response = await fetch(`/api/dailygames/${date}`);
+                const response = await fetch(`/api/team-game/${date}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -1100,7 +1099,7 @@
                             (currentDate.getMonth() + 1).toString().padStart(2, '0') +
                             currentDate.getDate().toString().padStart(2, '0');
 
-                const response = await fetch(`/api/dailygames/${date}`);
+                const response = await fetch(`/api/team-game/${date}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -1287,17 +1286,16 @@
                 
                 if (selectedGame && selectedGameType && selectedGameType.value === 'attack') {
                     try {
-                        const response = await fetch('/api/betting/start', {
+                        const response = await fetch(`/api/team-game/${currentDate.getFullYear().toString() +
+                                      (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                                      currentDate.getDate().toString().padStart(2, '0')}/betting/start`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
                                 gameNumber: selectedGame,
-                                gameType: selectedGameType.value,
-                                date: currentDate.getFullYear().toString() +
-                                      (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                                      currentDate.getDate().toString().padStart(2, '0')
+                                gameType: selectedGameType.value
                             })
                         });
                         
@@ -1324,16 +1322,15 @@
             document.getElementById('stopBetting').addEventListener('click', async function() {
                 if (selectedGame) {
                     try {
-                        const response = await fetch('/api/betting/stop', {
+                        const response = await fetch(`/api/team-game/${currentDate.getFullYear().toString() +
+                                      (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                                      currentDate.getDate().toString().padStart(2, '0')}/betting/stop`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                gameNumber: selectedGame,
-                                date: currentDate.getFullYear().toString() +
-                                      (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                                      currentDate.getDate().toString().padStart(2, '0')
+                                gameNumber: selectedGame
                             })
                         });
                         
@@ -1382,17 +1379,16 @@
                             
                             // 예측 결과 서버로 전송
                             try {
-                                const response = await fetch('/api/betting/result', {
+                                const response = await fetch(`/api/team-game/${currentDate.getFullYear().toString() +
+                                              (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                                              currentDate.getDate().toString().padStart(2, '0')}/betting/result`, {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
                                     },
                                     body: JSON.stringify({
                                         gameNumber: selectedGame,
-                                        prediction: radio.value,
-                                        date: currentDate.getFullYear().toString() +
-                                              (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                                              currentDate.getDate().toString().padStart(2, '0')
+                                        prediction: radio.value
                                     })
                                 });
                                 
