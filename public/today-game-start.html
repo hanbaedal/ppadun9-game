@@ -441,8 +441,10 @@
 
                 // 시간 설정
                 if (startHour && startMinute) {
-                    document.getElementById(`startHour${i}`).value = displayStartHour;
-                    document.getElementById(`startMinute${i}`).value = startMinute;
+                    const startHourElement = document.getElementById(`startHour${i}`);
+                    const startMinuteElement = document.getElementById(`startMinute${i}`);
+                    if (startHourElement) startHourElement.value = displayStartHour;
+                    if (startMinuteElement) startMinuteElement.value = startMinute;
                 }
 
 
@@ -530,13 +532,17 @@
                         endTime = endTimeInput.value;
                     }
 
+                    const homeTeamElement = document.getElementById(`homeTeam${i}`);
+                    const awayTeamElement = document.getElementById(`awayTeam${i}`);
+                    const noGameElement = document.getElementById(`noGame${i}`);
+                    
                     const gameData = {
                         number: i,
-                        homeTeam: document.getElementById(`homeTeam${i}`).value || null,
-                        awayTeam: document.getElementById(`awayTeam${i}`).value || null,
+                        homeTeam: homeTeamElement ? homeTeamElement.value || null : null,
+                        awayTeam: awayTeamElement ? awayTeamElement.value || null : null,
                         startTime: startTime,
                         endTime: endTime,
-                        noGame: document.getElementById(`noGame${i}`).value
+                        noGame: noGameElement ? noGameElement.value : '정상게임'
                     };
 
                     games.push(gameData);
@@ -596,8 +602,10 @@
                         gameTime = `${hour.toString().padStart(2, '0')}:${startMinute}`;
                     }
 
-                    const homeTeam = document.getElementById(`homeTeam${i}`).value;
-                    const awayTeam = document.getElementById(`awayTeam${i}`).value;
+                    const homeTeamElement = document.getElementById(`homeTeam${i}`);
+                    const awayTeamElement = document.getElementById(`awayTeam${i}`);
+                    const homeTeam = homeTeamElement ? homeTeamElement.value : '';
+                    const awayTeam = awayTeamElement ? awayTeamElement.value : '';
 
                     // 팀이 선택된 경우에만 저장
                     if (homeTeam && awayTeam) {

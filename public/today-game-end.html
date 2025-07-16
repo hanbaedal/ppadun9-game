@@ -346,8 +346,10 @@
                 tbody.appendChild(tr);
 
                 if (endHour && endMinute) {
-                    document.getElementById(`endHour${i}`).value = displayEndHour;
-                    document.getElementById(`endMinute${i}`).value = endMinute;
+                    const endHourElement = document.getElementById(`endHour${i}`);
+                    const endMinuteElement = document.getElementById(`endMinute${i}`);
+                    if (endHourElement) endHourElement.value = displayEndHour;
+                    if (endMinuteElement) endMinuteElement.value = endMinute;
                 }
             }
         }
@@ -391,10 +393,15 @@
                         endTime = `${hour.toString().padStart(2, '0')}:${endMinute}`;
                     }
 
-                    const homeTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`).value;
-                    const awayTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`).value;
-                    const startTime = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(4) input`).value;
-                    const noGame = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(6)`).textContent;
+                    const homeTeamElement = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`);
+                    const awayTeamElement = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`);
+                    const startTimeElement = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(4) input`);
+                    const noGameElement = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(6)`);
+                    
+                    const homeTeam = homeTeamElement ? homeTeamElement.value : '';
+                    const awayTeam = awayTeamElement ? awayTeamElement.value : '';
+                    const startTime = startTimeElement ? startTimeElement.value : '';
+                    const noGame = noGameElement ? noGameElement.textContent : '정상게임';
 
                     // 팀이 선택된 경우에만 저장
                     if (homeTeam && awayTeam) {
