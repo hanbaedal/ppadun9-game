@@ -1000,8 +1000,6 @@
 
         function displayGames(games) {
             const gameSelectionTableBody = document.getElementById('gameSelectionTableBody');
-            console.log('displayGames 호출됨, games:', games);
-            console.log('gameSelectionTableBody:', gameSelectionTableBody);
             gameSelectionTableBody.innerHTML = '';
 
             for (let i = 1; i <= 5; i++) {
@@ -1073,13 +1071,49 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    displayGames(result.data.games || []);
+                    if (result.data && result.data.games && result.data.games.length > 0) {
+                        displayGames(result.data.games);
+                    } else {
+                        // team-games에 데이터가 없으면 daily-games에서 복사
+                        console.log('team-games에 데이터가 없음, daily-games에서 복사 시도');
+                        await copyFromDailyGames(date);
+                    }
                 } else {
                     throw new Error(result.message || '데이터를 불러오는 중 오류가 발생했습니다.');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 // 오류 발생 시 빈 테이블 표시
+                displayGames([]);
+            }
+        }
+
+        // daily-games에서 데이터 복사
+        async function copyFromDailyGames(date) {
+            try {
+                const response = await fetch(`/api/team-game/${date}/copy-from-daily`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('daily-games에서 데이터 복사 완료');
+                        // 복사된 데이터 표시
+                        displayGames(result.data.games || []);
+                    } else {
+                        console.error('데이터 복사 실패:', result.message);
+                        displayGames([]);
+                    }
+                } else {
+                    console.error('데이터 복사 API 호출 실패');
+                    displayGames([]);
+                }
+            } catch (error) {
+                console.error('데이터 복사 오류:', error);
                 displayGames([]);
             }
         }
@@ -1249,16 +1283,6 @@
         window.onload = function() {
             loadCurrentUser();
             updateDate();
-            
-            // 기본 경기 데이터 생성 (서버 데이터 없이도 표시)
-            const defaultGames = [
-                { number: 1, homeTeam: '팀A', awayTeam: '팀B', startTime: '14:00', endTime: '16:00' },
-                { number: 2, homeTeam: '팀C', awayTeam: '팀D', startTime: '15:00', endTime: '17:00' },
-                { number: 3, homeTeam: '팀E', awayTeam: '팀F', startTime: '16:00', endTime: '18:00' },
-                { number: 4, homeTeam: '팀G', awayTeam: '팀H', startTime: '17:00', endTime: '19:00' },
-                { number: 5, homeTeam: '팀I', awayTeam: '팀J', startTime: '18:00', endTime: '20:00' }
-            ];
-            displayGames(defaultGames);
             
             // 서버에서 데이터 가져오기
             fetchGames();

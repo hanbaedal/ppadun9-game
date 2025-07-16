@@ -188,4 +188,53 @@ router.post('/:date/betting/result', async (req, res) => {
     }
 });
 
+// daily-games 데이터를 team-games로 복사
+router.post('/:date/copy-from-daily', async (req, res) => {
+    try {
+        const { date } = req.params;
+        console.log('[Team Game] daily-games에서 데이터 복사:', date);
+        
+        const db = getDb();
+        const dailyCollection = db.collection('daily-games');
+        const teamCollection = db.collection('team-games');
+        
+        // daily-games에서 데이터 조회
+        const dailyData = await dailyCollection.findOne({ date });
+        
+        if (!dailyData) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 날짜의 daily-games 데이터를 찾을 수 없습니다.'
+            });
+        }
+        
+        // team-games에 데이터 저장
+        const result = await teamCollection.findOneAndUpdate(
+            { date },
+            { 
+                $set: { 
+                    date,
+                    games: dailyData.games,
+                    updatedAt: getKoreanTime()
+                }
+            },
+            { upsert: true, returnDocument: 'after' }
+        );
+        
+        console.log('[Team Game] 데이터 복사 완료');
+        res.json({
+            success: true,
+            message: 'daily-games 데이터가 team-games로 복사되었습니다.',
+            data: result.value
+        });
+    } catch (error) {
+        console.error('[Team Game] 데이터 복사 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '데이터 복사에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 
