@@ -41,8 +41,10 @@ router.post('/import-from-daily/:date', async (req, res) => {
         
         const { date } = req.params;
         
-        // daily-games에서 데이터 조회
-        const dailyGames = await dailyCollection.findOne({ date });
+        // daily-games에서 데이터 조회 (날짜 형식 변환)
+        const dailyDate = date.replace(/-/g, ''); // 하이픈 제거
+        console.log('[TeamGames] daily-games 조회 날짜:', dailyDate);
+        const dailyGames = await dailyCollection.findOne({ date: dailyDate });
         
         if (!dailyGames || !dailyGames.games) {
             return res.status(404).json({
@@ -75,7 +77,9 @@ router.post('/import-from-daily/:date', async (req, res) => {
         
         // 데이터 저장
         if (teamGames.length > 0) {
-            await teamCollection.insertMany(teamGames);
+            console.log('[TeamGames] team-games에 저장 시작:', teamGames.length, '개');
+            const insertResult = await teamCollection.insertMany(teamGames);
+            console.log('[TeamGames] 저장 결과:', insertResult);
         }
         
         console.log('[TeamGames] 데이터 변환 및 저장 완료:', teamGames.length, '개');
