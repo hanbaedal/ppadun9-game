@@ -1013,24 +1013,13 @@
                 // 한국 시간으로 현재 시간 계산
                 let now, currentTime;
                 
-                if (typeof KoreanTime !== 'undefined' && KoreanTime.getKoreanTime) {
-                    now = KoreanTime.getKoreanTime();
-                    currentTime = now.getHours() * 60 + now.getMinutes(); // 한국 시간을 분으로 변환
-                } else {
-                    // KoreanTime이 없으면 일반 Date 사용
-                    now = new Date();
-                    // UTC 시간에 한국 시간대 오프셋 적용
-                    const utcHours = now.getUTCHours();
-                    const koreanHours = (utcHours + 9) % 24; // UTC+9
-                    currentTime = koreanHours * 60 + now.getMinutes();
-                }
+                // 항상 한국 시간으로 계산
+                now = new Date();
+                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+                currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
                 
                 console.log('=== 진행상태(시간기준) 디버깅 ===');
-                if (typeof KoreanTime !== 'undefined' && KoreanTime.formatKoreanTime) {
-                    console.log('현재 시간:', KoreanTime.formatKoreanTime(now, 'datetime'));
-                } else {
-                    console.log('현재 시간:', now.toLocaleString('ko-KR'));
-                }
+                console.log('현재 시간:', koreanTime.toLocaleString('ko-KR'));
                 console.log('한국 현재 시간(분):', currentTime);
                 console.log('시작시간:', startTime);
                 console.log('종료시간:', endTime);
