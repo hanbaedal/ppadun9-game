@@ -680,13 +680,55 @@ app.post('/api/employee/login', async (req, res) => {
 
         // 동시 로그인 차단: 5분 이내 활동이 있는 계정만 새 로그인 거부
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-        const isRecentlyActive = employee.isLoggedIn && 
-            ((employee.lastActivityAt && employee.lastActivityAt >= fiveMinutesAgo) ||
-             (employee.lastLoginAt && employee.lastLoginAt >= fiveMinutesAgo));
+        console.log('=== 동시 로그인 차단 검사 ===');
+        console.log('사용자 정보:', {
+            username: employee.username,
+            isLoggedIn: employee.isLoggedIn,
+            lastActivityAt: employee.lastActivityAt,
+            lastLoginAt: employee.lastLoginAt
+        });
+        console.log('5분 전 시간:', fiveMinutesAgo);
         
+        // 더 정확한 활동 시간 확인
+        let isRecentlyActive = false;
+        
+        if (employee.isLoggedIn) {
+            // lastActivityAt이 있으면 그것을 우선 사용
+            if (employee.lastActivityAt) {
+                const lastActivityTime = new Date(employee.lastActivityAt);
+                isRecentlyActive = lastActivityTime >= fiveMinutesAgo;
+                console.log('lastActivityAt 기준:', {
+                    lastActivityTime: lastActivityTime,
+                    fiveMinutesAgo: fiveMinutesAgo,
+                    isActive: isRecentlyActive
+                });
+            }
+            // lastActivityAt이 없으면 lastLoginAt 사용
+            else if (employee.lastLoginAt) {
+                const lastLoginTime = new Date(employee.lastLoginAt);
+                isRecentlyActive = lastLoginTime >= fiveMinutesAgo;
+                console.log('lastLoginAt 기준:', {
+                    lastLoginTime: lastLoginTime,
+                    fiveMinutesAgo: fiveMinutesAgo,
+                    isActive: isRecentlyActive
+                });
+            }
+            // 둘 다 없으면 비활성으로 간주
+            else {
+                isRecentlyActive = false;
+                console.log('활동 시간 정보 없음 - 비활성으로 간주');
+            }
+        }
+        
+        console.log('최종 활동 여부:', isRecentlyActive);
+        
+        // 동시 로그인 차단: 5분 이내 활동이 있는 계정만 새 로그인 거부
         if (isRecentlyActive) {
+            console.log('동시 로그인 차단됨:', employee.username);
             return res.status(403).json({ error: '이미 다른 곳에서 로그인했습니다. 먼저 로그아웃 후 다시 시도하세요.' });
         }
+        
+        console.log('동시 로그인 차단 검사 통과:', employee.username);
         
         // 중복 로그인 방지: 기존 세션 무효화
         const sessionId = req.sessionID;
@@ -895,6 +937,107 @@ app.post('/api/employee/force-logout', async (req, res) => {
         });
     } catch (error) {
         console.error('강제 로그아웃 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 모든 사용자 강제 로그아웃 API (디버깅용)
+app.post('/api/employee/force-logout-all', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 모든 사용자를 강제 로그아웃 처리
+        const result = await collection.updateMany(
+            { isLoggedIn: true },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: getKoreanTime(),
+                    currentSessionId: null,
+                    updatedAt: getKoreanTime()
+                } 
+            }
+        );
+        
+        console.log('모든 사용자 강제 로그아웃 처리 완료:', result.modifiedCount, '명');
+        
+        res.json({
+            success: true,
+            message: `${result.modifiedCount}명의 사용자가 강제 로그아웃되었습니다.`
+        });
+    } catch (error) {
+        console.error('모든 사용자 강제 로그아웃 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 데이터베이스 상태 정리 API (근본적 해결용)
+app.post('/api/employee/cleanup-database', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 1. 5분 이상 활동이 없는 사용자들을 자동 로그아웃
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const inactiveResult = await collection.updateMany(
+            { 
+                isLoggedIn: true,
+                $or: [
+                    { lastActivityAt: { $lt: fiveMinutesAgo } },
+                    { 
+                        lastActivityAt: { $exists: false },
+                        lastLoginAt: { $lt: fiveMinutesAgo }
+                    }
+                ]
+            },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: getKoreanTime(),
+                    currentSessionId: null,
+                    updatedAt: getKoreanTime()
+                } 
+            }
+        );
+        
+        // 2. 잘못된 상태의 사용자들 정리
+        const cleanupResult = await collection.updateMany(
+            { 
+                isLoggedIn: true,
+                lastLoginAt: { $exists: false }
+            },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: getKoreanTime(),
+                    currentSessionId: null,
+                    updatedAt: getKoreanTime()
+                } 
+            }
+        );
+        
+        console.log('데이터베이스 정리 완료:', {
+            inactiveUsers: inactiveResult.modifiedCount,
+            cleanupUsers: cleanupResult.modifiedCount
+        });
+        
+        res.json({
+            success: true,
+            message: '데이터베이스 상태가 정리되었습니다.',
+            inactiveUsers: inactiveResult.modifiedCount,
+            cleanupUsers: cleanupResult.modifiedCount
+        });
+    } catch (error) {
+        console.error('데이터베이스 정리 오류:', error);
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
