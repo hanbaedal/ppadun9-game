@@ -509,6 +509,20 @@
             display: inline-block;
         }
 
+        .game-progress {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .game-time {
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+        }
+
         .status-before {
             background-color: #fff3cd;
             color: #856404;
@@ -800,7 +814,9 @@
                     <tr style="display: table-row !important;">
                         <th style="display: table-cell !important;">경기번호</th>
                         <th style="display: table-cell !important;">매치업</th>
+                        <th style="display: table-cell !important;">경기시간</th>
                         <th style="display: table-cell !important;">경기상황</th>
+                        <th style="display: table-cell !important;">진행상태</th>
                         <th style="display: table-cell !important;">선택</th>
                 </tr>
             </thead>
@@ -903,6 +919,25 @@
         function updateDate() {
             const dateStr = KoreanTime.formatKoreanTime(currentDate, 'date');
             document.getElementById('dateDisplay').textContent = dateStr;
+        }
+
+        // 경기상황에 따른 스타일 클래스 반환
+        function getStatusClass(status) {
+            switch(status) {
+                case '정상게임':
+                    return 'status-normal';
+                case '미세먼지/초미세먼지/황사':
+                case '안개':
+                case '천재지변':
+                case '우천':
+                case '폭염':
+                case '번개/천둥':
+                case '태풍/강풍':
+                case '그라운드 상태':
+                    return 'status-delayed';
+                default:
+                    return 'status-cancelled';
+            }
         }
 
         function getGameStatus(startTime, endTime) {
@@ -1008,14 +1043,22 @@
                     homeTeam: null,
                     awayTeam: null,
                     startTime: null,
-                    endTime: null
+                    endTime: null,
+                    noGame: '정상게임'
                 };
 
                 console.log(`${i}경기 시작시간:`, game.startTime);
                 console.log(`${i}경기 종료시간:`, game.endTime);
+                console.log(`${i}경기 상황:`, game.noGame);
 
-                const status = getGameStatus(game.startTime, game.endTime);
-                console.log(`${i}경기 상태:`, status);
+                // 경기 상태 계산 (시작/종료 시간 기반)
+                const gameProgress = getGameStatus(game.startTime, game.endTime);
+                console.log(`${i}경기 진행상태:`, gameProgress);
+
+                // 실제 경기상황 데이터 사용 (noGame 필드)
+                const gameStatus = game.noGame || '정상게임';
+                const statusClass = getStatusClass(gameStatus);
+                console.log(`${i}경기 상황:`, { text: gameStatus, class: statusClass });
 
                 const gameRow = document.createElement('tr');
                 gameRow.className = 'game-row';
@@ -1023,7 +1066,9 @@
                 gameRow.innerHTML = `
                     <td class="game-number">${i}경기</td>
                     <td class="game-matchup">${game.homeTeam || '-'} vs ${game.awayTeam || '-'}</td>
-                    <td class="game-status ${status.class}">${status.text}</td>
+                    <td class="game-time">${game.startTime || '-'} ~ ${game.endTime || '-'}</td>
+                    <td class="game-status ${statusClass}">${gameStatus}</td>
+                    <td class="game-progress ${gameProgress.class}">${gameProgress.text}</td>
                     <td>
                         <button class="select-game-btn" data-game="${i}">선택</button>
                     </td>
@@ -1033,9 +1078,13 @@
                 // 선택 버튼 클릭 이벤트 리스너 추가
                 const selectBtn = gameRow.querySelector('.select-game-btn');
                 selectBtn.addEventListener('click', function() {
+                    const progressElement = gameRow.querySelector('.game-progress');
+                    const progressText = progressElement.textContent;
                     const statusElement = gameRow.querySelector('.game-status');
                     const statusText = statusElement.textContent;
-                    if (statusText === '경기중') {
+                    
+                    // 경기중이고 정상게임인 경우만 선택 가능
+                    if (progressText === '경기중' && statusText === '정상게임') {
                         document.querySelectorAll('.game-row').forEach(row => {
                             row.classList.remove('selected');
                         });
@@ -1050,7 +1099,15 @@
                     document.getElementById('startBetting').disabled = false;
                         showCustomModal(`선택한 경기번호: ${selectedGame}경기가 선택되었습니다!`);
                     } else {
-                        showCustomModal('경기중인 경기만 선택할 수 있습니다. 현재 상태: ' + statusText);
+                        let message = '';
+                        if (progressText !== '경기중') {
+                            message = `경기중인 경기만 선택할 수 있습니다. 현재 진행상태: ${progressText}`;
+                        } else if (statusText !== '정상게임') {
+                            message = `정상게임인 경기만 선택할 수 있습니다. 현재 경기상황: ${statusText}`;
+                        } else {
+                            message = `경기중이고 정상게임인 경기만 선택할 수 있습니다.`;
+                        }
+                        showCustomModal(message);
                     }
             });
             }
@@ -1070,8 +1127,10 @@
                 }
 
                 const result = await response.json();
+                console.log('API 응답 결과:', result);
                 if (result.success) {
                     if (result.data && result.data.games && result.data.games.length > 0) {
+                        console.log('team-games에 데이터 있음, 표시');
                         displayGames(result.data.games);
                     } else {
                         // team-games에 데이터가 없으면 daily-games에서 복사
@@ -1079,6 +1138,7 @@
                         await copyFromDailyGames(date);
                     }
                 } else {
+                    console.log('API 응답 실패:', result.message);
                     throw new Error(result.message || '데이터를 불러오는 중 오류가 발생했습니다.');
                 }
             } catch (error) {
@@ -1091,6 +1151,7 @@
         // daily-games에서 데이터 복사
         async function copyFromDailyGames(date) {
             try {
+                console.log('copyFromDailyGames 호출됨, 날짜:', date);
                 const response = await fetch(`/api/team-game/${date}/copy-from-daily`, {
                     method: 'POST',
                     headers: {
@@ -1098,8 +1159,10 @@
                     }
                 });
                 
+                console.log('복사 API 응답 상태:', response.status);
                 if (response.ok) {
                     const result = await response.json();
+                    console.log('복사 API 응답 결과:', result);
                     if (result.success) {
                         console.log('daily-games에서 데이터 복사 완료');
                         // 복사된 데이터 표시
@@ -1109,7 +1172,7 @@
                         displayGames([]);
                     }
                 } else {
-                    console.error('데이터 복사 API 호출 실패');
+                    console.error('데이터 복사 API 호출 실패, 상태:', response.status);
                     displayGames([]);
                 }
             } catch (error) {
