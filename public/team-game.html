@@ -970,10 +970,11 @@
         let bettingTimer = null;
 
         // 날짜 변경 함수
-        function changeDate(days) {
+        async function changeDate(days) {
             currentDate.setDate(currentDate.getDate() + days);
             updateDate();
-            fetchGames();
+            const games = await fetchGames();
+            displayGames(games);
         }
 
         // 날짜 표시 업데이트
@@ -1155,27 +1156,33 @@
             gameSelectionTableBody.innerHTML = '';
 
             for (let i = 1; i <= 5; i++) {
-                const game = games.find(g => g.number === i) || {
-                    number: i,
-                    homeTeam: null,
-                    awayTeam: null,
-                    startTime: null,
-                    endTime: null,
-                    noGame: '정상게임'
+                const game = games.find(g => g.gameNumber === i) || {
+                    gameNumber: i,
+                    matchup: '- vs -',
+                    startTime: '-',
+                    endTime: '-',
+                    gameStatus: '정상게임',
+                    progressStatus: '경기전',
+                    gameType: '타자',
+                    bettingStart: '중지',
+                    bettingStop: '중지',
+                    predictionResult: ''
                 };
 
+                console.log(`${i}경기 매치업:`, game.matchup);
                 console.log(`${i}경기 시작시간:`, game.startTime);
                 console.log(`${i}경기 종료시간:`, game.endTime);
-                console.log(`${i}경기 상황(외부조건):`, game.noGame);
+                console.log(`${i}경기 상황:`, game.gameStatus);
+                console.log(`${i}경기 진행상태:`, game.progressStatus);
 
                 // 진행상태 계산 (시작/종료 시간 기반)
-                const gameProgress = getGameStatus(game.startTime, game.endTime, game.noGame);
+                const gameProgress = getGameStatus(game.startTime, game.endTime, game.gameStatus);
                 console.log(`${i}경기 진행상태(시간기준):`, gameProgress);
 
-                // 실제 경기상황 데이터 사용 (noGame 필드)
-                const gameStatus = game.noGame || '정상게임';
+                // 실제 경기상황 데이터 사용
+                const gameStatus = game.gameStatus || '정상게임';
                 const statusClass = getStatusClass(gameStatus);
-                console.log(`${i}경기 상황(외부조건):`, { text: gameStatus, class: statusClass });
+                console.log(`${i}경기 상황:`, { text: gameStatus, class: statusClass });
 
                 // 선택 버튼 활성화 조건 확인
                 const canSelect = gameStatus === '정상게임' && gameProgress.text === '경기중';
@@ -1188,8 +1195,8 @@
                 gameRow.dataset.game = i;
                 gameRow.innerHTML = `
                     <td class="game-number">${i}경기</td>
-                    <td class="game-matchup">${game.homeTeam || '-'} vs ${game.awayTeam || '-'}</td>
-                    <td class="game-time">${game.startTime || '-'} ~ ${game.endTime || '-'}</td>
+                    <td class="game-matchup">${game.matchup}</td>
+                    <td class="game-time">${game.startTime} ~ ${game.endTime}</td>
                     <td class="game-status ${statusClass}">${gameStatus}</td>
                     <td class="game-progress ${gameProgress.class}">${gameProgress.text}</td>
                     <td>
@@ -1244,37 +1251,41 @@
             }
         }
 
-        // 게임 데이터 불러오기 (daily-games 콜렉션 사용)
+        // 게임 데이터 불러오기 (team-games 콜렉션 사용)
         async function fetchGames() {
             try {
-                const date = currentDate.getFullYear().toString() +
-                            (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                            currentDate.getDate().toString().padStart(2, '0');
-
-                const response = await fetch(`/api/dailygames/${date}`);
+                const today = new Date().toISOString().split('T')[0];
+                console.log('[TeamGame] 오늘 날짜:', today);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // 먼저 team-games에서 데이터 확인
+                const teamResponse = await fetch(`/api/team-games/${today}`);
+                const teamData = await teamResponse.json();
+                
+                if (teamData.success && teamData.data && teamData.data.length > 0) {
+                    console.log('[TeamGame] team-games에서 데이터 발견:', teamData.data.length, '개');
+                    return teamData.data;
                 }
-
-                const result = await response.json();
-                console.log('daily-games API 응답 결과:', result);
-                if (result.success) {
-                    if (result.data && result.data.games && result.data.games.length > 0) {
-                        console.log('daily-games에 데이터 있음, 표시');
-                        displayGames(result.data.games);
-                    } else {
-                        console.log('daily-games에 데이터가 없음, 빈 테이블 표시');
-                        displayGames([]);
+                
+                // team-games에 데이터가 없으면 daily-games에서 복사
+                console.log('[TeamGame] team-games에 데이터 없음, daily-games에서 복사 시도');
+                const copyResponse = await fetch(`/api/team-games/import-from-daily/${today}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     }
+                });
+                
+                if (copyResponse.ok) {
+                    const copyData = await copyResponse.json();
+                    console.log('[TeamGame] daily-games에서 복사 성공:', copyData.data.length, '개');
+                    return copyData.data;
                 } else {
-                    console.log('API 응답 실패:', result.message);
-                    throw new Error(result.message || '데이터를 불러오는 중 오류가 발생했습니다.');
+                    console.log('[TeamGame] daily-games에서 복사 실패');
+                    return [];
                 }
             } catch (error) {
-                console.error('Error:', error);
-                // 오류 발생 시 빈 테이블 표시
-                displayGames([]);
+                console.error('[TeamGame] 게임 데이터 불러오기 오류:', error);
+                return [];
             }
         }
 
@@ -1473,12 +1484,13 @@
         }
 
         // 페이지 로드 시 실행
-        window.onload = function() {
+        window.onload = async function() {
             loadCurrentUser();
             updateDate();
             
             // 서버에서 데이터 가져오기
-            fetchGames();
+            const games = await fetchGames();
+            displayGames(games);
 
             // 게임형태 라디오 버튼 이벤트 리스너
             document.querySelectorAll('input[name="gameType"]').forEach(radio => {
