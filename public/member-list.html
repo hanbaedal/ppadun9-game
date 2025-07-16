@@ -93,6 +93,7 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="js/korean-time.js"></script>
     <script>
         // 페이지 로드 시 회원 목록 가져오기
         $(document).ready(function() {
@@ -133,9 +134,26 @@
             
             members.forEach(function(member, index) {
                 console.log('회원 데이터:', member);
-                const createdAt = member.createdAt ? KoreanTime.formatKoreanTime(member.createdAt, 'date') : '-';
-                const lastLoginAt = member.lastLoginAt ? KoreanTime.formatKoreanTime(member.lastLoginAt, 'datetime') : '-';
-                const lastLogoutAt = member.lastLogoutAt ? KoreanTime.formatKoreanTime(member.lastLogoutAt, 'datetime') : '-';
+                
+                // KoreanTime 함수가 있는지 확인하고 안전하게 사용
+                const formatTime = (date, format) => {
+                    if (!date) return '-';
+                    if (window.KoreanTime && window.KoreanTime.formatKoreanTime) {
+                        return window.KoreanTime.formatKoreanTime(date, format);
+                    } else {
+                        // KoreanTime이 없으면 기본 포맷 사용
+                        const d = new Date(date);
+                        if (format === 'date') {
+                            return d.toLocaleDateString('ko-KR');
+                        } else {
+                            return d.toLocaleString('ko-KR');
+                        }
+                    }
+                };
+                
+                const createdAt = formatTime(member.createdAt, 'date');
+                const lastLoginAt = formatTime(member.lastLoginAt, 'datetime');
+                const lastLogoutAt = formatTime(member.lastLogoutAt, 'datetime');
                 const isLoggedIn = member.isLoggedIn ? '온라인' : '오프라인';
                 const loginStatusClass = member.isLoggedIn ? 'text-success' : 'text-muted';
                 
