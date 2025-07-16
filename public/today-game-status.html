@@ -281,6 +281,7 @@
 
         // 게임 데이터 표시
         function displayGames(games) {
+            console.log('displayGames 호출됨, games:', games);
             const tbody = document.getElementById('gameTableBody');
             tbody.innerHTML = '';
 
@@ -293,6 +294,8 @@
                     endTime: null,
                     noGame: '정상게임'
                 };
+
+                console.log(`경기 ${i} 데이터:`, game);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -315,6 +318,7 @@
 
         // 경기상황 옵션을 동적으로 생성하는 함수
         function populateStatusOptions(gameNumber, selectedStatus) {
+            console.log(`populateStatusOptions 호출됨, 경기: ${gameNumber}, 선택된 상태: ${selectedStatus}`);
             const statusSelect = document.getElementById(`gameStatus${gameNumber}`);
             
             if (!statusSelect) {
@@ -322,12 +326,16 @@
                 return;
             }
             
+            // 기존 옵션 제거
+            statusSelect.innerHTML = '';
+            
             gameStatusOptions.forEach(option => {
                 const optionElement = document.createElement('option');
                 optionElement.value = option;
                 optionElement.textContent = option;
                 if (option === selectedStatus) {
                     optionElement.selected = true;
+                    console.log(`경기 ${gameNumber}에서 ${option} 선택됨`);
                 }
                 statusSelect.appendChild(optionElement);
             });
@@ -365,6 +373,14 @@
                     const endTime = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(5) input`).value;
                     const noGame = document.getElementById(`gameStatus${i}`).value;
 
+                    console.log(`경기 ${i} 수집된 데이터:`, {
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        startTime: startTime,
+                        endTime: endTime,
+                        noGame: noGame
+                    });
+
                     // 팀이 선택된 경우에만 저장
                     if (homeTeam && awayTeam) {
                         // 게임 상태 결정
@@ -401,15 +417,18 @@
                     try {
                         console.log('모든 경기 데이터 저장 시작:', allGames);
                         
+                        const requestBody = {
+                            date: date,
+                            games: allGames
+                        };
+                        console.log('API 요청 데이터:', JSON.stringify(requestBody, null, 2));
+                        
                         const dailyGameResponse = await fetch(`/api/dailygames`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({
-                                date: date,
-                                games: allGames
-                            })
+                            body: JSON.stringify(requestBody)
                         });
 
                         console.log('daily-games 응답 상태:', dailyGameResponse.status);
@@ -430,9 +449,10 @@
                     }
                 }
 
-                alert('게임 정보가 저장되었습니다.');
+                console.log('저장 완료, 데이터 다시 불러오기 시작');
                 // 저장 후 데이터 다시 불러오기
                 await fetchGames();
+                alert('게임 정보가 저장되었습니다.');
             } catch (error) {
                 console.error('Error:', error);
                 alert('저장 중 오류가 발생했습니다: ' + error.message);
@@ -457,20 +477,25 @@
                            (today.getMonth() + 1).toString().padStart(2, '0') +
                            today.getDate().toString().padStart(2, '0');
 
+                console.log('fetchGames 호출됨, 날짜:', date);
                 const response = await fetch(`/api/dailygames/${date}`);
                 
+                console.log('API 응답 상태:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const result = await response.json();
+                console.log('API 응답 결과:', result);
+                
                 if (result.success) {
+                    console.log('성공적으로 데이터 받음, games:', result.data.games);
                     displayGames(result.data.games || []);
                 } else {
                     throw new Error(result.message || '데이터를 불러오는 중 오류가 발생했습니다.');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('fetchGames 오류:', error);
                 // 오류 발생 시 빈 테이블 표시
                 displayGames([]);
             }
