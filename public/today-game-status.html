@@ -355,7 +355,9 @@
                             (today.getMonth() + 1).toString().padStart(2, '0') +
                             today.getDate().toString().padStart(2, '0');
 
-                // daily-games 컬렉션 업데이트
+                // 모든 경기 데이터 수집
+                const allGames = [];
+                
                 for (let i = 1; i <= 5; i++) {
                     const homeTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(2) input`).value;
                     const awayTeam = document.querySelector(`#gameTableBody tr:nth-child(${i}) td:nth-child(3) input`).value;
@@ -388,55 +390,43 @@
                             isActive: true
                         };
 
-                        // daily-games 컬렉션에서 기존 데이터 확인 후 업데이트
-                        try {
-                            console.log(`경기 ${i} daily-games 저장 시작:`, dailyGameData);
-                            console.log(`경기 ${i} 선택된 경기상황:`, noGame);
-                            
-                            // 기존 데이터 확인
-                            const checkResponse = await fetch(`/api/daily-games/${date}/${i}`);
-                            const checkResult = await checkResponse.json();
-                            console.log(`경기 ${i} 기존 데이터 확인 결과:`, checkResult);
-                            
-                            let dailyGameResponse;
-                            if (checkResult.success) {
-                                // 기존 데이터가 있으면 업데이트
-                                console.log(`경기 ${i} 기존 데이터 업데이트 시작`);
-                                dailyGameResponse = await fetch(`/api/daily-games/${date}/${i}`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(dailyGameData)
-                                });
-                            } else {
-                                // 기존 데이터가 없으면 새로 생성
-                                console.log(`경기 ${i} 새 데이터 생성 시작`);
-                                dailyGameResponse = await fetch('/api/daily-games', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(dailyGameData)
-                                });
-                            }
+                        allGames.push(dailyGameData);
+                        console.log(`경기 ${i} 데이터 수집 완료:`, dailyGameData);
+                        console.log(`경기 ${i} 선택된 경기상황:`, noGame);
+                    }
+                }
 
-                            console.log(`경기 ${i} daily-games 응답 상태:`, dailyGameResponse.status);
+                // 모든 경기를 한 번에 저장
+                if (allGames.length > 0) {
+                    try {
+                        console.log('모든 경기 데이터 저장 시작:', allGames);
+                        
+                        const dailyGameResponse = await fetch(`/api/dailygames`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                date: date,
+                                games: allGames
+                            })
+                        });
 
-                            if (!dailyGameResponse.ok) {
-                                console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResponse.status);
+                        console.log('daily-games 응답 상태:', dailyGameResponse.status);
+
+                        if (!dailyGameResponse.ok) {
+                            console.warn('daily-games 저장 실패:', dailyGameResponse.status);
+                        } else {
+                            const dailyGameResult = await dailyGameResponse.json();
+                            console.log('daily-games 응답 결과:', dailyGameResult);
+                            if (!dailyGameResult.success) {
+                                console.warn('daily-games 저장 실패:', dailyGameResult.message);
                             } else {
-                                const dailyGameResult = await dailyGameResponse.json();
-                                console.log(`경기 ${i} daily-games 응답 결과:`, dailyGameResult);
-                                if (!dailyGameResult.success) {
-                                    console.warn(`경기 ${i} daily-games 저장 실패:`, dailyGameResult.message);
-                                } else {
-                                    console.log(`경기 ${i} daily-games 저장 성공`);
-                                }
+                                console.log('daily-games 저장 성공');
                             }
-                        } catch (error) {
-                            console.error(`경기 ${i} daily-games 저장 오류:`, error);
                         }
+                    } catch (error) {
+                        console.error('daily-games 저장 오류:', error);
                     }
                 }
 
