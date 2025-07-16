@@ -677,19 +677,35 @@ app.post('/api/employee/login', async (req, res) => {
         if (employee.password !== password) {
             return res.status(401).json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         }
+
+        // 동시 로그인 차단: 5분 이내 활동이 있는 계정만 새 로그인 거부
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const isRecentlyActive = employee.isLoggedIn && 
+            ((employee.lastActivityAt && employee.lastActivityAt >= fiveMinutesAgo) ||
+             (employee.lastLoginAt && employee.lastLoginAt >= fiveMinutesAgo));
+        
+        if (isRecentlyActive) {
+            return res.status(403).json({ error: '이미 다른 곳에서 로그인했습니다. 먼저 로그아웃 후 다시 시도하세요.' });
+        }
+        
+        // 중복 로그인 방지: 기존 세션 무효화
+        const sessionId = req.sessionID;
+        console.log('현재 세션 ID:', sessionId);
         
         // 로그인 카운트 증가
         const newLoginCount = (employee.loginCount || 0) + 1;
         const lastLoginAt = getKoreanTime();
         
-        // 데이터베이스에 로그인 카운트와 마지막 로그인 시간 업데이트
+        // 데이터베이스에 로그인 정보 업데이트 (세션 ID 포함)
         await collection.updateOne(
             { username },
             { 
                 $set: { 
                     loginCount: newLoginCount,
                     lastLoginAt: lastLoginAt,
+                    lastActivityAt: lastLoginAt,
                     isLoggedIn: true,
+                    currentSessionId: sessionId, // 현재 세션 ID 저장
                     updatedAt: getKoreanTime()
                 } 
             }
@@ -700,7 +716,8 @@ app.post('/api/employee/login', async (req, res) => {
         const updatedUserInfo = {
             ...userInfo,
             loginCount: newLoginCount,
-            lastLoginAt: lastLoginAt
+            lastLoginAt: lastLoginAt,
+            currentSessionId: sessionId
         };
         
         console.log('로그인 성공, 세션에 저장할 사용자 정보:', updatedUserInfo);
@@ -769,8 +786,9 @@ app.post('/api/employee/logout', async (req, res) => {
                 { username: req.session.user.username },
                 { 
                     $set: { 
-                        lastLogoutAt: new Date(),
+                        lastLogoutAt: getKoreanTime(),
                         isLoggedIn: false,
+                        currentSessionId: null, // 세션 ID 초기화
                         updatedAt: getKoreanTime()
                     } 
                 }
@@ -858,7 +876,8 @@ app.post('/api/employee/force-logout', async (req, res) => {
             { 
                 $set: { 
                     isLoggedIn: false,
-                    lastLogoutAt: new Date(),
+                    lastLogoutAt: getKoreanTime(),
+                    currentSessionId: null, // 세션 ID 초기화
                     updatedAt: getKoreanTime()
                 } 
             }
@@ -896,7 +915,8 @@ app.post('/api/system/auto-logout-all', async (req, res) => {
             { 
                 $set: { 
                     isLoggedIn: false,
-                    lastLogoutAt: new Date(),
+                    lastLogoutAt: getKoreanTime(),
+                    currentSessionId: null, // 세션 ID 초기화
                     updatedAt: getKoreanTime()
                 } 
             }
@@ -960,6 +980,73 @@ app.post('/api/system/auto-logout-all', async (req, res) => {
                 res.status(500).json({ error: '서버 오류가 발생했습니다.' });
             }
         });
+
+// 세션 검증 API (중복 로그인 방지용)
+app.get('/api/employee/validate-session', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        // 세션에서 사용자 정보 확인
+        if (!req.session || !req.session.user) {
+            return res.status(401).json({ 
+                valid: false, 
+                error: '로그인이 필요합니다.' 
+            });
+        }
+
+        const username = req.session.user.username;
+        const currentSessionId = req.sessionID;
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 데이터베이스에서 사용자 정보 조회
+        const user = await collection.findOne({ username });
+        
+        if (!user) {
+            return res.status(404).json({ 
+                valid: false, 
+                error: '사용자를 찾을 수 없습니다.' 
+            });
+        }
+        
+        // 세션 ID 비교
+        if (user.currentSessionId && user.currentSessionId !== currentSessionId) {
+            console.log(`중복 로그인 감지: ${username} - 기존 세션: ${user.currentSessionId}, 현재 세션: ${currentSessionId}`);
+            
+            // 세션 무효화
+            req.session.destroy((err) => {
+                if (err) {
+                    console.error('세션 삭제 오류:', err);
+                }
+            });
+            
+            return res.status(401).json({ 
+                valid: false, 
+                error: '다른 기기에서 로그인되어 세션이 종료되었습니다.',
+                duplicateLogin: true
+            });
+        }
+        
+        // 세션이 유효한 경우
+        res.json({ 
+            valid: true, 
+            user: {
+                username: user.username,
+                name: user.name,
+                isLoggedIn: user.isLoggedIn
+            }
+        });
+        
+    } catch (error) {
+        console.error('세션 검증 오류:', error);
+        res.status(500).json({ 
+            valid: false,
+            error: '서버 오류가 발생했습니다.' 
+        });
+    }
+});
 
 // 현재 로그인된 사용자 수 조회 API (5분 이내 활동자 기준)
 app.get('/api/employee/online-users', async (req, res) => {
