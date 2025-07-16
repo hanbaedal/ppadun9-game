@@ -16,6 +16,9 @@ router.get('/:date', async (req, res) => {
         const games = await collection.find({ date }).toArray();
         
         console.log('[TeamGames] 조회 결과:', games.length, '개');
+        if (games.length > 0) {
+            console.log('[TeamGames] 첫 번째 경기 데이터:', games[0]);
+        }
         
         res.json({
             success: true,

@@ -1013,10 +1013,20 @@
                 // 한국 시간으로 현재 시간 계산
                 let now, currentTime;
                 
-                // 항상 한국 시간으로 계산
+                // 현재 시간을 한국 시간대로 계산 (간단한 방법)
                 now = new Date();
-                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-                currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
+                
+                // UTC 시간에 9시간을 더해서 한국 시간 계산
+                const utcHours = now.getUTCHours();
+                const koreanHours = (utcHours + 9) % 24; // UTC+9
+                const koreanMinutes = now.getUTCMinutes();
+                currentTime = koreanHours * 60 + koreanMinutes;
+                
+                // 디버깅을 위한 현재 시간 정보
+                console.log('현재 UTC 시간:', now.toISOString());
+                console.log('UTC 시간 (시:분):', utcHours + ':' + koreanMinutes);
+                console.log('한국 시간 (시:분):', koreanHours + ':' + koreanMinutes);
+                console.log('한국 시간 (분):', currentTime);
                 
                 console.log('=== 진행상태(시간기준) 디버깅 ===');
                 console.log('현재 시간:', koreanTime.toLocaleString('ko-KR'));
