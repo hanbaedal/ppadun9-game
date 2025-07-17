@@ -80,22 +80,30 @@ router.post('/import-from-daily/:date', async (req, res) => {
                 bettingStart: '중지',
                 bettingStop: '중지',
                 predictionResult: '',
-                createdAt: getKoreanTime(),
-                updatedAt: getKoreanTime()
+                createdAt: new Date(),
+                updatedAt: new Date()
             }));
             
             // 기존 데이터 삭제 후 새로 저장
-            await teamCollection.deleteMany({ date });
+            console.log('[TeamGames] 기존 데이터 삭제 시작');
+            const deleteResult = await teamCollection.deleteMany({ date });
+            console.log('[TeamGames] 기존 데이터 삭제 완료:', deleteResult.deletedCount, '개');
+            
             if (teamGames.length > 0) {
+                console.log('[TeamGames] 기본 데이터 저장 시작:', teamGames.length, '개');
                 const insertResult = await teamCollection.insertMany(teamGames);
                 console.log('[TeamGames] 기본 데이터 저장 완료:', insertResult.insertedCount, '개');
+                
+                // 저장 확인
+                const savedGames = await teamCollection.find({ date }).toArray();
+                console.log('[TeamGames] 저장 확인:', savedGames.length, '개 저장됨');
+                
+                return res.json({
+                    success: true,
+                    message: 'daily-games 데이터가 없어서 기본 경기 데이터를 생성했습니다.',
+                    data: savedGames
+                });
             }
-            
-            return res.json({
-                success: true,
-                message: 'daily-games 데이터가 없어서 기본 경기 데이터를 생성했습니다.',
-                data: teamGames
-            });
         }
         
         if (!dailyGames.games || dailyGames.games.length === 0) {
@@ -109,8 +117,9 @@ router.post('/import-from-daily/:date', async (req, res) => {
         console.log('[TeamGames] daily-games 데이터 발견:', dailyGames.games.length, '개 경기');
         
         // 기존 team-games 데이터 삭제
-        await teamCollection.deleteMany({ date });
-        console.log('[TeamGames] 기존 team-games 데이터 삭제 완료');
+        console.log('[TeamGames] 기존 team-games 데이터 삭제 시작');
+        const deleteResult = await teamCollection.deleteMany({ date });
+        console.log('[TeamGames] 기존 team-games 데이터 삭제 완료:', deleteResult.deletedCount, '개');
         
         // 새로운 형식으로 데이터 변환 및 저장
         const teamGames = dailyGames.games.map(game => ({
@@ -125,15 +134,22 @@ router.post('/import-from-daily/:date', async (req, res) => {
             bettingStart: '중지', // 초기값
             bettingStop: '중지', // 초기값
             predictionResult: '', // 빈값으로 시작
-            createdAt: getKoreanTime(),
-            updatedAt: getKoreanTime()
+            createdAt: new Date(),
+            updatedAt: new Date()
         }));
         
         // 데이터 저장
         if (teamGames.length > 0) {
             console.log('[TeamGames] team-games에 저장 시작:', teamGames.length, '개');
+            console.log('[TeamGames] 저장할 데이터 샘플:', teamGames[0]);
+            
             const insertResult = await teamCollection.insertMany(teamGames);
             console.log('[TeamGames] 저장 결과:', insertResult.insertedCount, '개 저장됨');
+            
+            // 저장 확인
+            const savedGames = await teamCollection.find({ date }).toArray();
+            console.log('[TeamGames] 저장 확인:', savedGames.length, '개 저장됨');
+            console.log('[TeamGames] 저장된 첫 번째 데이터:', savedGames[0]);
         }
         
         console.log('[TeamGames] 데이터 변환 및 저장 완료:', teamGames.length, '개');
