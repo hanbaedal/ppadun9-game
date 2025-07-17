@@ -1625,7 +1625,7 @@
                         const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                         const date = koreanTime.toISOString().split('T')[0];
                         
-                        // 1. team-games 콜렉션에 배팅시작 상태 업데이트
+                        // team-games 콜렉션에 배팅시작 상태 업데이트
                         const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                             method: 'PUT',
                             headers: {
@@ -1633,7 +1633,7 @@
                             },
                             body: JSON.stringify({
                                 bettingStart: '시작',
-                                bettingStop: '대기',
+                                bettingStop: '중지',
                                 predictionResult: '',
                                 gameType: selectedGameType.value
                             })
@@ -1643,34 +1643,18 @@
                             throw new Error('team-games 업데이트 실패');
                         }
                         
-                        console.log('[TeamGame] 배팅시작 상태가 team-games에 업데이트됨');
-                        
-                        // 2. 기존 배팅 시작 API 호출
-                        const dateFormat = koreanTime.getFullYear().toString() +
-                                          (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
-                                          koreanTime.getDate().toString().padStart(2, '0');
-                        
-                        const response = await fetch(`/api/betting/start`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                gameNumber: selectedGame,
-                                gameType: selectedGameType.value,
-                                date: dateFormat
-                            })
-                        });
-                        
-                        const result = await response.json();
-                        if (result.success) {
+                        const updateResult = await teamGameUpdateResponse.json();
+                        if (updateResult.success) {
+                            console.log('[TeamGame] 배팅시작 상태가 team-games에 업데이트됨');
+                            
+                            // UI 상태 업데이트
                             updateBettingTime();
                             this.disabled = true;
                             document.getElementById('stopBetting').disabled = false;
                             console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value);
                             showCustomModal('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
                         } else {
-                            showCustomModal('배팅 시작 실패: ' + result.message);
+                            showCustomModal('배팅 시작 실패: ' + updateResult.message);
                         }
                     } catch (error) {
                         console.error('배팅 시작 오류:', error);
@@ -1692,14 +1676,14 @@
                         const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                         const date = koreanTime.toISOString().split('T')[0];
                         
-                        // 1. team-games 콜렉션에 배팅중지 상태 업데이트
+                        // team-games 콜렉션에 배팅중지 상태 업데이트
                         const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                bettingStart: '시작',
+                                bettingStart: '중지',
                                 bettingStop: '중지',
                                 predictionResult: ''
                             })
@@ -1709,26 +1693,11 @@
                             throw new Error('team-games 업데이트 실패');
                         }
                         
-                        console.log('[TeamGame] 배팅중지 상태가 team-games에 업데이트됨');
-                        
-                        // 2. 기존 배팅 중지 API 호출
-                        const dateFormat = koreanTime.getFullYear().toString() +
-                                          (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
-                                          koreanTime.getDate().toString().padStart(2, '0');
-                        
-                        const response = await fetch(`/api/betting/stop`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                gameNumber: selectedGame,
-                                date: dateFormat
-                            })
-                        });
-                        
-                        const result = await response.json();
-                        if (result.success) {
+                        const updateResult = await teamGameUpdateResponse.json();
+                        if (updateResult.success) {
+                            console.log('[TeamGame] 배팅중지 상태가 team-games에 업데이트됨');
+                            
+                            // UI 상태 업데이트
                             updateStopTime();
                             this.disabled = true;
                             // 라디오 버튼 활성화
@@ -1740,7 +1709,7 @@
                             console.log('배팅 중지:', selectedGame);
                             showCustomModal('배팅이 중지되었습니다. 예측결과를 선택해주세요.');
                         } else {
-                            showCustomModal('배팅 중지 실패: ' + result.message);
+                            showCustomModal('배팅 중지 실패: ' + updateResult.message);
                         }
                     } catch (error) {
                         console.error('배팅 중지 오류:', error);
@@ -1779,14 +1748,14 @@
                                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                                 const date = koreanTime.toISOString().split('T')[0];
                                 
-                                // 1. team-games 콜렉션에 예측결과 업데이트
+                                // team-games 콜렉션에 예측결과 업데이트
                                 const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                                     method: 'PUT',
                                     headers: {
                                         'Content-Type': 'application/json',
                                     },
                                     body: JSON.stringify({
-                                        bettingStart: '시작',
+                                        bettingStart: '중지',
                                         bettingStop: '중지',
                                         predictionResult: radio.value
                                     })
@@ -1796,29 +1765,15 @@
                                     throw new Error('team-games 업데이트 실패');
                                 }
                                 
-                                console.log('[TeamGame] 예측결과가 team-games에 업데이트됨:', radio.value);
-                                
-                                // 2. 기존 예측 결과 API 호출
-                                const dateFormat = koreanTime.getFullYear().toString() +
-                                                  (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
-                                                  koreanTime.getDate().toString().padStart(2, '0');
-                                
-                                const response = await fetch(`/api/betting/result`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        gameNumber: selectedGame,
-                                        prediction: radio.value,
-                                        date: dateFormat
-                                    })
-                                });
-                                
-                                console.log('예측 결과 전송 완료:', radio.value);
-                                
-                                // 다음타자 버튼 활성화
-                                document.getElementById('nextBatterBtn').disabled = false;
+                                const updateResult = await teamGameUpdateResponse.json();
+                                if (updateResult.success) {
+                                    console.log('[TeamGame] 예측결과가 team-games에 업데이트됨:', radio.value);
+                                    
+                                    // 다음타자 버튼 활성화
+                                    document.getElementById('nextBatterBtn').disabled = false;
+                                } else {
+                                    console.error('예측결과 업데이트 실패:', updateResult.message);
+                                }
                             } catch (error) {
                                 console.error('예측 결과 전송 오류:', error);
                             }
