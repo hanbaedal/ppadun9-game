@@ -236,11 +236,11 @@
                 <button id="prevDate" class="nav-btn">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <div class="date-display" id="dateDisplay"></div>
+            <div class="date-display" id="dateDisplay"></div>
                 <button id="nextDate" class="nav-btn">
                     <i class="fas fa-chevron-right"></i>
                 </button>
-            </div>
+        </div>
         </div>
 
 
@@ -337,8 +337,8 @@
             try {
                 // 현재 선택된 날짜 사용
                 const date = currentDate.getFullYear().toString() +
-                           (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-                           currentDate.getDate().toString().padStart(2, '0');
+                            (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                            currentDate.getDate().toString().padStart(2, '0');
 
                 const response = await fetch(`/api/dailygames/${date}`);
                 

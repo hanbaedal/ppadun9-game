@@ -408,7 +408,7 @@
 
                         allGames.push(dailyGameData);
                         console.log(`경기 ${i} 데이터 수집 완료:`, dailyGameData);
-                        console.log(`경기 ${i} 선택된 경기상황:`, noGame);
+                            console.log(`경기 ${i} 선택된 경기상황:`, noGame);
                     }
                 }
 
@@ -424,23 +424,23 @@
                         console.log('API 요청 데이터:', JSON.stringify(requestBody, null, 2));
                         
                         const dailyGameResponse = await fetch(`/api/dailygames`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
                             body: JSON.stringify(requestBody)
-                        });
+                                });
 
                         console.log('daily-games 응답 상태:', dailyGameResponse.status);
 
-                        if (!dailyGameResponse.ok) {
+                            if (!dailyGameResponse.ok) {
                             console.warn('daily-games 저장 실패:', dailyGameResponse.status);
-                        } else {
-                            const dailyGameResult = await dailyGameResponse.json();
-                            console.log('daily-games 응답 결과:', dailyGameResult);
-                            if (!dailyGameResult.success) {
-                                console.warn('daily-games 저장 실패:', dailyGameResult.message);
                             } else {
+                                const dailyGameResult = await dailyGameResponse.json();
+                            console.log('daily-games 응답 결과:', dailyGameResult);
+                                if (!dailyGameResult.success) {
+                                console.warn('daily-games 저장 실패:', dailyGameResult.message);
+                                } else {
                                 console.log('daily-games 저장 성공');
                             }
                         }
@@ -474,8 +474,8 @@
             try {
                 const today = new Date();
                 const date = today.getFullYear().toString() +
-                           (today.getMonth() + 1).toString().padStart(2, '0') +
-                           today.getDate().toString().padStart(2, '0');
+                            (today.getMonth() + 1).toString().padStart(2, '0') +
+                            today.getDate().toString().padStart(2, '0');
 
                 console.log('fetchGames 호출됨, 날짜:', date);
                 const response = await fetch(`/api/dailygames/${date}`);
@@ -518,11 +518,11 @@
                 }
             } catch (error) {
                 console.error('날짜 표시 오류:', error);
-                const today = new Date();
-                const dateStr = today.getFullYear() + '년 ' + 
-                               (today.getMonth() + 1) + '월 ' + 
-                               today.getDate() + '일';
-                document.getElementById('dateDisplay').textContent = dateStr;
+            const today = new Date();
+            const dateStr = today.getFullYear() + '년 ' +
+                           (today.getMonth() + 1) + '월 ' +
+                           today.getDate() + '일';
+            document.getElementById('dateDisplay').textContent = dateStr;
             }
         }
 

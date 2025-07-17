@@ -23,9 +23,9 @@ router.get('/', async (req, res) => {
             // 모든 게임 조회 (최신순)
             const allGames = await collection.find({}).sort({ date: -1 }).toArray();
             res.json({
-                success: true,
+            success: true,
                 games: allGames
-            });
+        });
         }
     } catch (error) {
         console.error('일일 게임 목록 조회 오류:', error);
@@ -71,7 +71,7 @@ router.get('/:date', async (req, res) => {
                 data: { games: [] }
             });
         }
-        
+
         res.json({
             success: true,
             data: games
@@ -147,27 +147,27 @@ router.put('/:date', async (req, res) => {
         
         const { date } = req.params;
         const { games } = req.body;
-        
+
         if (!games) {
             return res.status(400).json({
                 success: false,
                 message: '게임 정보가 필요합니다.'
             });
         }
-        
+
         const result = await collection.findOneAndUpdate(
             { date },
             { $set: { games, updatedAt: getKoreanTime() } },
             { returnDocument: 'after' }
         );
-        
+
         if (!result.value) {
             return res.status(404).json({
                 success: false,
                 message: '해당 날짜의 게임을 찾을 수 없습니다.'
             });
         }
-        
+
         res.json({
             success: true,
             message: '게임이 수정되었습니다.',
@@ -199,7 +199,7 @@ router.delete('/:date', async (req, res) => {
                 message: '해당 날짜의 게임을 찾을 수 없습니다.'
             });
         }
-        
+
         res.json({
             success: true,
             message: '일일 게임이 삭제되었습니다.'

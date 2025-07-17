@@ -472,12 +472,12 @@ app.get('/api/employee/login-stats', async (req, res) => {
                 // 현재 세션 사용자가 목록에 없으면 추가
                 const existingUser = onlineUsersList.find(u => u.username === currentUser.username);
                 if (!existingUser) {
-                    onlineUsersList.push({
-                        ...currentUser,
-                        lastLoginAt: new Date(), // 현재 시간으로 설정
+                onlineUsersList.push({
+                    ...currentUser,
+                    lastLoginAt: new Date(), // 현재 시간으로 설정
                         isLoggedIn: true,
-                        isCurrentSession: true
-                    });
+                    isCurrentSession: true
+                });
                 } else {
                     // 기존 사용자에 현재 세션 표시 추가
                     existingUser.isCurrentSession = true;
@@ -520,7 +520,7 @@ app.get('/api/employee/login-stats', async (req, res) => {
                         isLoggedIn: false,
                         lastLogoutAt: getKoreanTime(),
                         updatedAt: getKoreanTime()
-                    } 
+            }
                 }
             );
             

@@ -375,8 +375,8 @@
         function toggleAmPm(gameNumber, isStartTime) {
             const btn = document.getElementById(`${isStartTime ? 'start' : 'end'}AmPm${gameNumber}`);
             if (btn) {
-                btn.classList.toggle('active');
-                btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
+            btn.classList.toggle('active');
+            btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
             }
         }
 
@@ -504,7 +504,7 @@
                 saveButton.style.cursor = 'not-allowed';
 
                 // 오늘 날짜 사용
-                const today = new Date();
+                    const today = new Date();
                 const date = today.getFullYear().toString() +
                            (today.getMonth() + 1).toString().padStart(2, '0') +
                            today.getDate().toString().padStart(2, '0');
@@ -537,7 +537,7 @@
                     const homeTeamElement = document.getElementById(`homeTeam${i}`);
                     const awayTeamElement = document.getElementById(`awayTeam${i}`);
                     const noGameElement = document.getElementById(`noGame${i}`);
-                    
+
                     const gameData = {
                         number: i,
                         homeTeam: homeTeamElement ? homeTeamElement.value || null : null,
@@ -613,7 +613,7 @@
         async function fetchGames() {
             try {
                 // 오늘 날짜 사용
-                const today = new Date();
+                    const today = new Date();
                 const date = today.getFullYear().toString() +
                            (today.getMonth() + 1).toString().padStart(2, '0') +
                            today.getDate().toString().padStart(2, '0');

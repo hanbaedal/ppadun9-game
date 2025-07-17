@@ -9,9 +9,9 @@ router.get('/', async (req, res) => {
     try {
         const db = getDb();
         const collection = db.collection('daily-games');
-        
+
         const { date } = req.query;
-        
+
         if (date) {
             // 특정 날짜의 게임 조회
             const games = await collection.findOne({ date });
@@ -42,9 +42,9 @@ router.post('/', async (req, res) => {
     try {
         const db = getDb();
         const collection = db.collection('daily-games');
-        
+
         const { date, games } = req.body;
-        
+
         if (!date || !games) {
             return res.status(400).json({
                 success: false,
@@ -58,11 +58,11 @@ router.post('/', async (req, res) => {
             { upsert: true, returnDocument: 'after' }
         );
         
-        res.json({
-            success: true,
+            res.json({
+                success: true,
             message: '일일 게임이 저장되었습니다.',
             data: result.value
-        });
+            });
     } catch (error) {
         console.error('일일 게임 저장 오류:', error);
         res.status(500).json({
@@ -78,7 +78,7 @@ router.delete('/:date', async (req, res) => {
     try {
         const db = getDb();
         const collection = db.collection('daily-games');
-        
+
         const { date } = req.params;
         
         const result = await collection.deleteOne({ date });
@@ -89,7 +89,7 @@ router.delete('/:date', async (req, res) => {
                 message: '해당 날짜의 게임을 찾을 수 없습니다.'
             });
         }
-        
+
         res.json({
             success: true,
             message: '일일 게임이 삭제되었습니다.'

@@ -312,8 +312,8 @@
         function toggleAmPm(gameNumber, isStartTime) {
             const btn = document.getElementById(`${isStartTime ? 'start' : 'end'}AmPm${gameNumber}`);
             if (btn) {
-                btn.classList.toggle('active');
-                btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
+            btn.classList.toggle('active');
+            btn.textContent = btn.classList.contains('active') ? 'PM' : 'AM';
             }
         }
 
@@ -431,49 +431,49 @@
                         noGame: noGame
                     };
 
-                    games.push(gameData);
-                }
+                        games.push(gameData);
+                    }
 
                 // 2. dailygames API 업데이트
                 try {
                     const existingResponse = await fetch(`/api/dailygames/${date}`);
                     const existingData = await existingResponse.json();
-
-                    let response;
+                
+                let response;
                     if (existingData.success) {
                         // 기존 데이터가 있으면 업데이트
-                        response = await fetch(`/api/dailygames/${date}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                    response = await fetch(`/api/dailygames/${date}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
                             body: JSON.stringify({ games })
-                        });
-                    } else {
+                    });
+                } else {
                         // 새 데이터 생성
-                        response = await fetch('/api/dailygames', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                date: date,
-                                games: games
-                            })
-                        });
-                    }
+                    response = await fetch('/api/dailygames', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            date: date,
+                            games: games
+                        })
+                    });
+                }
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-                    const result = await response.json();
-                    if (!result.success) {
-                        throw new Error(result.message || '저장 중 오류가 발생했습니다.');
-                    }
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message || '저장 중 오류가 발생했습니다.');
+                }
 
                     console.log('dailygames API 업데이트 성공');
-                } catch (error) {
+                        } catch (error) {
                     console.error('dailygames API 업데이트 오류:', error);
                 }
 
@@ -546,4 +546,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
