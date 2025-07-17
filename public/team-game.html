@@ -953,44 +953,7 @@
             </div>
         </div>
 
-        <!-- 실시간 업데이트 컨트롤 UI 추가 -->
-        <div class="realtime-controls" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-weight: 500; color: #333;">실시간 업데이트:</span>
-                        <button id="toggleRealtime" class="btn btn-sm btn-primary">시작</button>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 14px; color: #666;">상태:</span>
-                        <span id="realtimeStatus" style="font-weight: 500; color: #dc3545;">중지됨</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 14px; color: #666;">DB 업데이트:</span>
-                        <span id="dbUpdateStatus" style="font-weight: 500; color: #28a745;">활성화</span>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button id="manualUpdate" class="btn btn-sm btn-secondary">수동 업데이트</button>
-                    <button id="forceUpdate" class="btn btn-sm btn-warning">강제 DB 업데이트</button>
-                    <span style="font-size: 13px; color: #666;">마지막 업데이트: <span id="lastUpdate">-</span></span>
-                </div>
-            </div>
-            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #dee2e6;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="font-size: 13px; color: #666;">
-                        <i class="fas fa-info-circle me-1"></i>
-                        실시간 업데이트 시 진행상태가 자동으로 데이터베이스에 저장됩니다
-                    </div>
-                    <div style="font-size: 13px; color: #666;">
-                        업데이트 간격: <span style="font-weight: 500; color: #007bff;">5초</span>
-                    </div>
-                </div>
-                <div style="margin-top: 8px; font-size: 12px; color: #666;">
-                    <span id="debugInfo">디버그 정보가 콘솔에 표시됩니다</span>
-                </div>
-            </div>
-        </div>
+
     </div>
 
     <!-- 모달 추가 (body 맨 아래에 위치) -->
@@ -1007,8 +970,6 @@
         let currentDate = new Date();
         let selectedGame = null;
         let bettingTimer = null;
-        let realtimeUpdateTimer = null;
-        let isRealtimeActive = false;
 
         // 날짜 변경 함수
         async function changeDate(days) {
@@ -1245,7 +1206,7 @@
 
                 // 선택 버튼 클릭 이벤트 리스너 추가
                 const selectBtn = gameRow.querySelector('.select-game-btn');
-                selectBtn.addEventListener('click', function() {
+                selectBtn.addEventListener('click', async function() {
                     // 비활성화된 버튼은 클릭 무시
                     if (this.disabled) {
                         return;
@@ -1258,21 +1219,72 @@
                     
                     // 정상게임이고 경기중인 경우만 선택 가능
                     if (statusText === '정상게임' && progressText === '경기중') {
+                        try {
+                            // 한국 시간 기준으로 날짜 계산
+                            const now = new Date();
+                            const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                            const date = koreanTime.toISOString().split('T')[0];
+                            
+                            // team-games 콜렉션에 경기 선택 상태 업데이트
+                            const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${i}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    isSelected: true,
+                                    bettingStart: '대기',
+                                    bettingStop: '대기',
+                                    predictionResult: ''
+                                })
+                            });
+                            
+                            if (!teamGameUpdateResponse.ok) {
+                                throw new Error('team-games 경기선택 업데이트 실패');
+                            }
+                            
+                            console.log('[TeamGame] 경기선택이 team-games에 업데이트됨:', i);
+                            
+                            // 이전에 선택된 경기들의 선택 상태 해제
+                            if (selectedGame && selectedGame !== i.toString()) {
+                                const prevGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        isSelected: false,
+                                        bettingStart: '대기',
+                                        bettingStop: '대기',
+                                        predictionResult: ''
+                                    })
+                                });
+                                
+                                if (prevGameUpdateResponse.ok) {
+                                    console.log('[TeamGame] 이전 선택 경기의 상태가 해제됨:', selectedGame);
+                                }
+                            }
+                            
+                        } catch (error) {
+                            console.error('경기 선택 업데이트 오류:', error);
+                        }
+                        
+                        // UI 업데이트
                         document.querySelectorAll('.game-row').forEach(row => {
                             row.classList.remove('selected');
                         });
-            document.querySelectorAll('.select-game-btn').forEach(btn => {
+                        document.querySelectorAll('.select-game-btn').forEach(btn => {
                             btn.classList.remove('selected');
                             // 원래 텍스트로 복원
                             const gameNumber = btn.dataset.game;
                             const canSelect = statusText === '정상게임' && progressText === '경기중';
                             btn.textContent = canSelect ? '선택' : '선택중지';
-                    });
+                        });
                         gameRow.classList.add('selected');
                         selectBtn.classList.add('selected');
                         selectBtn.textContent = '선택됨';
                         selectedGame = gameRow.dataset.game;
-                    document.getElementById('startBetting').disabled = false;
+                        document.getElementById('startBetting').disabled = false;
                         showCustomModal(`선택한 경기번호: ${selectedGame}경기가 선택되었습니다!`);
                     } else {
                         let message = '';
@@ -1285,7 +1297,7 @@
                         }
                         showCustomModal(message);
                     }
-            });
+                });
             }
         }
 
@@ -1422,7 +1434,7 @@
             document.getElementById('stopTime').textContent = `${hours}:${minutes}:${seconds}`;
         }
 
-        // 진행상태(시간기준) 실시간 업데이트 함수 - 서버 데이터베이스 업데이트 포함
+        // 진행상태(시간기준) 업데이트 함수
         async function updateGameStatus() {
             try {
                 // 한국 시간 기준으로 오늘 날짜 계산 (수정된 로직)
@@ -1432,113 +1444,35 @@
                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                 const today = koreanTime.toISOString().split('T')[0];
                 
-                console.log('[UpdateStatus] 진행상태 업데이트 시작:', today);
+                const response = await fetch(`/api/team-games/${today}`);
                 
-                // 서버에서 모든 경기의 진행상태를 일괄 업데이트
-                const updateResponse = await fetch(`/api/team-games/${today}/progress/update-all`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!updateResponse.ok) {
-                    throw new Error(`진행상태 업데이트 API 오류! status: ${updateResponse.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const updateResult = await updateResponse.json();
-                if (updateResult.success) {
-                    console.log('[UpdateStatus] 서버 진행상태 업데이트 완료:', updateResult.updatedCount, '개 경기 업데이트됨');
-                    
-                    // 업데이트된 데이터로 화면 갱신
-                    const games = updateResult.data || [];
+                const result = await response.json();
+                if (result.success) {
+                    const games = result.data || [];
                     const gameRows = document.querySelectorAll('.game-row');
                     
                     gameRows.forEach(gameRow => {
                         const gameNumber = parseInt(gameRow.dataset.game);
                         const progressDisplay = gameRow.querySelector('.game-progress');
-                        const selectBtn = gameRow.querySelector('.select-game-btn');
-                        const statusDisplay = gameRow.querySelector('.game-status');
                         
                         // 해당 경기 데이터 찾기
                         const game = games.find(g => g.gameNumber === gameNumber);
                         
                         if (game) {
-                            // 진행상태 표시 업데이트 (서버에서 계산된 값 사용)
-                            const progressClass = getProgressClass(game.progressStatus);
-                            progressDisplay.className = `game-progress ${progressClass}`;
-                            progressDisplay.textContent = game.progressStatus;
+                            const status = getGameStatus(game.startTime, game.endTime, game.gameStatus);
                             
-                            // 경기상황 표시 업데이트
-                            const statusClass = getStatusClass(game.gameStatus);
-                            statusDisplay.className = `game-status ${statusClass}`;
-                            statusDisplay.textContent = game.gameStatus;
-                            
-                            // 선택 버튼 상태 업데이트
-                            const canSelect = game.gameStatus === '정상게임' && game.progressStatus === '경기중';
-                            const buttonText = canSelect ? '선택' : '선택불가';
-                            const buttonClass = canSelect ? 'select-game-btn' : 'select-game-btn disabled';
-                            
-                            selectBtn.textContent = buttonText;
-                            selectBtn.className = buttonClass;
-                            selectBtn.disabled = !canSelect;
-                            
-                            console.log(`[UpdateStatus] ${gameNumber}경기 상태 업데이트:`, {
-                                progressStatus: game.progressStatus,
-                                gameStatus: game.gameStatus,
-                                canSelect: canSelect
-                            });
+                            // 진행상태(시간기준) 표시 업데이트
+                            progressDisplay.className = `game-progress ${status.class}`;
+                            progressDisplay.textContent = status.text;
                         }
                     });
-                } else {
-                    console.error('[UpdateStatus] 서버 진행상태 업데이트 실패:', updateResult.message);
                 }
             } catch (error) {
-                console.error('[UpdateStatus] 진행상태 업데이트 오류:', error);
-                
-                // API 오류 시 기존 방식으로 폴백
-                console.log('[UpdateStatus] 기존 방식으로 폴백');
-                const response = await fetch(`/api/team-games/${today}`);
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        const games = result.data || [];
-                        const gameRows = document.querySelectorAll('.game-row');
-                        
-                        gameRows.forEach(gameRow => {
-                            const gameNumber = parseInt(gameRow.dataset.game);
-                            const progressDisplay = gameRow.querySelector('.game-progress');
-                            
-                            // 해당 경기 데이터 찾기
-                            const game = games.find(g => g.gameNumber === gameNumber);
-                            
-                            if (game) {
-                                const status = getGameStatus(game.startTime, game.endTime, game.gameStatus);
-                                
-                                // 진행상태(시간기준) 표시 업데이트
-                                progressDisplay.className = `game-progress ${status.class}`;
-                                progressDisplay.textContent = status.text;
-                            }
-                        });
-                    }
-                }
-            }
-        }
-
-        // 진행상태에 따른 CSS 클래스 반환 함수
-        function getProgressClass(progressStatus) {
-            switch(progressStatus) {
-                case '경기전':
-                    return 'status-before';
-                case '경기중':
-                    return 'status-ongoing';
-                case '경기끝':
-                    return 'status-ended';
-                case '경기취소':
-                    return 'status-cancelled';
-                default:
-                    return 'status-before';
+                console.error('진행상태 업데이트 오류:', error);
             }
         }
 
@@ -1676,11 +1610,7 @@
                 });
             });
 
-            // 초기 진행상태 업데이트
-            setTimeout(updateGameStatus, 1000);
 
-            // 1분마다 진행상태 업데이트
-            setInterval(updateGameStatus, 60000);
 
             // 배팅시작 버튼 이벤트 리스너
             document.getElementById('startBetting').addEventListener('click', async function() {
@@ -1693,9 +1623,32 @@
                         
                         // 한국 시간으로 변환 (UTC+9)
                         const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                        const date = koreanTime.getFullYear().toString() +
-                                      (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
-                                      koreanTime.getDate().toString().padStart(2, '0');
+                        const date = koreanTime.toISOString().split('T')[0];
+                        
+                        // 1. team-games 콜렉션에 배팅시작 상태 업데이트
+                        const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                bettingStart: '시작',
+                                bettingStop: '대기',
+                                predictionResult: '',
+                                gameType: selectedGameType.value
+                            })
+                        });
+                        
+                        if (!teamGameUpdateResponse.ok) {
+                            throw new Error('team-games 업데이트 실패');
+                        }
+                        
+                        console.log('[TeamGame] 배팅시작 상태가 team-games에 업데이트됨');
+                        
+                        // 2. 기존 배팅 시작 API 호출
+                        const dateFormat = koreanTime.getFullYear().toString() +
+                                          (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
+                                          koreanTime.getDate().toString().padStart(2, '0');
                         
                         const response = await fetch(`/api/betting/start`, {
                             method: 'POST',
@@ -1705,16 +1658,16 @@
                             body: JSON.stringify({
                                 gameNumber: selectedGame,
                                 gameType: selectedGameType.value,
-                                date: date
+                                date: dateFormat
                             })
                         });
                         
                         const result = await response.json();
                         if (result.success) {
-                    updateBettingTime();
-                    this.disabled = true;
-                    document.getElementById('stopBetting').disabled = false;
-                    console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value);
+                            updateBettingTime();
+                            this.disabled = true;
+                            document.getElementById('stopBetting').disabled = false;
+                            console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value);
                             showCustomModal('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
                         } else {
                             showCustomModal('배팅 시작 실패: ' + result.message);
@@ -1737,9 +1690,31 @@
                         
                         // 한국 시간으로 변환 (UTC+9)
                         const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                        const date = koreanTime.getFullYear().toString() +
-                                      (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
-                                      koreanTime.getDate().toString().padStart(2, '0');
+                        const date = koreanTime.toISOString().split('T')[0];
+                        
+                        // 1. team-games 콜렉션에 배팅중지 상태 업데이트
+                        const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                bettingStart: '시작',
+                                bettingStop: '중지',
+                                predictionResult: ''
+                            })
+                        });
+                        
+                        if (!teamGameUpdateResponse.ok) {
+                            throw new Error('team-games 업데이트 실패');
+                        }
+                        
+                        console.log('[TeamGame] 배팅중지 상태가 team-games에 업데이트됨');
+                        
+                        // 2. 기존 배팅 중지 API 호출
+                        const dateFormat = koreanTime.getFullYear().toString() +
+                                          (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
+                                          koreanTime.getDate().toString().padStart(2, '0');
                         
                         const response = await fetch(`/api/betting/stop`, {
                             method: 'POST',
@@ -1748,21 +1723,21 @@
                             },
                             body: JSON.stringify({
                                 gameNumber: selectedGame,
-                                date: date
+                                date: dateFormat
                             })
                         });
                         
                         const result = await response.json();
                         if (result.success) {
-                    updateStopTime();
-                    this.disabled = true;
-                    // 라디오 버튼 활성화
-                    document.querySelectorAll('input[name="prediction"]').forEach(radio => {
-                        radio.disabled = false;
-                    });
+                            updateStopTime();
+                            this.disabled = true;
+                            // 라디오 버튼 활성화
+                            document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                                radio.disabled = false;
+                            });
                             // 다음타자 버튼 초기화 (비활성화)
                             document.getElementById('nextBatterBtn').disabled = true;
-                    console.log('배팅 중지:', selectedGame);
+                            console.log('배팅 중지:', selectedGame);
                             showCustomModal('배팅이 중지되었습니다. 예측결과를 선택해주세요.');
                         } else {
                             showCustomModal('배팅 중지 실패: ' + result.message);
@@ -1802,9 +1777,31 @@
                                 
                                 // 한국 시간으로 변환 (UTC+9)
                                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                                const date = koreanTime.getFullYear().toString() +
-                                              (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
-                                              koreanTime.getDate().toString().padStart(2, '0');
+                                const date = koreanTime.toISOString().split('T')[0];
+                                
+                                // 1. team-games 콜렉션에 예측결과 업데이트
+                                const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        bettingStart: '시작',
+                                        bettingStop: '중지',
+                                        predictionResult: radio.value
+                                    })
+                                });
+                                
+                                if (!teamGameUpdateResponse.ok) {
+                                    throw new Error('team-games 업데이트 실패');
+                                }
+                                
+                                console.log('[TeamGame] 예측결과가 team-games에 업데이트됨:', radio.value);
+                                
+                                // 2. 기존 예측 결과 API 호출
+                                const dateFormat = koreanTime.getFullYear().toString() +
+                                                  (koreanTime.getMonth() + 1).toString().padStart(2, '0') +
+                                                  koreanTime.getDate().toString().padStart(2, '0');
                                 
                                 const response = await fetch(`/api/betting/result`, {
                                     method: 'POST',
@@ -1814,7 +1811,7 @@
                                     body: JSON.stringify({
                                         gameNumber: selectedGame,
                                         prediction: radio.value,
-                                        date: date
+                                        date: dateFormat
                                     })
                                 });
                                 
@@ -1865,14 +1862,7 @@
             showCustomModal('새로운 배팅이 시작되었습니다.');
             });
 
-            // 실시간 업데이트 버튼 이벤트 리스너
-            document.getElementById('toggleRealtime').addEventListener('click', toggleRealtimeUpdate);
-            
-            // 수동 업데이트 버튼 이벤트 리스너
-            document.getElementById('manualUpdate').addEventListener('click', performManualUpdate);
-            
-            // 강제 DB 업데이트 버튼 이벤트 리스너
-            document.getElementById('forceUpdate').addEventListener('click', performForceUpdate);
+
         };
 
         function showCustomModal(msg) {
@@ -1889,10 +1879,40 @@
         // 다음타자 버튼 클릭 이벤트 리스너
         const nextBatterBtn = document.getElementById('nextBatterBtn');
         if (nextBatterBtn) {
-          nextBatterBtn.onclick = function() {
+          nextBatterBtn.onclick = async function() {
             // 모든 상태 초기화
             console.log('다음 타자 배팅 준비 - 상태 초기화');
             
+            try {
+                // 한국 시간 기준으로 날짜 계산
+                const now = new Date();
+                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const date = koreanTime.toISOString().split('T')[0];
+                
+                // team-games 콜렉션에 다음타자 상태로 초기화
+                const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bettingStart: '대기',
+                        bettingStop: '대기',
+                        predictionResult: ''
+                    })
+                });
+                
+                if (!teamGameUpdateResponse.ok) {
+                    throw new Error('team-games 다음타자 초기화 실패');
+                }
+                
+                console.log('[TeamGame] 다음타자 상태로 team-games 초기화됨');
+                
+            } catch (error) {
+                console.error('다음타자 초기화 오류:', error);
+            }
+            
+            // UI 상태 초기화
             // 배팅 시작 버튼 활성화
             document.getElementById('startBetting').disabled = false;
             
@@ -1916,163 +1936,7 @@
           }
         }
 
-        // 실시간 업데이트 시작/중지 함수
-        function toggleRealtimeUpdate() {
-            const toggleBtn = document.getElementById('toggleRealtime');
-            const statusSpan = document.getElementById('realtimeStatus');
-            
-            if (isRealtimeActive) {
-                // 실시간 업데이트 중지
-                clearInterval(realtimeUpdateTimer);
-                isRealtimeActive = false;
-                toggleBtn.textContent = '시작';
-                toggleBtn.className = 'btn btn-sm btn-primary';
-                statusSpan.textContent = '중지됨';
-                statusSpan.style.color = '#dc3545';
-                console.log('실시간 업데이트 중지됨');
-            } else {
-                // 실시간 업데이트 시작
-                isRealtimeActive = true;
-                toggleBtn.textContent = '중지';
-                toggleBtn.className = 'btn btn-sm btn-danger';
-                statusSpan.textContent = '활성화';
-                statusSpan.style.color = '#28a745';
-                
-                // 즉시 한 번 업데이트
-                performRealtimeUpdate();
-                
-                // 5초마다 실시간 업데이트
-                realtimeUpdateTimer = setInterval(performRealtimeUpdate, 5000);
-                console.log('실시간 업데이트 시작됨 (5초 간격)');
-            }
-        }
 
-        // 실시간 업데이트 수행 함수
-        async function performRealtimeUpdate() {
-            try {
-                console.log('실시간 업데이트 수행 중...');
-                
-                // 1. 게임 데이터 업데이트 (daily-games → team-games 변환 포함)
-                const games = await fetchGames();
-                displayGames(games);
-                
-                // 2. 진행상태 실시간 업데이트 (데이터베이스 업데이트 포함)
-                await updateGameStatus();
-                
-                // 3. 마지막 업데이트 시간 표시
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('ko-KR');
-                document.getElementById('lastUpdate').textContent = timeStr;
-                
-                console.log('실시간 업데이트 완료:', timeStr);
-            } catch (error) {
-                console.error('실시간 업데이트 오류:', error);
-                
-                // 오류 발생 시 실시간 업데이트 중지
-                if (isRealtimeActive) {
-                    toggleRealtimeUpdate();
-                    showCustomModal('실시간 업데이트 중 오류가 발생하여 중지되었습니다.');
-                }
-            }
-        }
-
-        // 수동 업데이트 함수
-        async function performManualUpdate() {
-            try {
-                console.log('수동 업데이트 수행 중...');
-                
-                const manualBtn = document.getElementById('manualUpdate');
-                manualBtn.disabled = true;
-                manualBtn.textContent = '업데이트 중...';
-                
-                // 1. 게임 데이터 업데이트 (daily-games → team-games 변환 포함)
-                const games = await fetchGames();
-                displayGames(games);
-                
-                // 2. 진행상태 실시간 업데이트 (데이터베이스 업데이트 포함)
-                await updateGameStatus();
-                
-                // 3. 마지막 업데이트 시간 표시
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('ko-KR');
-                document.getElementById('lastUpdate').textContent = timeStr;
-                
-                manualBtn.disabled = false;
-                manualBtn.textContent = '수동 업데이트';
-                
-                console.log('수동 업데이트 완료:', timeStr);
-                showCustomModal('데이터가 수동으로 업데이트되었습니다.');
-            } catch (error) {
-                console.error('수동 업데이트 오류:', error);
-                
-                const manualBtn = document.getElementById('manualUpdate');
-                manualBtn.disabled = false;
-                manualBtn.textContent = '수동 업데이트';
-                
-                showCustomModal('수동 업데이트 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 강제 데이터베이스 업데이트 함수
-        async function performForceUpdate() {
-            try {
-                console.log('강제 DB 업데이트 수행 중...');
-                
-                const forceBtn = document.getElementById('forceUpdate');
-                forceBtn.disabled = true;
-                forceBtn.textContent = 'DB 업데이트 중...';
-                
-                // 한국 시간 기준으로 오늘 날짜 계산
-                const now = new Date();
-                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                const today = koreanTime.toISOString().split('T')[0];
-                
-                console.log('[ForceUpdate] 강제 DB 업데이트 시작:', today);
-                console.log('[ForceUpdate] 현재 한국 시간:', koreanTime.toLocaleString('ko-KR'));
-                
-                // 서버에서 강제로 진행상태 업데이트
-                const updateResponse = await fetch(`/api/team-games/${today}/progress/update-all`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!updateResponse.ok) {
-                    throw new Error(`강제 업데이트 API 오류! status: ${updateResponse.status}`);
-                }
-
-                const updateResult = await updateResponse.json();
-                if (updateResult.success) {
-                    console.log('[ForceUpdate] 강제 DB 업데이트 완료:', updateResult.updatedCount, '개 경기 업데이트됨');
-                    console.log('[ForceUpdate] 업데이트된 데이터:', updateResult.data);
-                    
-                    // 화면 갱신
-                    displayGames(updateResult.data);
-                    
-                    // 디버그 정보 표시
-                    const debugInfo = `DB 업데이트 완료: ${updateResult.updatedCount}개 경기 업데이트됨`;
-                    document.getElementById('debugInfo').textContent = debugInfo;
-                    
-                    showCustomModal(`강제 DB 업데이트 완료! ${updateResult.updatedCount}개 경기의 진행상태가 업데이트되었습니다.`);
-                } else {
-                    console.error('[ForceUpdate] 강제 DB 업데이트 실패:', updateResult.message);
-                    showCustomModal('강제 DB 업데이트 실패: ' + updateResult.message);
-                }
-                
-                forceBtn.disabled = false;
-                forceBtn.textContent = '강제 DB 업데이트';
-                
-            } catch (error) {
-                console.error('[ForceUpdate] 강제 업데이트 오류:', error);
-                
-                const forceBtn = document.getElementById('forceUpdate');
-                forceBtn.disabled = false;
-                forceBtn.textContent = '강제 DB 업데이트';
-                
-                showCustomModal('강제 DB 업데이트 중 오류가 발생했습니다.');
-            }
-        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
