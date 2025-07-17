@@ -1258,8 +1258,20 @@
                 console.log('[TeamGame] 한국 시간 기준 오늘 날짜:', today);
                 console.log('[TeamGame] 한국 시간:', koreanTime.toLocaleString('ko-KR'));
                 
-                // 먼저 daily-games에서 team-games로 자동 변환 수행
-                console.log('[TeamGame] daily-games에서 team-games로 자동 변환 시작');
+                // 먼저 team-games에 데이터가 있는지 확인
+                console.log('[TeamGame] team-games에서 기존 데이터 확인');
+                let teamResponse = await fetch(`/api/team-games/${today}`);
+                if (teamResponse.ok) {
+                    const teamData = await teamResponse.json();
+                    if (teamData.success && teamData.data && teamData.data.length > 0) {
+                        console.log('[TeamGame] team-games에 기존 데이터 발견:', teamData.data.length, '개');
+                        console.log('[TeamGame] 첫 번째 경기 데이터:', teamData.data[0]);
+                        return teamData.data;
+                    }
+                }
+                
+                // team-games에 데이터가 없으면 daily-games에서 변환 시도
+                console.log('[TeamGame] team-games에 데이터 없음, daily-games에서 변환 시작');
                 const copyResponse = await fetch(`/api/team-games/import-from-daily/${today}`, {
                     method: 'POST',
                     headers: {
@@ -1274,7 +1286,7 @@
                     
                     // 변환 성공 후 team-games에서 데이터 가져오기
                     console.log('[TeamGame] team-games에서 데이터 가져오기');
-                    const teamResponse = await fetch(`/api/team-games/${today}`);
+                    teamResponse = await fetch(`/api/team-games/${today}`);
                     if (teamResponse.ok) {
                         const teamData = await teamResponse.json();
                         if (teamData.success && teamData.data && teamData.data.length > 0) {
