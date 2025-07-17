@@ -110,7 +110,7 @@ router.post('/import-from-daily/:date', async (req, res) => {
             console.log('[TeamGames] daily-games에 games 배열이 없거나 비어있음');
             return res.status(404).json({
                 success: false,
-                message: '해당 날짜의 daily-games에 경기 데이터가 없습니다.'
+                message: '해당 날짜의daily-games에 경기 데이터가 없습니다.'
             });
         }
         
@@ -398,7 +398,7 @@ router.put('/:date/:gameNumber/progress', async (req, res) => {
             { 
                 $set: { 
                     progressStatus,
-                    updatedAt: getKoreanTime()
+                    updatedAt: new Date()
                 }
             },
             { returnDocument: 'after' }
@@ -421,6 +421,217 @@ router.put('/:date/:gameNumber/progress', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '진행상태 업데이트에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 모든 경기의 진행상태를 시간 기준으로 일괄 업데이트
+router.put('/:date/progress/update-all', async (req, res) => {
+    try {
+        console.log('[TeamGames] 모든 경기 진행상태 일괄 업데이트 요청:', req.params.date);
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        const { date } = req.params;
+        
+        // 해당 날짜의 모든 경기 조회
+        const games = await collection.find({ date }).toArray();
+        
+        if (games.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 날짜의 경기 데이터를 찾을 수 없습니다.'
+            });
+        }
+        
+        console.log('[TeamGames] 업데이트할 경기 수:', games.length);
+        
+        // 진행상태 계산 함수 (서버 버전)
+        function calculateGameStatus(startTime, endTime, gameStatus) {
+            try {
+                console.log(`[CalculateStatus] 진행상태 계산 시작:`, {
+                    startTime, endTime, gameStatus
+                });
+                
+                // 경기상황이 '정상게임'이 아니면 '경기취소' 반환
+                if (gameStatus && gameStatus !== '정상게임') {
+                    console.log(`[CalculateStatus] 경기상황이 정상게임이 아님 → 경기취소`);
+                    return '경기취소';
+                }
+                
+                // 한국 시간으로 현재 시간 계산
+                const now = new Date();
+                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
+                
+                console.log(`[CalculateStatus] 시간 정보:`, {
+                    utcTime: now.toISOString(),
+                    koreanTime: koreanTime.toISOString(),
+                    koreanTimeString: koreanTime.toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'}),
+                    currentHour: koreanTime.getHours(),
+                    currentMinute: koreanTime.getMinutes(),
+                    currentTimeInMinutes: currentTime
+                });
+                
+                // 시작시간이 없는 경우
+                if (!startTime || startTime === '' || startTime === '-') {
+                    console.log(`[CalculateStatus] 시작시간 없음 → 경기전`);
+                    return '경기전';
+                }
+                
+                // 시작시간을 분으로 변환
+                let startTimeInMinutes = null;
+                if (startTime && startTime !== '' && startTime !== '-') {
+                    try {
+                        const timeParts = startTime.split(':');
+                        if (timeParts.length === 2) {
+                            const startHour = parseInt(timeParts[0]);
+                            const startMinute = parseInt(timeParts[1]);
+                            if (!isNaN(startHour) && !isNaN(startMinute)) {
+                                startTimeInMinutes = startHour * 60 + startMinute;
+                                console.log(`[CalculateStatus] 시작시간 변환:`, {
+                                    startTime,
+                                    startHour,
+                                    startMinute,
+                                    startTimeInMinutes
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.log(`[CalculateStatus] 시작시간 변환 오류:`, error);
+                        return '경기전';
+                    }
+                }
+                
+                // 종료시간을 분으로 변환
+                let endTimeInMinutes = null;
+                if (endTime && endTime !== '' && endTime !== '-') {
+                    try {
+                        const timeParts = endTime.split(':');
+                        if (timeParts.length === 2) {
+                            const endHour = parseInt(timeParts[0]);
+                            const endMinute = parseInt(timeParts[1]);
+                            if (!isNaN(endHour) && !isNaN(endMinute)) {
+                                endTimeInMinutes = endHour * 60 + endMinute;
+                                console.log(`[CalculateStatus] 종료시간 변환:`, {
+                                    endTime,
+                                    endHour,
+                                    endMinute,
+                                    endTimeInMinutes
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.log(`[CalculateStatus] 종료시간 변환 오류:`, error);
+                        endTimeInMinutes = null;
+                    }
+                }
+                
+                // 시작시간이 유효하지 않은 경우
+                if (startTimeInMinutes === null) {
+                    console.log(`[CalculateStatus] 시작시간이 유효하지 않음 → 경기전`);
+                    return '경기전';
+                }
+                
+                console.log(`[CalculateStatus] 시간 비교:`, {
+                    currentTime,
+                    startTimeInMinutes,
+                    endTimeInMinutes,
+                    currentTimeIsAfterStart: currentTime >= startTimeInMinutes
+                });
+                
+                // 현재시간이 시작시간보다 이전이면 '경기전'
+                if (currentTime < startTimeInMinutes) {
+                    console.log(`[CalculateStatus] 현재시간 < 시작시간 → 경기전`);
+                    return '경기전';
+                }
+                
+                // 종료시간이 있는 경우
+                if (endTimeInMinutes !== null) {
+                    // 종료시간이 시작시간보다 작은 경우는 다음날로 간주
+                    if (endTimeInMinutes < startTimeInMinutes) {
+                        endTimeInMinutes += 1440; // 24시간(1440분) 추가
+                        console.log(`[CalculateStatus] 종료시간이 다음날로 조정됨:`, endTimeInMinutes);
+                    }
+                    
+                    // 현재시간이 종료시간 이후면 '경기끝'
+                    if (currentTime >= endTimeInMinutes) {
+                        console.log(`[CalculateStatus] 현재시간 >= 종료시간 → 경기끝`);
+                        return '경기끝';
+                    }
+                    // 시작시간 이후이고 종료시간 이전이면 '경기중'
+                    else {
+                        console.log(`[CalculateStatus] 시작시간 <= 현재시간 < 종료시간 → 경기중`);
+                        return '경기중';
+                    }
+                }
+                // 종료시간이 없는 경우: 시작시간 이후면 '경기중'
+                else {
+                    console.log(`[CalculateStatus] 종료시간 없음, 시작시간 이후 → 경기중`);
+                    return '경기중';
+                }
+            } catch (error) {
+                console.error('[CalculateStatus] 진행상태 계산 오류:', error);
+                return '경기전';
+            }
+        }
+        
+        const updatePromises = games.map(async (game) => {
+            const newProgressStatus = calculateGameStatus(game.startTime, game.endTime, game.gameStatus);
+            
+            console.log(`[TeamGames] ${game.gameNumber}경기 진행상태 업데이트:`, {
+                gameNumber: game.gameNumber,
+                startTime: game.startTime,
+                endTime: game.endTime,
+                gameStatus: game.gameStatus,
+                oldProgress: game.progressStatus,
+                newProgress: newProgressStatus
+            });
+            
+            // 항상 업데이트 (조건 제거로 더 안정적인 동작)
+            try {
+                const updateResult = await collection.updateOne(
+                    { date, gameNumber: game.gameNumber },
+                    { 
+                        $set: { 
+                            progressStatus: newProgressStatus,
+                            updatedAt: new Date()
+                        }
+                    }
+                );
+                
+                console.log(`[TeamGames] ${game.gameNumber}경기 업데이트 결과:`, {
+                    matchedCount: updateResult.matchedCount,
+                    modifiedCount: updateResult.modifiedCount
+                });
+                
+                return updateResult;
+            } catch (error) {
+                console.error(`[TeamGames] ${game.gameNumber}경기 업데이트 오류:`, error);
+                return null;
+            }
+        });
+        
+        const updateResults = await Promise.all(updatePromises);
+        const actualUpdates = updateResults.filter(result => result !== null);
+        
+        console.log('[TeamGames] 진행상태 업데이트 완료:', actualUpdates.length, '개 경기 업데이트됨');
+        
+        // 업데이트된 데이터 다시 조회
+        const updatedGames = await collection.find({ date }).toArray();
+        
+        res.json({
+            success: true,
+            message: `${actualUpdates.length}개 경기의 진행상태가 업데이트되었습니다.`,
+            data: updatedGames,
+            updatedCount: actualUpdates.length
+        });
+    } catch (error) {
+        console.error('[TeamGames] 진행상태 일괄 업데이트 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '진행상태 일괄 업데이트에 실패했습니다.',
             error: error.message
         });
     }
