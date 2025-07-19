@@ -1012,18 +1012,12 @@
                     return { text: '경기취소', class: 'status-cancelled' };
                 }
 
-                // 한국 시간으로 현재 시간 계산
-                let now, currentTime;
+                // 한국 시간으로 현재 시간 계산 (더 정확한 방법)
+                const now = new Date();
                 
-                // 현재 시간을 한국 시간대로 계산 (간단한 방법)
-                now = new Date();
-                
-                // 한국 시간으로 현재 시간 계산 (확실한 방법)
-                now = new Date();
-                
-                // 한국 시간대로 직접 계산
-                const koreanTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-                currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
+                // UTC 시간을 한국 시간으로 변환 (UTC+9)
+                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
                 
                 // 디버깅을 위한 현재 시간 정보
                 console.log('현재 UTC 시간:', now.toISOString());
@@ -1033,19 +1027,19 @@
             
                 console.log('=== 진행상태(시간기준) 디버깅 ===');
                 console.log('현재 시간:', koreanTime.toLocaleString('ko-KR'));
-            console.log('한국 현재 시간(분):', currentTime);
-            console.log('시작시간:', startTime);
-            console.log('종료시간:', endTime);
+                console.log('한국 현재 시간(분):', currentTime);
+                console.log('시작시간:', startTime);
+                console.log('종료시간:', endTime);
                 console.log('경기상황:', noGame);
 
-            // 시작시간이 없는 경우
+                // 시작시간이 없는 경우
                 if (!startTime || startTime === '' || startTime === '-') {
-                console.log('시작시간 없음 → 경기전');
-                return { text: '경기전', class: 'status-before' };
-            }
+                    console.log('시작시간 없음 → 경기전');
+                    return { text: '경기전', class: 'status-before' };
+                }
 
-            // 시작시간을 분으로 변환
-            let startTimeInMinutes = null;
+                // 시작시간을 분으로 변환
+                let startTimeInMinutes = null;
                 if (startTime && startTime !== '' && startTime !== '-') {
                     try {
                         const timeParts = startTime.split(':');
@@ -1053,17 +1047,17 @@
                             const startHour = parseInt(timeParts[0]);
                             const startMinute = parseInt(timeParts[1]);
                             if (!isNaN(startHour) && !isNaN(startMinute)) {
-                startTimeInMinutes = startHour * 60 + startMinute;
+                                startTimeInMinutes = startHour * 60 + startMinute;
                             }
                         }
                     } catch (error) {
                         console.error('시작시간 변환 오류:', error);
                         return { text: '경기전', class: 'status-before' };
                     }
-            }
+                }
 
-            // 종료시간을 분으로 변환
-            let endTimeInMinutes = null;
+                // 종료시간을 분으로 변환
+                let endTimeInMinutes = null;
                 if (endTime && endTime !== '' && endTime !== '-') {
                     try {
                         const timeParts = endTime.split(':');
@@ -1071,24 +1065,24 @@
                             const endHour = parseInt(timeParts[0]);
                             const endMinute = parseInt(timeParts[1]);
                             if (!isNaN(endHour) && !isNaN(endMinute)) {
-                endTimeInMinutes = endHour * 60 + endMinute;
+                                endTimeInMinutes = endHour * 60 + endMinute;
                             }
                         }
                     } catch (error) {
                         console.error('종료시간 변환 오류:', error);
                         endTimeInMinutes = null;
                     }
-            }
+                }
 
-            console.log('시작시간(분):', startTimeInMinutes);
-            console.log('종료시간(분):', endTimeInMinutes);
-            console.log('현재시간(분):', currentTime);
+                console.log('시작시간(분):', startTimeInMinutes);
+                console.log('종료시간(분):', endTimeInMinutes);
+                console.log('현재시간(분):', currentTime);
 
                 // 시작시간이 유효하지 않은 경우
                 if (startTimeInMinutes === null) {
                     console.log('시작시간이 유효하지 않음 → 경기전');
-                        return { text: '경기전', class: 'status-before' };
-                    }
+                    return { text: '경기전', class: 'status-before' };
+                }
 
                 // 현재시간이 시작시간보다 이전이면 '경기전'
                 if (currentTime < startTimeInMinutes) {
@@ -1098,32 +1092,32 @@
                 
                 // 종료시간이 있는 경우
                 if (endTimeInMinutes !== null) {
-                // 종료시간이 시작시간보다 작은 경우는 다음날로 간주
-                if (endTimeInMinutes < startTimeInMinutes) {
-                    console.log('종료시간이 시작시간보다 작음 → 다음날로 간주');
-                    endTimeInMinutes += 1440; // 24시간(1440분) 추가
-                    console.log('수정된 종료시간(분):', endTimeInMinutes);
-                }
-                
-                // 현재시간이 종료시간 이후면 '경기끝'
-                if (currentTime >= endTimeInMinutes) {
-                    console.log('현재시간 >= 종료시간 → 경기끝');
-                    return { text: '경기끝', class: 'status-ended' };
-                }
-                // 시작시간 이후이고 종료시간 이전이면 '경기중'
+                    // 종료시간이 시작시간보다 작은 경우는 다음날로 간주
+                    if (endTimeInMinutes < startTimeInMinutes) {
+                        console.log('종료시간이 시작시간보다 작음 → 다음날로 간주');
+                        endTimeInMinutes += 1440; // 24시간(1440분) 추가
+                        console.log('수정된 종료시간(분):', endTimeInMinutes);
+                    }
+                    
+                    // 현재시간이 종료시간 이후면 '경기끝'
+                    if (currentTime >= endTimeInMinutes) {
+                        console.log('현재시간 >= 종료시간 → 경기끝');
+                        return { text: '경기끝', class: 'status-ended' };
+                    }
+                    // 시작시간 이후이고 종료시간 이전이면 '경기중'
                     else {
-                    console.log('시작시간 <= 현재시간 < 종료시간 → 경기중');
+                        console.log('시작시간 <= 현재시간 < 종료시간 → 경기중');
+                        return { text: '경기중', class: 'status-ongoing' };
+                    }
+                }
+                // 종료시간이 없는 경우: 시작시간 이후면 '경기중'
+                else {
+                    console.log('종료시간 없음, 시작시간 이후 → 경기중');
                     return { text: '경기중', class: 'status-ongoing' };
                 }
-            }
-            // 종료시간이 없는 경우: 시작시간 이후면 '경기중'
-                else {
-                console.log('종료시간 없음, 시작시간 이후 → 경기중');
-                return { text: '경기중', class: 'status-ongoing' };
-            }
             } catch (error) {
                 console.error('getGameStatus 오류:', error);
-            return { text: '경기전', class: 'status-before' };
+                return { text: '경기전', class: 'status-before' };
             }
         }
 
@@ -1225,7 +1219,18 @@
                             const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                             const date = koreanTime.toISOString().split('T')[0];
                             
-                            // team-games 콜렉션에 경기 선택 상태 업데이트
+                            // 현재 선택된 게임의 정보 가져오기
+                            const games = await fetchGames();
+                            const selectedGameData = games.find(g => g.gameNumber === i);
+                            
+                            // 현재 시간 기준으로 진행상태 계산
+                            const currentProgressStatus = getGameStatus(
+                                selectedGameData?.startTime || '-', 
+                                selectedGameData?.endTime || '-', 
+                                selectedGameData?.gameStatus || '정상게임'
+                            );
+                            
+                            // team-games 콜렉션에 경기 선택 상태 업데이트 (progressStatus 포함)
                             const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${i}`, {
                                 method: 'PUT',
                                 headers: {
@@ -1235,7 +1240,8 @@
                                     isSelected: true,
                                     bettingStart: '대기',
                                     bettingStop: '대기',
-                                    predictionResult: ''
+                                    predictionResult: '',
+                                    progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
                                 })
                             });
                             
@@ -1243,7 +1249,7 @@
                                 throw new Error('team-games 경기선택 업데이트 실패');
                             }
                             
-                            console.log('[TeamGame] 경기선택이 team-games에 업데이트됨:', i);
+                            console.log('[TeamGame] 경기선택이 team-games에 업데이트됨:', i, '진행상태:', currentProgressStatus.text);
                             
                             // 이전에 선택된 경기들의 선택 상태 해제
                             if (selectedGame && selectedGame !== i.toString()) {
@@ -1256,7 +1262,8 @@
                                         isSelected: false,
                                         bettingStart: '대기',
                                         bettingStop: '대기',
-                                        predictionResult: ''
+                                        predictionResult: '',
+                                        progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
                                     })
                                 });
                                 
@@ -1273,18 +1280,18 @@
                         document.querySelectorAll('.game-row').forEach(row => {
                             row.classList.remove('selected');
                         });
-                        document.querySelectorAll('.select-game-btn').forEach(btn => {
+            document.querySelectorAll('.select-game-btn').forEach(btn => {
                             btn.classList.remove('selected');
                             // 원래 텍스트로 복원
                             const gameNumber = btn.dataset.game;
                             const canSelect = statusText === '정상게임' && progressText === '경기중';
                             btn.textContent = canSelect ? '선택' : '선택중지';
-                        });
+                    });
                         gameRow.classList.add('selected');
                         selectBtn.classList.add('selected');
                         selectBtn.textContent = '선택됨';
                         selectedGame = gameRow.dataset.game;
-                        document.getElementById('startBetting').disabled = false;
+                    document.getElementById('startBetting').disabled = false;
                         showCustomModal(`선택한 경기번호: ${selectedGame}경기가 선택되었습니다!`);
                     } else {
                         let message = '';
@@ -1297,7 +1304,7 @@
                         }
                         showCustomModal(message);
                     }
-                });
+            });
             }
         }
 
@@ -1443,7 +1450,7 @@
                 // 한국 시간으로 변환 (UTC+9)
                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                 const today = koreanTime.toISOString().split('T')[0];
-                
+
                 const response = await fetch(`/api/team-games/${today}`);
                 
                 if (!response.ok) {
@@ -1625,7 +1632,18 @@
                         const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                         const date = koreanTime.toISOString().split('T')[0];
                         
-                        // team-games 콜렉션에 배팅시작 상태 업데이트
+                        // 현재 선택된 게임의 정보 가져오기
+                        const games = await fetchGames();
+                        const selectedGameData = games.find(g => g.gameNumber === parseInt(selectedGame));
+                        
+                        // 현재 시간 기준으로 진행상태 계산
+                        const currentProgressStatus = getGameStatus(
+                            selectedGameData?.startTime || '-', 
+                            selectedGameData?.endTime || '-', 
+                            selectedGameData?.gameStatus || '정상게임'
+                        );
+                        
+                        // team-games 콜렉션에 배팅시작 상태 업데이트 (progressStatus 포함)
                         const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                             method: 'PUT',
                             headers: {
@@ -1635,7 +1653,8 @@
                                 bettingStart: '시작',
                                 bettingStop: '중지',
                                 predictionResult: '',
-                                gameType: selectedGameType.value
+                                gameType: selectedGameType.value,
+                                progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
                             })
                         });
                         
@@ -1645,13 +1664,13 @@
                         
                         const updateResult = await teamGameUpdateResponse.json();
                         if (updateResult.success) {
-                            console.log('[TeamGame] 배팅시작 상태가 team-games에 업데이트됨');
+                            console.log('[TeamGame] 배팅시작 상태가 team-games에 업데이트됨 (progressStatus 포함)');
                             
                             // UI 상태 업데이트
-                            updateBettingTime();
-                            this.disabled = true;
-                            document.getElementById('stopBetting').disabled = false;
-                            console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value);
+                    updateBettingTime();
+                    this.disabled = true;
+                    document.getElementById('stopBetting').disabled = false;
+                    console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value, '진행상태:', currentProgressStatus.text);
                             showCustomModal('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
                         } else {
                             showCustomModal('배팅 시작 실패: ' + updateResult.message);
@@ -1676,7 +1695,18 @@
                         const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                         const date = koreanTime.toISOString().split('T')[0];
                         
-                        // team-games 콜렉션에 배팅중지 상태 업데이트
+                        // 현재 선택된 게임의 정보 가져오기
+                        const games = await fetchGames();
+                        const selectedGameData = games.find(g => g.gameNumber === parseInt(selectedGame));
+                        
+                        // 현재 시간 기준으로 진행상태 계산
+                        const currentProgressStatus = getGameStatus(
+                            selectedGameData?.startTime || '-', 
+                            selectedGameData?.endTime || '-', 
+                            selectedGameData?.gameStatus || '정상게임'
+                        );
+                        
+                        // team-games 콜렉션에 배팅중지 상태 업데이트 (progressStatus 포함)
                         const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                             method: 'PUT',
                             headers: {
@@ -1685,7 +1715,8 @@
                             body: JSON.stringify({
                                 bettingStart: '중지',
                                 bettingStop: '중지',
-                                predictionResult: ''
+                                predictionResult: '',
+                                progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
                             })
                         });
                         
@@ -1695,18 +1726,18 @@
                         
                         const updateResult = await teamGameUpdateResponse.json();
                         if (updateResult.success) {
-                            console.log('[TeamGame] 배팅중지 상태가 team-games에 업데이트됨');
+                            console.log('[TeamGame] 배팅중지 상태가 team-games에 업데이트됨 (progressStatus 포함)');
                             
                             // UI 상태 업데이트
-                            updateStopTime();
-                            this.disabled = true;
-                            // 라디오 버튼 활성화
-                            document.querySelectorAll('input[name="prediction"]').forEach(radio => {
-                                radio.disabled = false;
-                            });
+                    updateStopTime();
+                    this.disabled = true;
+                    // 라디오 버튼 활성화
+                    document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                        radio.disabled = false;
+                    });
                             // 다음타자 버튼 초기화 (비활성화)
                             document.getElementById('nextBatterBtn').disabled = true;
-                            console.log('배팅 중지:', selectedGame);
+                    console.log('배팅 중지:', selectedGame, '진행상태:', currentProgressStatus.text);
                             showCustomModal('배팅이 중지되었습니다. 예측결과를 선택해주세요.');
                         } else {
                             showCustomModal('배팅 중지 실패: ' + updateResult.message);
@@ -1748,7 +1779,18 @@
                                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                                 const date = koreanTime.toISOString().split('T')[0];
                                 
-                                // team-games 콜렉션에 예측결과 업데이트
+                                // 현재 선택된 게임의 정보 가져오기
+                                const games = await fetchGames();
+                                const selectedGameData = games.find(g => g.gameNumber === parseInt(selectedGame));
+                                
+                                // 현재 시간 기준으로 진행상태 계산
+                                const currentProgressStatus = getGameStatus(
+                                    selectedGameData?.startTime || '-', 
+                                    selectedGameData?.endTime || '-', 
+                                    selectedGameData?.gameStatus || '정상게임'
+                                );
+                                
+                                // team-games 콜렉션에 예측결과 업데이트 (progressStatus 포함)
                                 const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                                     method: 'PUT',
                                     headers: {
@@ -1757,7 +1799,8 @@
                                     body: JSON.stringify({
                                         bettingStart: '중지',
                                         bettingStop: '중지',
-                                        predictionResult: radio.value
+                                        predictionResult: radio.value,
+                                        progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
                                     })
                                 });
                                 
@@ -1767,10 +1810,10 @@
                                 
                                 const updateResult = await teamGameUpdateResponse.json();
                                 if (updateResult.success) {
-                                    console.log('[TeamGame] 예측결과가 team-games에 업데이트됨:', radio.value);
-                                    
-                                    // 다음타자 버튼 활성화
-                                    document.getElementById('nextBatterBtn').disabled = false;
+                                    console.log('[TeamGame] 예측결과가 team-games에 업데이트됨:', radio.value, '진행상태:', currentProgressStatus.text);
+                                
+                                // 다음타자 버튼 활성화
+                                document.getElementById('nextBatterBtn').disabled = false;
                                 } else {
                                     console.error('예측결과 업데이트 실패:', updateResult.message);
                                 }
@@ -1844,7 +1887,18 @@
                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                 const date = koreanTime.toISOString().split('T')[0];
                 
-                // team-games 콜렉션에 다음타자 상태로 초기화
+                // 현재 선택된 게임의 정보 가져오기
+                const games = await fetchGames();
+                const selectedGameData = games.find(g => g.gameNumber === parseInt(selectedGame));
+                
+                // 현재 시간 기준으로 진행상태 계산
+                const currentProgressStatus = getGameStatus(
+                    selectedGameData?.startTime || '-', 
+                    selectedGameData?.endTime || '-', 
+                    selectedGameData?.gameStatus || '정상게임'
+                );
+                
+                // team-games 콜렉션에 다음타자 상태로 초기화 (progressStatus 포함)
                 const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                     method: 'PUT',
                     headers: {
@@ -1853,7 +1907,8 @@
                     body: JSON.stringify({
                         bettingStart: '대기',
                         bettingStop: '대기',
-                        predictionResult: ''
+                        predictionResult: '',
+                        progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
                     })
                 });
                 
@@ -1861,7 +1916,7 @@
                     throw new Error('team-games 다음타자 초기화 실패');
                 }
                 
-                console.log('[TeamGame] 다음타자 상태로 team-games 초기화됨');
+                console.log('[TeamGame] 다음타자 상태로 team-games 초기화됨 (progressStatus 포함):', currentProgressStatus.text);
                 
             } catch (error) {
                 console.error('다음타자 초기화 오류:', error);
