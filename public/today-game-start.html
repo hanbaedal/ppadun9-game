@@ -617,6 +617,23 @@
                 // 2. 추가 로깅 (선택사항)
                 console.log('모든 게임 데이터가 성공적으로 저장되었습니다.');
 
+                // 3. team-games 자동 생성(복사) 추가
+                try {
+                    const teamGamesDate = today.getFullYear().toString() + '-' +
+                        (today.getMonth() + 1).toString().padStart(2, '0') + '-' +
+                        today.getDate().toString().padStart(2, '0');
+                    const teamGamesResponse = await fetch(`/api/team-games/import-from-daily/${teamGamesDate}`, {
+                        method: 'POST'
+                    });
+                    if (teamGamesResponse.ok) {
+                        console.log('team-games 자동 생성(복사) 성공');
+                    } else {
+                        console.warn('team-games 자동 생성(복사) 실패:', teamGamesResponse.status);
+                    }
+                } catch (error) {
+                    console.error('team-games 자동 생성(복사) 오류:', error);
+                }
+
                 alert('게임 정보가 저장되었습니다.');
                 // 저장 후 데이터 다시 불러오기
                 await fetchGames();

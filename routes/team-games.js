@@ -123,22 +123,80 @@ router.post('/import-from-daily/:date', async (req, res) => {
         console.log('[TeamGames] 기존 team-games 데이터 삭제 완료:', deleteResult.deletedCount, '개');
         
         // 새로운 형식으로 데이터 변환 및 저장
-        const teamGames = dailyGames.games.map(game => ({
-            date: date,
-            gameNumber: game.number,
-            matchup: `${game.homeTeam || '-'} vs ${game.awayTeam || '-'}`,
-            startTime: game.startTime || '-',
-            endTime: game.endTime || '-',
-            gameStatus: game.noGame || '정상게임',
-            progressStatus: '경기전', // 초기값, 시간에 따라 업데이트됨
-            gameType: '타자', // 고정값
-            bettingStart: '대기', // 초기값
-            bettingStop: '대기', // 초기값
-            predictionResult: '', // 빈값으로 시작
-            isSelected: false, // 초기값
-            createdAt: getKoreanTime(),
-            updatedAt: getKoreanTime()
-        }));
+        const teamGames = dailyGames.games.map(game => {
+            // progressStatus 계산 함수
+            function calculateProgressStatus(startTime, endTime) {
+                if (!startTime) return '경기전';
+                
+                const now = new Date();
+                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
+                
+                let startTimeInMinutes = null;
+                let endTimeInMinutes = null;
+                
+                if (startTime && startTime !== '' && startTime !== '-') {
+                    try {
+                        const timeParts = startTime.split(':');
+                        if (timeParts.length === 2) {
+                            const startHour = parseInt(timeParts[0]);
+                            const startMinute = parseInt(timeParts[1]);
+                            if (!isNaN(startHour) && !isNaN(startMinute)) {
+                                startTimeInMinutes = startHour * 60 + startMinute;
+                            }
+                        }
+                    } catch (error) {
+                        console.log('[TeamGames] 시작시간 변환 오류:', error);
+                        return '경기전';
+                    }
+                }
+                
+                if (endTime && endTime !== '' && endTime !== '-') {
+                    try {
+                        const timeParts = endTime.split(':');
+                        if (timeParts.length === 2) {
+                            const endHour = parseInt(timeParts[0]);
+                            const endMinute = parseInt(timeParts[1]);
+                            if (!isNaN(endHour) && !isNaN(endMinute)) {
+                                endTimeInMinutes = endHour * 60 + endMinute;
+                                if (endTimeInMinutes < startTimeInMinutes) {
+                                    endTimeInMinutes += 1440; // 24시간 추가
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.log('[TeamGames] 종료시간 변환 오류:', error);
+                        endTimeInMinutes = null;
+                    }
+                }
+                
+                if (startTimeInMinutes === null) return '경기전';
+                if (currentTime < startTimeInMinutes) return '경기전';
+                if (endTimeInMinutes !== null) {
+                    if (currentTime >= endTimeInMinutes) return '경기끝';
+                    if (currentTime >= startTimeInMinutes && currentTime < endTimeInMinutes) return '경기중';
+                }
+                if (currentTime >= startTimeInMinutes) return '경기중';
+                return '경기전';
+            }
+            
+            return {
+                date: date,
+                gameNumber: game.number,
+                matchup: `${game.homeTeam || '-'} vs ${game.awayTeam || '-'}`,
+                startTime: game.startTime || null,  // null 그대로 유지
+                endTime: game.endTime || null,      // null 그대로 유지
+                gameStatus: game.noGame || '정상게임',
+                progressStatus: calculateProgressStatus(game.startTime, game.endTime),
+                gameType: '타자', // 고정값
+                bettingStart: '대기', // 초기값
+                bettingStop: '대기', // 초기값
+                predictionResult: '', // 빈값으로 시작
+                isSelected: false, // 초기값
+                createdAt: getKoreanTime(),
+                updatedAt: getKoreanTime()
+            };
+        });
         
         // 데이터 저장
         if (teamGames.length > 0) {
