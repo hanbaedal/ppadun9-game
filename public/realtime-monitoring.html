@@ -381,7 +381,7 @@
                                     <tr>
                                         <th style="color: #000;">경기</th>
                                         <th style="color: #000;">매치업</th>
-                                        <th style="color: #000;">게임</th>
+                                        <th style="color: #000;">진행상태</th>
                                         <th style="color: #000;">참가자수</th>
                                         <th style="color: #000;">1루</th>
                                         <th style="color: #000;">2루</th>
@@ -389,15 +389,15 @@
                                         <th style="color: #000;">홈런</th>
                                         <th style="color: #000;">삼진</th>
                                         <th style="color: #000;">아웃</th>
-                                        <th style="color: #000;">배팅결과</th>
+                                        <th style="color: #000;">예측결과</th>
                                     </tr>
                                 </thead>
                                 <tbody id="gameStatsTableBody">
                                     <tr class="game-stats-row">
                                         <td style="color: #000;"><strong>1경기</strong></td>
                                         <td style="color: #000;">-</td>
-                                        <td style="color: #000;">타자</td>
                                         <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
@@ -409,8 +409,8 @@
                                     <tr class="game-stats-row">
                                         <td style="color: #000;"><strong>2경기</strong></td>
                                         <td style="color: #000;">-</td>
-                                        <td style="color: #000;">타자</td>
                                         <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
@@ -422,8 +422,8 @@
                                     <tr class="game-stats-row">
                                         <td style="color: #000;"><strong>3경기</strong></td>
                                         <td style="color: #000;">-</td>
-                                        <td style="color: #000;">타자</td>
                                         <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
@@ -435,8 +435,8 @@
                                     <tr class="game-stats-row">
                                         <td style="color: #000;"><strong>4경기</strong></td>
                                         <td style="color: #000;">-</td>
-                                        <td style="color: #000;">타자</td>
                                         <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
@@ -448,8 +448,8 @@
                                     <tr class="game-stats-row">
                                         <td style="color: #000;"><strong>5경기</strong></td>
                                         <td style="color: #000;">-</td>
-                                        <td style="color: #000;">타자</td>
                                         <td style="color: #000;"><strong>0</strong></td>
+                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
                                         <td style="color: #000;"><strong>0명 (₩0)</strong></td>
@@ -579,63 +579,13 @@
                     totalBettors += stats.count;
                 });
 
-                // 게임선택 텍스트 설정
-                let gameTypeText = '타자'; // 기본값
-                if (game.gameType) {
-                    switch(game.gameType) {
-                        case 'attack':
-                            gameTypeText = '타자';
-                            break;
-                        case 'defense':
-                            gameTypeText = '수비';
-                            break;
-                        case 'pitcher':
-                            gameTypeText = '투수';
-                            break;
-                        default:
-                            gameTypeText = game.gameType;
-                    }
-                }
-
-                // 배팅결과 텍스트 설정
-                let bettingResultText = '-';
-                if (game.bettingResult) {
-                    switch(game.bettingResult) {
-                        case '1base':
-                        case '1루':
-                            bettingResultText = '1루';
-                            break;
-                        case '2base':
-                        case '2루':
-                            bettingResultText = '2루';
-                            break;
-                        case '3base':
-                        case '3루':
-                            bettingResultText = '3루';
-                            break;
-                        case 'homerun':
-                        case '홈런':
-                            bettingResultText = '홈런';
-                            break;
-                        case 'strikeout':
-                        case '삼진':
-                            bettingResultText = '삼진';
-                            break;
-                        case 'out':
-                        case '아웃':
-                            bettingResultText = '아웃';
-                            break;
-                        default:
-                            bettingResultText = game.bettingResult;
-                    }
-                }
-
                 // 행 업데이트
                 row.cells[0].innerHTML = `<strong class="game-number">${gameNumber}경기</strong>`;
                 row.cells[1].textContent = game.homeTeam === '-' ? '-' : `${game.homeTeam} vs ${game.awayTeam}`;
                 row.cells[1].className = 'matchup';
-                row.cells[2].textContent = gameTypeText;
-                row.cells[2].className = 'game-type';
+                // 진행상태 표시
+                const progressText = game.progressStatus || '-';
+                row.cells[2].innerHTML = `<strong class="game-progress">${progressText}</strong>`;
                 row.cells[3].innerHTML = `<strong class="total-bettors">${totalBettors}</strong>`;
                 row.cells[4].innerHTML = `<strong class="betting-choice">${getBettingStats('1루')}</strong>`;
                 row.cells[5].innerHTML = `<strong class="betting-choice">${getBettingStats('2루')}</strong>`;
@@ -643,7 +593,9 @@
                 row.cells[7].innerHTML = `<strong class="betting-choice">${getBettingStats('홈런')}</strong>`;
                 row.cells[8].innerHTML = `<strong class="betting-choice">${getBettingStats('삼진')}</strong>`;
                 row.cells[9].innerHTML = `<strong class="betting-choice">${getBettingStats('아웃')}</strong>`;
-                row.cells[10].innerHTML = `<strong class="betting-result">${bettingResultText}</strong>`;
+                // 예측결과 표시
+                const predictionText = game.predictionResult || '-';
+                row.cells[10].innerHTML = `<strong class="prediction-result">${predictionText}</strong>`;
 
                 // 행 스타일 업데이트
                 row.className = `game-stats-row ${game.status === 'active' ? 'active' : game.status === 'completed' ? 'completed' : ''}`;
