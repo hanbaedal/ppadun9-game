@@ -81,8 +81,8 @@ router.post('/import-from-daily/:date', async (req, res) => {
                 bettingStop: '대기',
                 predictionResult: '',
                 isSelected: false,
-                createdAt: new Date(),
-                updatedAt: new Date()
+                createdAt: getKoreanTime(),
+                updatedAt: getKoreanTime()
             }));
             
             // 기존 데이터 삭제 후 새로 저장
@@ -136,8 +136,8 @@ router.post('/import-from-daily/:date', async (req, res) => {
             bettingStop: '대기', // 초기값
             predictionResult: '', // 빈값으로 시작
             isSelected: false, // 초기값
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: getKoreanTime(),
+            updatedAt: getKoreanTime()
         }));
         
         // 데이터 저장
@@ -265,7 +265,7 @@ router.put('/:date/:gameNumber', async (req, res) => {
         const updateData = req.body;
         
         // updatedAt 필드 추가
-        updateData.updatedAt = new Date();
+        updateData.updatedAt = getKoreanTime();
         
         const result = await collection.findOneAndUpdate(
             { date, gameNumber: parseInt(gameNumber) },
@@ -400,7 +400,7 @@ router.put('/:date/:gameNumber/progress', async (req, res) => {
             { 
                 $set: { 
                     progressStatus,
-                    updatedAt: new Date()
+                    updatedAt: getKoreanTime()
                 }
             },
             { returnDocument: 'after' }
@@ -606,7 +606,7 @@ router.put('/:date/progress/update-all', async (req, res) => {
                         $set: { 
                             progressStatus: newProgressStatus,
                             gameStatus: newGameStatus,
-                            updatedAt: new Date()
+                            updatedAt: getKoreanTime()
                         }
                     }
                 );
