@@ -3,6 +3,7 @@ const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
 const { getKoreanTime } = require('../utils/korean-time');
+const { getGameStatsCollection } = require('../models/game-stats');
 
 // team-games 콜렉션에서 데이터 조회
 router.get('/:date', async (req, res) => {
@@ -407,10 +408,9 @@ router.put('/:date/:gameNumber/prediction', async (req, res) => {
     try {
         const db = getDb();
         const collection = db.collection('team-games');
-        
+        const gameStatsCollection = getGameStatsCollection();
         const { date, gameNumber } = req.params;
         const { predictionResult } = req.body;
-        
         const result = await collection.findOneAndUpdate(
             { date, gameNumber: parseInt(gameNumber) },
             { 
@@ -421,14 +421,18 @@ router.put('/:date/:gameNumber/prediction', async (req, res) => {
             },
             { returnDocument: 'after' }
         );
-        
         if (!result.value) {
             return res.status(404).json({
                 success: false,
                 message: '해당 경기를 찾을 수 없습니다.'
             });
         }
-        
+        // 예측결과가 확정되면 game-stats에도 upsert
+        await gameStatsCollection.updateOne(
+            { date, gameNumber: parseInt(gameNumber) },
+            { $set: { ...result.value, updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
+            { upsert: true }
+        );
         res.json({
             success: true,
             message: '예측 결과가 업데이트되었습니다.',
@@ -449,10 +453,9 @@ router.put('/:date/:gameNumber/progress', async (req, res) => {
     try {
         const db = getDb();
         const collection = db.collection('team-games');
-        
+        const gameStatsCollection = getGameStatsCollection();
         const { date, gameNumber } = req.params;
         const { progressStatus } = req.body;
-        
         const result = await collection.findOneAndUpdate(
             { date, gameNumber: parseInt(gameNumber) },
             { 
@@ -463,14 +466,20 @@ router.put('/:date/:gameNumber/progress', async (req, res) => {
             },
             { returnDocument: 'after' }
         );
-        
         if (!result.value) {
             return res.status(404).json({
                 success: false,
                 message: '해당 경기를 찾을 수 없습니다.'
             });
         }
-        
+        // 진행상태가 '경기끝'일 때만 game-stats에도 upsert
+        if (progressStatus === '경기끝') {
+            await gameStatsCollection.updateOne(
+                { date, gameNumber: parseInt(gameNumber) },
+                { $set: { ...result.value, updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
+                { upsert: true }
+            );
+        }
         res.json({
             success: true,
             message: '진행상태가 업데이트되었습니다.',

@@ -190,6 +190,7 @@ const friendInviteRoutes = require('./routes/friend-invite');
 const customerInquiriesRoutes = require('./routes/customer-inquiries');
 const videoWatchRoutes = require('./routes/video-watch');
 const bettingRoutes = require('./routes/betting');
+const gameStatsRoutes = require('./routes/game-stats');
 
 // 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
@@ -207,6 +208,7 @@ app.use('/api/friend-invite', friendInviteRoutes);
 app.use('/api/customer-inquiries', customerInquiriesRoutes);
 app.use('/api/video-watch', videoWatchRoutes);
 app.use('/api/betting', bettingRoutes);
+app.use('/api/game-stats', gameStatsRoutes);
 
 // members 라우트는 /api/members로 접근하도록 변경
 app.use('/api/members', membersRoutes);
