@@ -582,13 +582,20 @@ router.put('/:date/progress/update-all', async (req, res) => {
         const updatePromises = games.map(async (game) => {
             const newProgressStatus = calculateGameStatus(game.startTime, game.endTime, game.gameStatus);
             
+            // 종료시간이 지나서 progressStatus가 '경기끝'이면 gameStatus도 '경기끝'으로 자동 업데이트
+            let newGameStatus = game.gameStatus;
+            if (newProgressStatus === '경기끝') {
+                newGameStatus = '경기끝';
+            }
+            
             console.log(`[TeamGames] ${game.gameNumber}경기 진행상태 업데이트:`, {
                 gameNumber: game.gameNumber,
                 startTime: game.startTime,
                 endTime: game.endTime,
                 gameStatus: game.gameStatus,
                 oldProgress: game.progressStatus,
-                newProgress: newProgressStatus
+                newProgress: newProgressStatus,
+                newGameStatus: newGameStatus
             });
             
             // 항상 업데이트 (조건 제거로 더 안정적인 동작)
@@ -598,6 +605,7 @@ router.put('/:date/progress/update-all', async (req, res) => {
                     { 
                         $set: { 
                             progressStatus: newProgressStatus,
+                            gameStatus: newGameStatus,
                             updatedAt: new Date()
                         }
                     }
