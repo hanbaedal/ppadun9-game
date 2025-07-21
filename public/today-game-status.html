@@ -405,6 +405,32 @@
                             noGame: noGame, // 사용자가 선택한 실제 경기상황 사용
                             isActive: true
                         };
+                        // progressStatus 계산 추가
+                        function calcProgressStatus(startTime, endTime) {
+                            if (!startTime) return '경기전';
+                            const now = KoreanTime.getKoreanTime();
+                            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                            let startMinutes = null;
+                            let endMinutes = null;
+                            if (startTime && startTime !== '-') {
+                                const [h, m] = startTime.split(':');
+                                startMinutes = parseInt(h) * 60 + parseInt(m);
+                            }
+                            if (endTime && endTime !== '-') {
+                                const [h, m] = endTime.split(':');
+                                endMinutes = parseInt(h) * 60 + parseInt(m);
+                                if (endMinutes < startMinutes) endMinutes += 1440;
+                            }
+                            if (startMinutes === null) return '경기전';
+                            if (nowMinutes < startMinutes) return '경기전';
+                            if (endMinutes !== null) {
+                                if (nowMinutes >= endMinutes) return '경기끝';
+                                if (nowMinutes >= startMinutes && nowMinutes < endMinutes) return '경기중';
+                            }
+                            if (nowMinutes >= startMinutes) return '경기중';
+                            return '경기전';
+                        }
+                        dailyGameData.progressStatus = calcProgressStatus(startTime, endTime);
 
                         allGames.push(dailyGameData);
                         console.log(`경기 ${i} 데이터 수집 완료:`, dailyGameData);
