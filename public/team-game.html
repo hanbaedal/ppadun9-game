@@ -1004,6 +1004,32 @@
             }
         }
 
+        function updateBettingTime() {
+            let now;
+            if (typeof KoreanTime !== 'undefined' && KoreanTime.getKoreanTime) {
+                now = KoreanTime.getKoreanTime();
+            } else {
+                now = new Date();
+            }
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('bettingTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        function updateStopTime() {
+            let now;
+            if (typeof KoreanTime !== 'undefined' && KoreanTime.getKoreanTime) {
+                now = KoreanTime.getKoreanTime();
+            } else {
+                now = new Date();
+            }
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('stopTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
         function displayGames(games) {
             const gameSelectionTableBody = document.getElementById('gameSelectionTableBody');
             gameSelectionTableBody.innerHTML = '';
@@ -1075,14 +1101,7 @@
                             const games = await fetchGames();
                             const selectedGameData = games.find(g => g.gameNumber === i);
                             
-                            // 현재 시간 기준으로 진행상태 계산
-                            const currentProgressStatus = getGameStatus(
-                                selectedGameData?.startTime || '-', 
-                                selectedGameData?.endTime || '-', 
-                                selectedGameData?.gameStatus || '정상게임'
-                            );
-                            
-                            // team-games 콜렉션에 경기 선택 상태 업데이트 (progressStatus 포함)
+                            // team-games 콜렉션에 경기 선택 상태 업데이트
                             const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${i}`, {
                                 method: 'PUT',
                                 headers: {
@@ -1092,8 +1111,7 @@
                                     isSelected: true,
                                     bettingStart: '대기',
                                     bettingStop: '대기',
-                                    predictionResult: '',
-                                    progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
+                                    predictionResult: ''
                                 })
                             });
                             
@@ -1101,7 +1119,7 @@
                                 throw new Error('team-games 경기선택 업데이트 실패');
                             }
                             
-                            console.log('[TeamGame] 경기선택이 team-games에 업데이트됨:', i, '진행상태:', currentProgressStatus.text);
+                            console.log('[TeamGame] 경기선택이 team-games에 업데이트됨:', i);
                             
                             // 이전에 선택된 경기들의 선택 상태 해제
                             if (selectedGame && selectedGame !== i.toString()) {
@@ -1114,8 +1132,7 @@
                                         isSelected: false,
                                         bettingStart: '대기',
                                         bettingStop: '대기',
-                                        predictionResult: '',
-                                        progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
+                                        predictionResult: ''
                                     })
                                 });
                                 
@@ -1289,11 +1306,13 @@
                         const game = games.find(g => g.gameNumber === gameNumber);
                         
                         if (game) {
-                            const status = getGameStatus(game.startTime, game.endTime, game.gameStatus);
+                            // 진행상태는 DB에서 직접 가져온 값만 사용
+                            const progressText = game.progressStatus || '경기전';
+                            const progressClass = progressText === '경기전' ? 'status-before' : progressText === '경기중' ? 'status-ongoing' : progressText === '경기끝' ? 'status-ended' : 'status-cancelled';
                             
-                            // 진행상태(시간기준) 표시 업데이트
-                            progressDisplay.className = `game-progress ${status.class}`;
-                            progressDisplay.textContent = status.text;
+                            // 진행상태 표시 업데이트
+                            progressDisplay.className = `game-progress ${progressClass}`;
+                            progressDisplay.textContent = progressText;
                         }
                     });
                 }
@@ -1455,14 +1474,7 @@
                         const games = await fetchGames();
                         const selectedGameData = games.find(g => g.gameNumber === parseInt(selectedGame));
                         
-                        // 현재 시간 기준으로 진행상태 계산
-                        const currentProgressStatus = getGameStatus(
-                            selectedGameData?.startTime || '-', 
-                            selectedGameData?.endTime || '-', 
-                            selectedGameData?.gameStatus || '정상게임'
-                        );
-                        
-                        // team-games 콜렉션에 배팅시작 상태 업데이트 (progressStatus 포함)
+                        // team-games 콜렉션에 배팅시작 상태 업데이트
                         const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                             method: 'PUT',
                             headers: {
@@ -1472,8 +1484,7 @@
                                 bettingStart: '시작',
                                 bettingStop: '중지',
                                 predictionResult: '',
-                                gameType: selectedGameType.value,
-                                progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
+                                gameType: selectedGameType.value
                             })
                         });
                         
@@ -1483,13 +1494,13 @@
                         
                         const updateResult = await teamGameUpdateResponse.json();
                         if (updateResult.success) {
-                            console.log('[TeamGame] 배팅시작 상태가 team-games에 업데이트됨 (progressStatus 포함)');
+                            console.log('[TeamGame] 배팅시작 상태가 team-games에 업데이트됨');
                             
                             // UI 상태 업데이트
                     updateBettingTime();
                     this.disabled = true;
                     document.getElementById('stopBetting').disabled = false;
-                    console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value, '진행상태:', currentProgressStatus.text);
+                    console.log('배팅 시작:', selectedGame, '게임형태:', selectedGameType.value);
                             showCustomModal('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
                         } else {
                             showCustomModal('배팅 시작 실패: ' + updateResult.message);
@@ -1518,14 +1529,7 @@
                         const games = await fetchGames();
                         const selectedGameData = games.find(g => g.gameNumber === parseInt(selectedGame));
                         
-                        // 현재 시간 기준으로 진행상태 계산
-                        const currentProgressStatus = getGameStatus(
-                            selectedGameData?.startTime || '-', 
-                            selectedGameData?.endTime || '-', 
-                            selectedGameData?.gameStatus || '정상게임'
-                        );
-                        
-                        // team-games 콜렉션에 배팅중지 상태 업데이트 (progressStatus 포함)
+                        // team-games 콜렉션에 배팅중지 상태 업데이트
                         const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                             method: 'PUT',
                             headers: {
@@ -1534,8 +1538,7 @@
                             body: JSON.stringify({
                                 bettingStart: '중지',
                                 bettingStop: '중지',
-                                predictionResult: '',
-                                progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
+                                predictionResult: ''
                             })
                         });
                         
@@ -1545,7 +1548,7 @@
                         
                         const updateResult = await teamGameUpdateResponse.json();
                         if (updateResult.success) {
-                            console.log('[TeamGame] 배팅중지 상태가 team-games에 업데이트됨 (progressStatus 포함)');
+                            console.log('[TeamGame] 배팅중지 상태가 team-games에 업데이트됨');
                             
                             // UI 상태 업데이트
                     updateStopTime();
@@ -1556,7 +1559,7 @@
                     });
                             // 다음타자 버튼 초기화 (비활성화)
                             document.getElementById('nextBatterBtn').disabled = true;
-                    console.log('배팅 중지:', selectedGame, '진행상태:', currentProgressStatus.text);
+                    console.log('배팅 중지:', selectedGame);
                             showCustomModal('배팅이 중지되었습니다. 예측결과를 선택해주세요.');
                         } else {
                             showCustomModal('배팅 중지 실패: ' + updateResult.message);
@@ -1602,14 +1605,7 @@
                                 const games = await fetchGames();
                                 const selectedGameData = games.find(g => g.gameNumber === parseInt(selectedGame));
                                 
-                                // 현재 시간 기준으로 진행상태 계산
-                                const currentProgressStatus = getGameStatus(
-                                    selectedGameData?.startTime || '-', 
-                                    selectedGameData?.endTime || '-', 
-                                    selectedGameData?.gameStatus || '정상게임'
-                                );
-                                
-                                // team-games 콜렉션에 예측결과 업데이트 (progressStatus 포함)
+                                // team-games 콜렉션에 예측결과 업데이트
                                 const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                                     method: 'PUT',
                                     headers: {
@@ -1618,8 +1614,7 @@
                                     body: JSON.stringify({
                                         bettingStart: '중지',
                                         bettingStop: '중지',
-                                        predictionResult: radio.value,
-                                        progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
+                                        predictionResult: radio.value
                                     })
                                 });
                                 
@@ -1629,7 +1624,7 @@
                                 
                                 const updateResult = await teamGameUpdateResponse.json();
                                 if (updateResult.success) {
-                                    console.log('[TeamGame] 예측결과가 team-games에 업데이트됨:', radio.value, '진행상태:', currentProgressStatus.text);
+                                    console.log('[TeamGame] 예측결과가 team-games에 업데이트됨:', radio.value);
                                 
                                 // 다음타자 버튼 활성화
                                 document.getElementById('nextBatterBtn').disabled = false;
@@ -1710,14 +1705,7 @@
                 const games = await fetchGames();
                 const selectedGameData = games.find(g => g.gameNumber === parseInt(selectedGame));
                 
-                // 현재 시간 기준으로 진행상태 계산
-                const currentProgressStatus = getGameStatus(
-                    selectedGameData?.startTime || '-', 
-                    selectedGameData?.endTime || '-', 
-                    selectedGameData?.gameStatus || '정상게임'
-                );
-                
-                // team-games 콜렉션에 다음타자 상태로 초기화 (progressStatus 포함)
+                // team-games 콜렉션에 다음타자 상태로 초기화
                 const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
                     method: 'PUT',
                     headers: {
@@ -1726,8 +1714,7 @@
                     body: JSON.stringify({
                         bettingStart: '대기',
                         bettingStop: '대기',
-                        predictionResult: '',
-                        progressStatus: currentProgressStatus.text // 진행상태 업데이트 추가
+                        predictionResult: ''
                     })
                 });
                 
@@ -1735,7 +1722,7 @@
                     throw new Error('team-games 다음타자 초기화 실패');
                 }
                 
-                console.log('[TeamGame] 다음타자 상태로 team-games 초기화됨 (progressStatus 포함):', currentProgressStatus.text);
+                console.log('[TeamGame] 다음타자 상태로 team-games 초기화됨');
                 
             } catch (error) {
                 console.error('다음타자 초기화 오류:', error);
