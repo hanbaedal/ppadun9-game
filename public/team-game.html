@@ -1004,146 +1004,6 @@
             }
         }
 
-        function getGameStatus(startTime, endTime, noGame) {
-            try {
-                // 경기상황이 '정상게임'이 아니면 '경기취소' 반환
-                if (noGame && noGame !== '정상게임') {
-                    console.log('경기상황이 정상게임이 아님 → 경기취소, noGame:', noGame);
-                    return { text: '경기취소', class: 'status-cancelled' };
-                }
-
-                // 한국 시간으로 현재 시간 계산 (더 정확한 방법)
-                const now = new Date();
-                
-                // UTC 시간을 한국 시간으로 변환 (UTC+9)
-                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                const currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
-                
-                // 디버깅을 위한 현재 시간 정보
-                console.log('현재 UTC 시간:', now.toISOString());
-                console.log('한국 시간:', koreanTime.toLocaleString('ko-KR'));
-                console.log('한국 시간 (시:분):', koreanTime.getHours() + ':' + koreanTime.getMinutes());
-                console.log('한국 시간 (분):', currentTime);
-            
-                console.log('=== 진행상태(시간기준) 디버깅 ===');
-                console.log('현재 시간:', koreanTime.toLocaleString('ko-KR'));
-                console.log('한국 현재 시간(분):', currentTime);
-                console.log('시작시간:', startTime);
-                console.log('종료시간:', endTime);
-                console.log('경기상황:', noGame);
-
-                // 시작시간이 없는 경우
-                if (!startTime || startTime === '' || startTime === '-') {
-                    console.log('시작시간 없음 → 경기전');
-                    return { text: '경기전', class: 'status-before' };
-                }
-
-                // 시작시간을 분으로 변환
-                let startTimeInMinutes = null;
-                if (startTime && startTime !== '' && startTime !== '-') {
-                    try {
-                        const timeParts = startTime.split(':');
-                        if (timeParts.length === 2) {
-                            const startHour = parseInt(timeParts[0]);
-                            const startMinute = parseInt(timeParts[1]);
-                            if (!isNaN(startHour) && !isNaN(startMinute)) {
-                                startTimeInMinutes = startHour * 60 + startMinute;
-                            }
-                        }
-                    } catch (error) {
-                        console.error('시작시간 변환 오류:', error);
-                        return { text: '경기전', class: 'status-before' };
-                    }
-                }
-
-                // 종료시간을 분으로 변환
-                let endTimeInMinutes = null;
-                if (endTime && endTime !== '' && endTime !== '-') {
-                    try {
-                        const timeParts = endTime.split(':');
-                        if (timeParts.length === 2) {
-                            const endHour = parseInt(timeParts[0]);
-                            const endMinute = parseInt(timeParts[1]);
-                            if (!isNaN(endHour) && !isNaN(endMinute)) {
-                                endTimeInMinutes = endHour * 60 + endMinute;
-                            }
-                        }
-                    } catch (error) {
-                        console.error('종료시간 변환 오류:', error);
-                        endTimeInMinutes = null;
-                    }
-                }
-
-                console.log('시작시간(분):', startTimeInMinutes);
-                console.log('종료시간(분):', endTimeInMinutes);
-                console.log('현재시간(분):', currentTime);
-
-                // 시작시간이 유효하지 않은 경우
-                if (startTimeInMinutes === null) {
-                    console.log('시작시간이 유효하지 않음 → 경기전');
-                    return { text: '경기전', class: 'status-before' };
-                }
-
-                // 현재시간이 시작시간보다 이전이면 '경기전'
-                if (currentTime < startTimeInMinutes) {
-                    console.log('현재시간 < 시작시간 → 경기전');
-                    return { text: '경기전', class: 'status-before' };
-                }
-                
-                // 종료시간이 있는 경우
-                if (endTimeInMinutes !== null) {
-                    // 종료시간이 시작시간보다 작은 경우는 다음날로 간주
-                    if (endTimeInMinutes < startTimeInMinutes) {
-                        console.log('종료시간이 시작시간보다 작음 → 다음날로 간주');
-                        endTimeInMinutes += 1440; // 24시간(1440분) 추가
-                        console.log('수정된 종료시간(분):', endTimeInMinutes);
-                    }
-                    
-                    // 현재시간이 종료시간 이후면 '경기끝'
-                    if (currentTime >= endTimeInMinutes) {
-                        console.log('현재시간 >= 종료시간 → 경기끝');
-                        return { text: '경기끝', class: 'status-ended' };
-                    }
-                    // 시작시간 이후이고 종료시간 이전이면 '경기중'
-                    else {
-                        console.log('시작시간 <= 현재시간 < 종료시간 → 경기중');
-                        return { text: '경기중', class: 'status-ongoing' };
-                    }
-                }
-                // 종료시간이 없는 경우: 시작시간 이후면 '경기중'
-                else {
-                    console.log('종료시간 없음, 시작시간 이후 → 경기중');
-                    return { text: '경기중', class: 'status-ongoing' };
-                }
-            } catch (error) {
-                console.error('getGameStatus 오류:', error);
-                return { text: '경기전', class: 'status-before' };
-            }
-        }
-
-        function updateBettingTime() {
-            let now;
-            if (typeof KoreanTime !== 'undefined' && KoreanTime.getKoreanTime) {
-                now = KoreanTime.getKoreanTime();
-            } else {
-                now = new Date();
-            }
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('bettingTime').textContent = `${hours}:${minutes}:${seconds}`;
-        }
-
-        function startBettingTimer() {
-            if (bettingTimer) {
-                clearInterval(bettingTimer);
-            }
-            updateBettingTime();
-            bettingTimer = setInterval(updateBettingTime, 1000); // 1초마다 업데이트
-        }
-
-
-
         function displayGames(games) {
             const gameSelectionTableBody = document.getElementById('gameSelectionTableBody');
             gameSelectionTableBody.innerHTML = '';
@@ -1162,23 +1022,15 @@
                     predictionResult: ''
                 };
 
-                console.log(`${i}경기 매치업:`, game.matchup);
-                console.log(`${i}경기 시작시간:`, game.startTime);
-                console.log(`${i}경기 종료시간:`, game.endTime);
-                console.log(`${i}경기 상황:`, game.gameStatus);
-                console.log(`${i}경기 진행상태:`, game.progressStatus);
-
-                // 진행상태 계산 (시작/종료 시간 기반)
-                const gameProgress = getGameStatus(game.startTime, game.endTime, game.gameStatus);
-                console.log(`${i}경기 진행상태(시간기준):`, gameProgress);
-
                 // 실제 경기상황 데이터 사용
                 const gameStatus = game.gameStatus || '정상게임';
                 const statusClass = getStatusClass(gameStatus);
-                console.log(`${i}경기 상황:`, { text: gameStatus, class: statusClass });
+                // 진행상태는 DB에서 직접 가져온 progressStatus만 사용
+                const progressText = game.progressStatus || '경기전';
+                const progressClass = progressText === '경기전' ? 'status-before' : progressText === '경기중' ? 'status-ongoing' : progressText === '경기끝' ? 'status-ended' : 'status-cancelled';
 
                 // 선택 버튼 활성화 조건 확인
-                const canSelect = gameStatus === '정상게임' && gameProgress.text === '경기중';
+                const canSelect = gameStatus === '정상게임' && progressText === '경기중';
                 const buttonText = canSelect ? '선택' : '선택불가';
                 const buttonDisabled = !canSelect;
                 const buttonClass = canSelect ? 'select-game-btn' : 'select-game-btn disabled';
@@ -1191,7 +1043,7 @@
                     <td class="game-matchup">${game.matchup}</td>
                     <td class="game-time">${game.startTime} ~ ${game.endTime}</td>
                     <td class="game-status ${statusClass}">${gameStatus}</td>
-                    <td class="game-progress ${gameProgress.class}">${gameProgress.text}</td>
+                    <td class="game-progress ${progressClass}">${progressText}</td>
                     <td>
                         <button class="${buttonClass}" data-game="${i}" ${buttonDisabled ? 'disabled' : ''}>${buttonText}</button>
                     </td>
@@ -1399,39 +1251,6 @@
                 return [];
             }
         }
-
-        // daily-games에서 데이터 복사 (더 이상 필요하지 않음)
-        // async function copyFromDailyGames(date) {
-        //     try {
-        //         console.log('copyFromDailyGames 호출됨, 날짜:', date);
-        //         const response = await fetch(`/api/team-game/${date}/copy-from-daily`, {
-        //             method: 'POST',
-        //             headers: {
-        //                 'Content-Type': 'application/json',
-        //             }
-        //         });
-        //         
-        //         console.log('복사 API 응답 상태:', response.status);
-        //         if (response.ok) {
-        //             const result = await response.json();
-        //             console.log('복사 API 응답 결과:', result);
-        //             if (result.success) {
-        //                 console.log('daily-games에서 데이터 복사 완료');
-        //                 // 복사된 데이터 표시
-        //                 displayGames(result.data.games || []);
-        //             } else {
-        //                 console.error('데이터 복사 실패:', result.message);
-        //                 displayGames([]);
-        //             }
-        //         } else {
-        //             console.error('데이터 복사 API 호출 실패, 상태:', response.status);
-        //                 displayGames([]);
-        //         }
-        //     } catch (error) {
-        //         console.error('데이터 복사 오류:', error);
-        //                 displayGames([]);
-        //     }
-        // }
 
         function updateStopTime() {
             const now = new Date();
