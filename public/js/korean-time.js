@@ -8,8 +8,7 @@ const KST_OFFSET = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
  * @returns {Date} 한국 시간
  */
 function getKoreanTime() {
-    const utcTime = new Date();
-    return new Date(utcTime.getTime() + KST_OFFSET);
+    return new Date(); // 시스템 시간을 그대로 반환
 }
 
 /**
