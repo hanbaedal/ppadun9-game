@@ -981,7 +981,12 @@
 
         // 날짜 표시 업데이트
         function updateDate() {
-            const dateStr = KoreanTime.formatKoreanTime(currentDate, 'date');
+            const today = (typeof KoreanTime !== 'undefined' && KoreanTime.getKoreanTime)
+                ? KoreanTime.getKoreanTime()
+                : new Date();
+            const dateStr = (typeof KoreanTime !== 'undefined' && KoreanTime.formatKoreanTime)
+                ? KoreanTime.formatKoreanTime(today, 'date')
+                : today.toISOString().split('T')[0];
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
