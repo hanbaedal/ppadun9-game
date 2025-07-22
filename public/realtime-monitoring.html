@@ -98,6 +98,67 @@
             color: #856404;
         }
 
+        /* 사용자별 상세 분석 모달 반응형 */
+        .user-detail-modal .modal-dialog {
+            max-width: 95%;
+        }
+
+        .user-detail-modal .col-md-2 {
+            margin-bottom: 10px;
+        }
+
+        .user-detail-modal .card {
+            min-height: 120px;
+            font-size: 0.85rem;
+        }
+
+        .user-detail-modal .card-header {
+            padding: 8px;
+            font-size: 0.8rem;
+        }
+
+        .user-detail-modal .card-body {
+            padding: 10px;
+        }
+
+        .user-detail-modal .fw-bold {
+            font-size: 0.9rem;
+        }
+
+        .user-detail-modal small {
+            font-size: 0.7rem;
+        }
+
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            .user-detail-modal .col-md-2 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+            
+            .user-detail-modal .card {
+                min-height: 100px;
+                font-size: 0.75rem;
+            }
+            
+            .user-detail-modal .card-header {
+                padding: 6px;
+                font-size: 0.7rem;
+            }
+            
+            .user-detail-modal .card-body {
+                padding: 8px;
+            }
+        }
+
+        /* 태블릿 반응형 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .user-detail-modal .col-md-2 {
+                flex: 0 0 33.333333%;
+                max-width: 33.333333%;
+            }
+        }
+
         .point-distribution {
             font-weight: bold;
             color: #28a745;
@@ -246,12 +307,6 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-chart-line me-2"></i>사용자 게임 분석</h2>
             <div class="d-flex align-items-center">
-                <button class="btn btn-info btn-sm me-2" onclick="loadExternalBettingData()">
-                    <i class="fas fa-download"></i> 외부 데이터 가져오기
-                </button>
-                <button class="btn btn-warning btn-sm me-2" onclick="createTestData()">
-                    <i class="fas fa-database"></i> 테스트 데이터 생성
-                </button>
                 <span class="badge bg-success me-2 live-indicator">
                     <i class="fas fa-circle"></i> LIVE
                 </span>
@@ -325,8 +380,8 @@
         </div>
 
         <!-- 사용자별 상세 분석 모달 -->
-        <div class="modal fade" id="userDetailModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+        <div class="modal fade user-detail-modal" id="userDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">사용자별 상세 분석</h5>
@@ -528,53 +583,15 @@
             const bettingChoices = game.bettingChoices || {};
             const choices = ['1루', '2루', '3루', '홈런', '삼진', '아웃'];
             
-            // 첫 번째 줄: 1루, 2루, 3루
-            const firstRowChoices = ['1루', '2루', '3루'];
+            // 모든 선택을 한 줄에 표시 (6개 박스)
             html += '<div class="row mb-3">';
-            firstRowChoices.forEach(choice => {
+            choices.forEach(choice => {
                 const stats = bettingChoices[choice] || { count: 0, totalPoints: 0 };
                 const isCorrect = game.predictionResult === choice;
                 const statusClass = game.predictionResult ? (isCorrect ? 'correct' : 'incorrect') : 'pending';
                 
                 html += `
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-header text-center">
-                                <span class="betting-choice ${statusClass}">${choice}</span>
-                                ${game.predictionResult ? (isCorrect ? '<i class="fas fa-check text-success ms-2"></i>' : '<i class="fas fa-times text-danger ms-2"></i>') : ''}
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                <div class="mb-2">
-                                    <small class="text-muted">배팅자 수</small>
-                                    <div class="fw-bold">${stats.count}명</div>
-                                </div>
-                                <div class="mb-2">
-                                    <small class="text-muted">총 배팅포인트</small>
-                                    <div class="fw-bold text-primary">₩${stats.totalPoints.toLocaleString()}</div>
-                                </div>
-                                ${game.predictionResult && isCorrect ? `
-                                    <div class="mt-auto">
-                                        <small class="text-muted">개인 분배 포인트</small>
-                                        <div class="fw-bold text-success">₩${analysis.distributedPoints.toLocaleString()}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            
-            // 두 번째 줄: 홈런, 삼진, 아웃
-            const secondRowChoices = ['홈런', '삼진', '아웃'];
-            html += '<div class="row">';
-            secondRowChoices.forEach(choice => {
-                const stats = bettingChoices[choice] || { count: 0, totalPoints: 0 };
-                const isCorrect = game.predictionResult === choice;
-                const statusClass = game.predictionResult ? (isCorrect ? 'correct' : 'incorrect') : 'pending';
-                
-                html += `
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <div class="card h-100">
                             <div class="card-header text-center">
                                 <span class="betting-choice ${statusClass}">${choice}</span>
@@ -606,130 +623,6 @@
             content.innerHTML = html;
             modal.show();
         }
-
-        // 테스트 데이터 생성 함수
-        async function createTestData() {
-            try {
-                const now = new Date();
-                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                const today = koreanTime.toISOString().split('T')[0];
-
-                // 테스트용 게임 데이터 생성
-                const testGame = {
-                    gameNumber: 'TEST001',
-                    matchup: '테스트 경기',
-                    progressStatus: '경기중',
-                    predictionResult: null, // 예측결과 없음
-                    bettingChoices: {
-                        '1루': { count: 10, totalPoints: 10000 },
-                        '2루': { count: 8, totalPoints: 8000 },
-                        '3루': { count: 12, totalPoints: 12000 },
-                        '홈런': { count: 5, totalPoints: 5000 },
-                        '삼진': { count: 20, totalPoints: 20000 },
-                        '아웃': { count: 30, totalPoints: 30000 }
-                    },
-                    totalBettors: 0,
-                    totalPoints: 0
-                };
-
-                // 테스트용 배팅 통계 데이터 생성
-                const testBettingStats = {
-                    date: today,
-                    games: [
-                        {
-                            gameNumber: 'TEST001',
-                            bettingChoices: {
-                                '1루': { count: 10, totalPoints: 10000 },
-                                '2루': { count: 8, totalPoints: 8000 },
-                                '3루': { count: 12, totalPoints: 12000 },
-                                '홈런': { count: 5, totalPoints: 5000 },
-                                '삼진': { count: 20, totalPoints: 20000 },
-                                '아웃': { count: 30, totalPoints: 30000 }
-                            },
-                            totalBettors: 73,
-                            totalPoints: 73000
-                        }
-                    ]
-                };
-
-                // 테스트용 team-games 데이터 생성
-                const testTeamGames = {
-                    date: today,
-                    games: [
-                        {
-                            gameNumber: 'TEST001',
-                            matchup: '테스트 경기',
-                            progressStatus: '경기중',
-                            predictionResult: null,
-                            bettingChoices: {
-                                '1루': { count: 10, totalPoints: 10000 },
-                                '2루': { count: 8, totalPoints: 8000 },
-                                '3루': { count: 12, totalPoints: 12000 },
-                                '홈런': { count: 5, totalPoints: 5000 },
-                                '삼진': { count: 20, totalPoints: 20000 },
-                                '아웃': { count: 30, totalPoints: 30000 }
-                            },
-                            totalBettors: 73,
-                            totalPoints: 73000
-                        }
-                    ]
-                };
-
-                // 테스트용 배팅 통계 API 호출
-                const bettingStatsResponse = await fetch(`/api/monitoring/game-betting-stats?date=${today}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(testBettingStats)
-                });
-                const bettingStatsResult = await bettingStatsResponse.json();
-                console.log('[Monitoring] 테스트 배팅 통계 데이터 생성 결과:', bettingStatsResult);
-
-                // 테스트용 team-games API 호출
-                const teamGamesResponse = await fetch(`/api/team-games/${today}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(testTeamGames)
-                });
-                const teamGamesResult = await teamGamesResponse.json();
-                console.log('[Monitoring] 테스트 team-games 데이터 생성 결과:', teamGamesResult);
-
-                alert('테스트 데이터가 생성되었습니다!');
-                loadTeamGamesData(); // 데이터 다시 로드
-            } catch (error) {
-                console.error('테스트 데이터 생성 오류:', error);
-                alert('테스트 데이터 생성 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 외부 배팅 데이터 가져오기 함수
-        async function loadExternalBettingData() {
-            try {
-                const now = new Date();
-                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                const today = koreanTime.toISOString().split('T')[0];
-
-                const response = await fetch(`/api/monitoring/external-betting-data?date=${today}`);
-                const result = await response.json();
-
-                if (result.success && result.data) {
-                    console.log('[Monitoring] 외부 배팅 데이터 로드됨:', result.data.length, '개');
-                    // 로컬 스토리지에 저장
-                    localStorage.setItem('externalBettingData', JSON.stringify(result.data));
-                    alert('외부 배팅 데이터가 로컬 스토리지에 저장되었습니다.');
-                    loadTeamGamesData(); // 팀 게임 데이터도 다시 로드
-                } else {
-                    alert('외부 배팅 데이터를 가져오는데 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('외부 배팅 데이터 로드 오류:', error);
-                alert('외부 배팅 데이터 로드 중 오류가 발생했습니다.');
-            }
-        }
-
 
         // 페이지 로드 시 초기화
         window.onload = function() {
