@@ -340,12 +340,10 @@
             const dateDisplay = document.getElementById('koreanDateDisplay');
             if (dateDisplay && window.KoreanTime) {
                 const koreanTime = KoreanTime.getKoreanTime();
-                const dateString = koreanTime.toLocaleDateString('ko-KR', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    timeZone: 'Asia/Seoul'
-                });
+                const year = koreanTime.getFullYear();
+                const month = koreanTime.getMonth() + 1;
+                const day = koreanTime.getDate();
+                const dateString = `${year}년 ${month}월 ${day}일`;
                 dateDisplay.textContent = dateString;
             }
         }
