@@ -246,6 +246,12 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-chart-line me-2"></i>사용자 게임 분석</h2>
             <div class="d-flex align-items-center">
+                <button class="btn btn-info btn-sm me-2" onclick="loadExternalBettingData()">
+                    <i class="fas fa-download"></i> 외부 데이터 가져오기
+                </button>
+                <button class="btn btn-warning btn-sm me-2" onclick="createTestData()">
+                    <i class="fas fa-database"></i> 테스트 데이터 생성
+                </button>
                 <span class="badge bg-success me-2 live-indicator">
                     <i class="fas fa-circle"></i> LIVE
                 </span>
@@ -348,9 +354,13 @@
                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                 const today = koreanTime.toISOString().split('T')[0];
                 
+                console.log('[Monitoring] 데이터 로드 시작 - 날짜:', today);
+                
                 // team-games 데이터 로드
                 const teamResponse = await fetch(`/api/team-games/${today}`);
                 const teamResult = await teamResponse.json();
+                
+                console.log('[Monitoring] team-games API 응답:', teamResult);
                 
                 if (teamResult.success && teamResult.data) {
                     console.log('[Monitoring] team-games 데이터 로드됨:', teamResult.data.length, '개');
@@ -359,7 +369,7 @@
                     const bettingResponse = await fetch(`/api/monitoring/game-betting-stats?date=${today}`);
                     const bettingResult = await bettingResponse.json();
                     
-                    console.log('[Monitoring] 배팅 통계 데이터:', bettingResult);
+                    console.log('[Monitoring] 배팅 통계 API 응답:', bettingResult);
                     
                     // team-games 데이터에 배팅 통계 병합
                     const gamesWithBetting = teamResult.data.map(game => {
@@ -381,6 +391,8 @@
                     currentGamesData = gamesWithBetting;
                     updateGameAnalysis(gamesWithBetting);
                     updateSummaryStats(gamesWithBetting);
+                } else {
+                    console.log('[Monitoring] team-games 데이터가 없거나 오류:', teamResult);
                 }
                 document.getElementById('lastUpdate').textContent = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
             } catch (error) {
@@ -595,6 +607,128 @@
             modal.show();
         }
 
+        // 테스트 데이터 생성 함수
+        async function createTestData() {
+            try {
+                const now = new Date();
+                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const today = koreanTime.toISOString().split('T')[0];
+
+                // 테스트용 게임 데이터 생성
+                const testGame = {
+                    gameNumber: 'TEST001',
+                    matchup: '테스트 경기',
+                    progressStatus: '경기중',
+                    predictionResult: null, // 예측결과 없음
+                    bettingChoices: {
+                        '1루': { count: 10, totalPoints: 10000 },
+                        '2루': { count: 8, totalPoints: 8000 },
+                        '3루': { count: 12, totalPoints: 12000 },
+                        '홈런': { count: 5, totalPoints: 5000 },
+                        '삼진': { count: 20, totalPoints: 20000 },
+                        '아웃': { count: 30, totalPoints: 30000 }
+                    },
+                    totalBettors: 0,
+                    totalPoints: 0
+                };
+
+                // 테스트용 배팅 통계 데이터 생성
+                const testBettingStats = {
+                    date: today,
+                    games: [
+                        {
+                            gameNumber: 'TEST001',
+                            bettingChoices: {
+                                '1루': { count: 10, totalPoints: 10000 },
+                                '2루': { count: 8, totalPoints: 8000 },
+                                '3루': { count: 12, totalPoints: 12000 },
+                                '홈런': { count: 5, totalPoints: 5000 },
+                                '삼진': { count: 20, totalPoints: 20000 },
+                                '아웃': { count: 30, totalPoints: 30000 }
+                            },
+                            totalBettors: 73,
+                            totalPoints: 73000
+                        }
+                    ]
+                };
+
+                // 테스트용 team-games 데이터 생성
+                const testTeamGames = {
+                    date: today,
+                    games: [
+                        {
+                            gameNumber: 'TEST001',
+                            matchup: '테스트 경기',
+                            progressStatus: '경기중',
+                            predictionResult: null,
+                            bettingChoices: {
+                                '1루': { count: 10, totalPoints: 10000 },
+                                '2루': { count: 8, totalPoints: 8000 },
+                                '3루': { count: 12, totalPoints: 12000 },
+                                '홈런': { count: 5, totalPoints: 5000 },
+                                '삼진': { count: 20, totalPoints: 20000 },
+                                '아웃': { count: 30, totalPoints: 30000 }
+                            },
+                            totalBettors: 73,
+                            totalPoints: 73000
+                        }
+                    ]
+                };
+
+                // 테스트용 배팅 통계 API 호출
+                const bettingStatsResponse = await fetch(`/api/monitoring/game-betting-stats?date=${today}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testBettingStats)
+                });
+                const bettingStatsResult = await bettingStatsResponse.json();
+                console.log('[Monitoring] 테스트 배팅 통계 데이터 생성 결과:', bettingStatsResult);
+
+                // 테스트용 team-games API 호출
+                const teamGamesResponse = await fetch(`/api/team-games/${today}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testTeamGames)
+                });
+                const teamGamesResult = await teamGamesResponse.json();
+                console.log('[Monitoring] 테스트 team-games 데이터 생성 결과:', teamGamesResult);
+
+                alert('테스트 데이터가 생성되었습니다!');
+                loadTeamGamesData(); // 데이터 다시 로드
+            } catch (error) {
+                console.error('테스트 데이터 생성 오류:', error);
+                alert('테스트 데이터 생성 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 외부 배팅 데이터 가져오기 함수
+        async function loadExternalBettingData() {
+            try {
+                const now = new Date();
+                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const today = koreanTime.toISOString().split('T')[0];
+
+                const response = await fetch(`/api/monitoring/external-betting-data?date=${today}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    console.log('[Monitoring] 외부 배팅 데이터 로드됨:', result.data.length, '개');
+                    // 로컬 스토리지에 저장
+                    localStorage.setItem('externalBettingData', JSON.stringify(result.data));
+                    alert('외부 배팅 데이터가 로컬 스토리지에 저장되었습니다.');
+                    loadTeamGamesData(); // 팀 게임 데이터도 다시 로드
+                } else {
+                    alert('외부 배팅 데이터를 가져오는데 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('외부 배팅 데이터 로드 오류:', error);
+                alert('외부 배팅 데이터 로드 중 오류가 발생했습니다.');
+            }
+        }
 
 
         // 페이지 로드 시 초기화

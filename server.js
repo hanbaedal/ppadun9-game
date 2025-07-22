@@ -3015,4 +3015,78 @@ app.post('/api/system/initialize-collections', async (req, res) => {
     }
 });
 
+// 외부 게임 시스템에서 배팅 데이터 가져오기 API
+app.get('/api/external/betting-data', async (req, res) => {
+    try {
+        const { date } = req.query;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const memberCollection = db.collection('game-member');
+        const targetDate = date || new Date().toISOString().split('T')[0];
+        
+        // 외부 게임 시스템 API 호출 (실제 구현 시)
+        // const externalResponse = await fetch(`http://external-game-system/api/betting-data?date=${targetDate}`);
+        // const externalData = await externalResponse.json();
+        
+        // 임시로 테스트 데이터 반환
+        const externalBettingData = [
+            {
+                userId: 'user001',
+                name: '김철수',
+                bettingHistory: [
+                    { date: targetDate, gameNumber: 1, prediction: '1루', points: 10000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 2, prediction: '홈런', points: 15000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 3, prediction: '2루', points: 8000, gameType: '타자' }
+                ]
+            },
+            {
+                userId: 'user002',
+                name: '이영희',
+                bettingHistory: [
+                    { date: targetDate, gameNumber: 1, prediction: '2루', points: 12000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 2, prediction: '삼진', points: 5000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 3, prediction: '1루', points: 9000, gameType: '타자' }
+                ]
+            },
+            {
+                userId: 'user003',
+                name: '박민수',
+                bettingHistory: [
+                    { date: targetDate, gameNumber: 1, prediction: '1루', points: 8000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 2, prediction: '홈런', points: 20000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 3, prediction: '3루', points: 11000, gameType: '타자' }
+                ]
+            }
+        ];
+        
+        // 기존 데이터 삭제 후 새 데이터 삽입
+        await memberCollection.deleteMany({ 
+            userId: { $in: externalBettingData.map(user => user.userId) } 
+        });
+        
+        const result = await memberCollection.insertMany(externalBettingData);
+        
+        console.log(`외부 배팅 데이터 가져오기 완료: ${result.insertedCount}개 사용자`);
+        
+        res.json({
+            success: true,
+            message: '외부 배팅 데이터를 가져왔습니다.',
+            importedCount: result.insertedCount,
+            data: externalBettingData
+        });
+    } catch (error) {
+        console.error('외부 배팅 데이터 가져오기 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '외부 배팅 데이터 가져오기 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 startServer(); 
