@@ -568,27 +568,12 @@
 
         // 날짜 표시 업데이트
         function updateDate() {
-            try {
-                if (typeof KoreanTime === 'undefined') {
-                    console.error('KoreanTime 유틸리티가 로드되지 않음');
-                    const today = new Date();
-                    const dateStr = today.getFullYear() + '년 ' + 
-                                   (today.getMonth() + 1) + '월 ' + 
-                                   today.getDate() + '일';
-                    document.getElementById('dateDisplay').textContent = dateStr;
-                } else {
-                    const today = KoreanTime.getKoreanTime();
-                    const dateStr = KoreanTime.formatKoreanTime(today, 'date');
-                    document.getElementById('dateDisplay').textContent = dateStr;
-                }
-            } catch (error) {
-                console.error('날짜 표시 오류:', error);
-            const today = new Date();
-            const dateStr = today.getFullYear() + '년 ' +
-                           (today.getMonth() + 1) + '월 ' +
-                           today.getDate() + '일';
+            const today = KoreanTime.getKoreanTime();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+            const dateStr = `${year}년 ${month}월 ${day}일`;
             document.getElementById('dateDisplay').textContent = dateStr;
-            }
         }
 
         // 페이지 로드 시 실행

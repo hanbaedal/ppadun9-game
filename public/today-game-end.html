@@ -596,7 +596,10 @@
         // 날짜 표시 업데이트
         function updateDate() {
             const today = KoreanTime.getKoreanTime();
-            const dateStr = KoreanTime.formatKoreanTime(today, 'date');
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+            const dateStr = `${year}년 ${month}월 ${day}일`;
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
