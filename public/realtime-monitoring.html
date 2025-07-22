@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실시간 모니터링 - 회원관리 시스템</title>
+    <title>사용자 게임 분석 - 회원관리 시스템</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/js/korean-time.js"></script>
     <style>
-        .monitor-card {
+        .analysis-card {
             border: none;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -21,12 +21,12 @@
             justify-content: space-between;
         }
 
-        .monitor-card:hover {
+        .analysis-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
-        .monitor-card .card-body {
+        .analysis-card .card-body {
             padding: 15px 20px;
             display: flex;
             align-items: center;
@@ -35,44 +35,20 @@
             color: #1a365d;
         }
 
-        .monitor-card .card-title {
+        .analysis-card .card-title {
             margin: 0;
             font-size: 16px;
             font-weight: 600;
             color: #1a365d;
         }
 
-        .monitor-card .card-value {
+        .analysis-card .card-value {
             margin: 0;
             font-size: 24px;
             font-weight: 700;
             color: #1a365d;
         }
 
-        .monitor-card h4 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a365d;
-        }
-
-        .monitor-card p {
-            margin: 0;
-            font-size: 11px;
-            color: #1a365d;
-            opacity: 0.8;
-        }
-
-        .monitor-icon {
-            font-size: 16px;
-            margin-bottom: 5px;
-            color: #1a365d;
-        }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-bottom: 20px;
-        }
         .live-indicator {
             animation: pulse 2s infinite;
         }
@@ -81,16 +57,22 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
-        .game-stats-card {
-            border-left: 4px solid #007bff;
-            margin-bottom: 15px;
+
+        .winner-row {
+            background-color: #d4edda !important;
+            border-left: 4px solid #28a745;
         }
-        .game-stats-card.active {
-            border-left-color: #28a745;
+
+        .loser-row {
+            background-color: #f8d7da !important;
+            border-left: 4px solid #dc3545;
         }
-        .game-stats-card.completed {
-            border-left-color: #6c757d;
+
+        .pending-row {
+            background-color: #fff3cd !important;
+            border-left: 4px solid #ffc107;
         }
+
         .betting-choice {
             display: inline-block;
             margin: 2px;
@@ -99,78 +81,42 @@
             font-size: 0.8rem;
             background-color: #e9ecef;
         }
-        .betting-choice.odd {
+
+        .betting-choice.correct {
             background-color: #d4edda;
             color: #155724;
+            font-weight: bold;
         }
-        .betting-choice.even {
+
+        .betting-choice.incorrect {
             background-color: #f8d7da;
             color: #721c24;
         }
-        .betting-choice.number {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        .betting-choice.base1 {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .betting-choice.base2 {
+
+        .betting-choice.pending {
             background-color: #fff3cd;
             color: #856404;
         }
-        .betting-choice.base3 {
-            background-color: #f8d7da;
-            color: #721c24;
+
+        .point-distribution {
+            font-weight: bold;
+            color: #28a745;
         }
-        .betting-choice.homerun {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        .betting-choice.strikeout {
-            background-color: #e2e3e5;
-            color: #383d41;
-        }
-        .betting-choice.out {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        body {
-            padding-top: 80px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stats-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .stats-value {
-            font-size: 1.5rem;
+
+        .total-pool {
             font-weight: bold;
             color: #007bff;
         }
-        .stats-label {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-top: 5px;
+
+        .win-rate {
+            font-weight: bold;
+            color: #ffc107;
         }
-        .game-stats-row.active {
-            background-color: #d4edda !important;
+
+        body {
+            padding-top: 80px;
         }
-        .game-stats-row.completed {
-            background-color: #f8f9fa !important;
-        }
-        .betting-choices-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
+
         .card {
             border: none;
             border-radius: 12px;
@@ -228,71 +174,42 @@
             background-color: #F7FAFC;
         }
 
-        /* 경기별 배경색 - 파스텔 톤 */
-        .table tbody tr:nth-child(1) { background-color: #FFF5F5; }  /* 1경기: 연한 파스텔 빨간색 */
-        .table tbody tr:nth-child(2) { background-color: #F0FFF4; }  /* 2경기: 연한 파스텔 초록색 */
-        .table tbody tr:nth-child(3) { background-color: #F0F8FF; }  /* 3경기: 연한 파스텔 파란색 */
-        .table tbody tr:nth-child(4) { background-color: #FAF5FF; }  /* 4경기: 연한 파스텔 보라색 */
-        .table tbody tr:nth-child(5) { background-color: #FFFAF0; }  /* 5경기: 연한 파스텔 주황색 */
-
-        .table tbody tr:nth-child(1):hover { background-color: #FED7D7; }
-        .table tbody tr:nth-child(2):hover { background-color: #C6F6D5; }
-        .table tbody tr:nth-child(3):hover { background-color: #BEE3F8; }
-        .table tbody tr:nth-child(4):hover { background-color: #E9D8FD; }
-        .table tbody tr:nth-child(5):hover { background-color: #FEEBC8; }
-
-        /* 경기 번호 스타일 */
-        .game-number {
-            font-weight: 700;
-            color: #2D3748;
-            font-size: 14px;
+        .stats-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        /* 매치업 스타일 */
-        .matchup {
-            color: #4A5568;
-            font-weight: 500;
-            font-size: 13px;
-        }
-
-        /* 게임선택 스타일 */
-        .game-type {
-            color: #805AD5;
+        .stats-summary h4 {
+            margin-bottom: 15px;
             font-weight: 600;
-            font-size: 13px;
         }
 
-        /* 배팅선택자 스타일 */
-        .total-bettors {
-            color: #3182CE;
-            font-weight: 700;
-            font-size: 14px;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
         }
 
-        /* 배팅 선택별 스타일 */
-        .betting-choice {
-            color: #2D3748;
-            font-weight: 500;
-            font-size: 12px;
+        .stats-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
         }
 
-        /* 배팅결과 스타일 */
-        .betting-result {
-            color: #E53E3E;
-            font-weight: 700;
-            font-size: 13px;
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
         }
 
-        /* 활성 경기 스타일 */
-        .game-stats-row.active {
-            background-color: #EBF8FF !important;
-            border-left: 4px solid #3182CE;
-        }
-
-        /* 완료된 경기 스타일 */
-        .game-stats-row.completed {
-            background-color: #F7FAFC !important;
-            border-left: 4px solid #48BB78;
+        .stats-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -322,7 +239,7 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>실시간 모니터링</h2>
+            <h2><i class="fas fa-chart-line me-2"></i>사용자 게임 분석</h2>
             <div class="d-flex align-items-center">
                 <span class="badge bg-success me-2 live-indicator">
                     <i class="fas fa-circle"></i> LIVE
@@ -331,48 +248,43 @@
             </div>
         </div>
         
-        <!-- 실시간 요약 카드 -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card monitor-card bg-primary">
-                    <div class="card-body">
-                        <div class="card-title">총 접속자</div>
-                        <div class="card-value" id="totalActiveUsers">0</div>
-                    </div>
+        <!-- 분석 요약 카드 -->
+        <div class="stats-summary">
+            <h4><i class="fas fa-trophy me-2"></i>오늘의 게임 분석 요약</h4>
+            <div class="stats-grid">
+                <div class="stats-item">
+                    <div class="stats-value" id="totalGames">0</div>
+                    <div class="stats-label">총 경기수</div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card monitor-card bg-success">
-                    <div class="card-body">
-                        <div class="card-title">총 참여자</div>
-                        <div class="card-value" id="totalParticipants">0</div>
-                    </div>
+                <div class="stats-item">
+                    <div class="stats-value" id="totalBettors">0</div>
+                    <div class="stats-label">총 배팅자</div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card monitor-card bg-warning">
-                    <div class="card-body">
-                        <div class="card-title">총 배팅자</div>
-                        <div class="card-value" id="totalBettors">0</div>
-                    </div>
+                <div class="stats-item">
+                    <div class="stats-value" id="totalPoints">₩0</div>
+                    <div class="stats-label">총 배팅포인트</div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card monitor-card bg-info">
-                    <div class="card-body">
-                        <div class="card-title">총 배팅포인트</div>
-                        <div class="card-value" id="totalPoints">₩0</div>
-                    </div>
+                <div class="stats-item">
+                    <div class="stats-value" id="totalWinners">0</div>
+                    <div class="stats-label">총 승리자</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-value" id="totalDistributed">₩0</div>
+                    <div class="stats-label">분배된 포인트</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-value" id="avgWinRate">0%</div>
+                    <div class="stats-label">평균 승률</div>
                 </div>
             </div>
         </div>
 
-        <!-- 경기별 상세 통계 -->
+        <!-- 경기별 사용자 분석 -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5>경기별 상세 통계</h5>
+                        <h5><i class="fas fa-users me-2"></i>경기별 사용자 배팅 분석</h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -382,84 +294,36 @@
                                         <th style="color: #000;">경기</th>
                                         <th style="color: #000;">매치업</th>
                                         <th style="color: #000;">진행상태</th>
-                                        <th style="color: #000;">참가자수</th>
-                                        <th style="color: #000;">1루</th>
-                                        <th style="color: #000;">2루</th>
-                                        <th style="color: #000;">3루</th>
-                                        <th style="color: #000;">홈런</th>
-                                        <th style="color: #000;">삼진</th>
-                                        <th style="color: #000;">아웃</th>
                                         <th style="color: #000;">예측결과</th>
+                                        <th style="color: #000;">총 배팅자</th>
+                                        <th style="color: #000;">총 배팅포인트</th>
+                                        <th style="color: #000;">승리자 수</th>
+                                        <th style="color: #000;">분배 포인트</th>
+                                        <th style="color: #000;">승률</th>
+                                        <th style="color: #000;">상세보기</th>
                                     </tr>
                                 </thead>
-                                <tbody id="gameStatsTableBody">
-                                    <tr class="game-stats-row">
-                                        <td style="color: #000;"><strong>1경기</strong></td>
-                                        <td style="color: #000;">-</td>
-                                        <td style="color: #000;"><strong>0</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>-</strong></td>
-                                    </tr>
-                                    <tr class="game-stats-row">
-                                        <td style="color: #000;"><strong>2경기</strong></td>
-                                        <td style="color: #000;">-</td>
-                                        <td style="color: #000;"><strong>0</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>-</strong></td>
-                                    </tr>
-                                    <tr class="game-stats-row">
-                                        <td style="color: #000;"><strong>3경기</strong></td>
-                                        <td style="color: #000;">-</td>
-                                        <td style="color: #000;"><strong>0</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>-</strong></td>
-                                    </tr>
-                                    <tr class="game-stats-row">
-                                        <td style="color: #000;"><strong>4경기</strong></td>
-                                        <td style="color: #000;">-</td>
-                                        <td style="color: #000;"><strong>0</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>-</strong></td>
-                                    </tr>
-                                    <tr class="game-stats-row">
-                                        <td style="color: #000;"><strong>5경기</strong></td>
-                                        <td style="color: #000;">-</td>
-                                        <td style="color: #000;"><strong>0</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>0명 (₩0)</strong></td>
-                                        <td style="color: #000;"><strong>-</strong></td>
-                                    </tr>
+                                <tbody id="gameAnalysisTableBody">
+                                    <!-- 동적으로 생성됨 -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사용자별 상세 분석 모달 -->
+        <div class="modal fade" id="userDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">사용자별 상세 분석</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="userDetailContent">
+                            <!-- 동적으로 생성됨 -->
                         </div>
                     </div>
                 </div>
@@ -470,74 +334,193 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let updateInterval;
+        let currentGamesData = [];
 
-        // 종합 모니터링 데이터 로드 → team-games에서 직접 불러오기
+        // team-games에서 데이터 로드
         async function loadTeamGamesData() {
             try {
-                // 한국 시간 기준 오늘 날짜
                 const now = new Date();
                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                 const today = koreanTime.toISOString().split('T')[0];
                 const response = await fetch(`/api/team-games/${today}`);
                 const result = await response.json();
                 if (result.success && result.data) {
-                    updateGameStats(result.data);
+                    currentGamesData = result.data;
+                    updateGameAnalysis(result.data);
+                    updateSummaryStats(result.data);
                 }
+                document.getElementById('lastUpdate').textContent = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
             } catch (error) {
                 console.error('team-games 데이터 불러오기 오류:', error);
             }
         }
 
-        // 대시보드 업데이트 함수는 사용하지 않음 (요약 카드 생략)
+        // 게임 분석 업데이트
+        function updateGameAnalysis(games) {
+            const tableBody = document.getElementById('gameAnalysisTableBody');
+            tableBody.innerHTML = '';
 
-        // 경기별 통계 업데이트 (team-games 데이터 구조 기준)
-        function updateGameStats(games) {
-            const tableBody = document.getElementById('gameStatsTableBody');
-            for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
-                const game = games.find(g => g.gameNumber === gameNumber) || {
-                    gameNumber: gameNumber,
-                    matchup: '- vs -',
-                    progressStatus: '-',
-                    predictionResult: '-',
-                    bettingChoices: {},
-                };
-                const row = tableBody.children[gameNumber - 1];
-                // 매치업
-                row.cells[1].textContent = game.matchup || '-';
-                // 진행상태
-                row.cells[2].innerHTML = `<strong class="game-progress">${game.progressStatus || '-'}</strong>`;
-                // 참가자수 및 배팅 선택별 통계
-                const getBettingStats = (choice) => {
-                    const stats = game.bettingChoices && game.bettingChoices[choice] ? game.bettingChoices[choice] : { count: 0, totalPoints: 0 };
-                    return `${stats.count}명 (₩${stats.totalPoints.toLocaleString()})`;
-                };
-                const choices = ['1루', '2루', '3루', '홈런', '삼진', '아웃'];
-                let totalBettors = 0;
-                choices.forEach(choice => {
-                    const stats = game.bettingChoices && game.bettingChoices[choice] ? game.bettingChoices[choice] : { count: 0, totalPoints: 0 };
-                    totalBettors += stats.count;
-                });
-                row.cells[3].innerHTML = `<strong class="total-bettors">${totalBettors}</strong>`;
-                row.cells[4].innerHTML = `<strong class="betting-choice">${getBettingStats('1루')}</strong>`;
-                row.cells[5].innerHTML = `<strong class="betting-choice">${getBettingStats('2루')}</strong>`;
-                row.cells[6].innerHTML = `<strong class="betting-choice">${getBettingStats('3루')}</strong>`;
-                row.cells[7].innerHTML = `<strong class="betting-choice">${getBettingStats('홈런')}</strong>`;
-                row.cells[8].innerHTML = `<strong class="betting-choice">${getBettingStats('삼진')}</strong>`;
-                row.cells[9].innerHTML = `<strong class="betting-choice">${getBettingStats('아웃')}</strong>`;
-                // 예측결과
-                row.cells[10].innerHTML = `<strong class="prediction-result">${game.predictionResult || '-'}</strong>`;
-            }
+            games.forEach(game => {
+                const row = document.createElement('tr');
+                
+                // 승리자 수와 분배 포인트 계산
+                const analysis = calculateGameAnalysis(game);
+                
+                row.innerHTML = `
+                    <td><strong>${game.gameNumber}경기</strong></td>
+                    <td>${game.matchup || '-'}</td>
+                    <td><strong class="game-progress">${game.progressStatus || '-'}</strong></td>
+                    <td><strong class="prediction-result">${game.predictionResult || '-'}</strong></td>
+                    <td><strong class="total-bettors">${analysis.totalBettors}</strong></td>
+                    <td><strong class="total-pool">₩${analysis.totalPoints.toLocaleString()}</strong></td>
+                    <td><strong class="point-distribution">${analysis.winners}</strong></td>
+                    <td><strong class="point-distribution">₩${analysis.distributedPoints.toLocaleString()}</strong></td>
+                    <td><strong class="win-rate">${analysis.winRate}%</strong></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showUserDetails(${game.gameNumber})">
+                            <i class="fas fa-eye"></i> 상세보기
+                        </button>
+                    </td>
+                `;
+
+                // 경기 상태에 따른 행 스타일 적용
+                if (game.progressStatus === '경기끝') {
+                    row.classList.add('completed');
+                } else if (game.progressStatus === '경기중') {
+                    row.classList.add('active');
+                }
+
+                tableBody.appendChild(row);
+            });
         }
 
-        // 페이지 로드 시 team-games 데이터 로드 및 실시간 갱신
+        // 게임별 분석 계산
+        function calculateGameAnalysis(game) {
+            const bettingChoices = game.bettingChoices || {};
+            let totalBettors = 0;
+            let totalPoints = 0;
+            let winners = 0;
+            let distributedPoints = 0;
+
+            // 각 선택별 통계 계산
+            Object.keys(bettingChoices).forEach(choice => {
+                const stats = bettingChoices[choice];
+                totalBettors += stats.count || 0;
+                totalPoints += stats.totalPoints || 0;
+
+                // 예측결과가 있고, 이 선택이 맞았다면 승리자로 계산
+                if (game.predictionResult && game.predictionResult === choice) {
+                    winners += stats.count || 0;
+                }
+            });
+
+            // 분배 포인트 계산 (승리자가 있을 때만)
+            if (winners > 0 && game.predictionResult) {
+                distributedPoints = Math.round(totalPoints / winners);
+            }
+
+            const winRate = totalBettors > 0 ? Math.round((winners / totalBettors) * 100) : 0;
+
+            return {
+                totalBettors,
+                totalPoints,
+                winners,
+                distributedPoints,
+                winRate
+            };
+        }
+
+        // 요약 통계 업데이트
+        function updateSummaryStats(games) {
+            let totalGames = games.length;
+            let totalBettors = 0;
+            let totalPoints = 0;
+            let totalWinners = 0;
+            let totalDistributed = 0;
+            let completedGames = 0;
+
+            games.forEach(game => {
+                const analysis = calculateGameAnalysis(game);
+                totalBettors += analysis.totalBettors;
+                totalPoints += analysis.totalPoints;
+                totalWinners += analysis.winners;
+                totalDistributed += analysis.distributedPoints;
+                
+                if (game.progressStatus === '경기끝') {
+                    completedGames++;
+                }
+            });
+
+            const avgWinRate = completedGames > 0 ? Math.round((totalWinners / totalBettors) * 100) : 0;
+
+            document.getElementById('totalGames').textContent = totalGames;
+            document.getElementById('totalBettors').textContent = totalBettors;
+            document.getElementById('totalPoints').textContent = `₩${totalPoints.toLocaleString()}`;
+            document.getElementById('totalWinners').textContent = totalWinners;
+            document.getElementById('totalDistributed').textContent = `₩${totalDistributed.toLocaleString()}`;
+            document.getElementById('avgWinRate').textContent = `${avgWinRate}%`;
+        }
+
+        // 사용자 상세 분석 표시
+        function showUserDetails(gameNumber) {
+            const game = currentGamesData.find(g => g.gameNumber === gameNumber);
+            if (!game) return;
+
+            const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+            const content = document.getElementById('userDetailContent');
+            
+            // 게임 분석 계산
+            const analysis = calculateGameAnalysis(game);
+            
+            let html = `
+                <h6>${gameNumber}경기 - ${game.matchup || '매치업 없음'}</h6>
+                <p><strong>진행상태:</strong> ${game.progressStatus || '-'} | <strong>예측결과:</strong> ${game.predictionResult || '-'}</p>
+                <p><strong>총 배팅포인트:</strong> ₩${analysis.totalPoints.toLocaleString()} | <strong>승리자 수:</strong> ${analysis.winners}명 | <strong>개인 분배 포인트:</strong> ₩${analysis.distributedPoints.toLocaleString()}</p>
+                <hr>
+                <div class="row">
+            `;
+
+            const bettingChoices = game.bettingChoices || {};
+            const choices = ['1루', '2루', '3루', '홈런', '삼진', '아웃'];
+            
+            choices.forEach(choice => {
+                const stats = bettingChoices[choice] || { count: 0, totalPoints: 0 };
+                const isCorrect = game.predictionResult === choice;
+                const statusClass = game.predictionResult ? (isCorrect ? 'correct' : 'incorrect') : 'pending';
+                
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="betting-choice ${statusClass}">${choice}</span>
+                                ${game.predictionResult ? (isCorrect ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>') : ''}
+                            </div>
+                            <div class="card-body">
+                                <p><strong>배팅자 수:</strong> ${stats.count}명</p>
+                                <p><strong>총 배팅포인트:</strong> ₩${stats.totalPoints.toLocaleString()}</p>
+                                ${game.predictionResult && isCorrect ? `<p class="text-success"><strong>개인 분배 포인트:</strong> ₩${analysis.distributedPoints.toLocaleString()}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            content.innerHTML = html;
+            modal.show();
+        }
+
+        // 페이지 로드 시 초기화
         window.onload = function() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (currentUser) {
                 document.getElementById('userName').textContent = currentUser.name || currentUser.username;
                 document.getElementById('logoutItem').style.display = 'block';
             }
+            
             loadTeamGamesData();
-            setInterval(loadTeamGamesData, 1000);
+            setInterval(loadTeamGamesData, 2000); // 2초마다 업데이트
+            
             document.getElementById('logoutBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 localStorage.removeItem('currentUser');
