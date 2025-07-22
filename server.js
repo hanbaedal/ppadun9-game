@@ -2210,6 +2210,92 @@ app.get('/api/monitoring/game-participants', async (req, res) => {
     }
 });
 
+// 테스트용 배팅 데이터 생성 API
+app.post('/api/test/create-betting-data', async (req, res) => {
+    try {
+        const { date } = req.body;
+        
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+        
+        const memberCollection = db.collection('game-member');
+        const targetDate = date || new Date().toISOString().split('T')[0];
+        
+        // 테스트용 배팅 데이터 생성
+        const testBettingData = [
+            {
+                userId: 'user001',
+                name: '김철수',
+                bettingHistory: [
+                    { date: targetDate, gameNumber: 1, prediction: '1루', points: 10000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 2, prediction: '홈런', points: 15000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 3, prediction: '2루', points: 8000, gameType: '타자' }
+                ]
+            },
+            {
+                userId: 'user002',
+                name: '이영희',
+                bettingHistory: [
+                    { date: targetDate, gameNumber: 1, prediction: '2루', points: 12000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 2, prediction: '삼진', points: 5000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 3, prediction: '1루', points: 9000, gameType: '타자' }
+                ]
+            },
+            {
+                userId: 'user003',
+                name: '박민수',
+                bettingHistory: [
+                    { date: targetDate, gameNumber: 1, prediction: '1루', points: 8000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 2, prediction: '홈런', points: 20000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 3, prediction: '3루', points: 11000, gameType: '타자' }
+                ]
+            },
+            {
+                userId: 'user004',
+                name: '최지영',
+                bettingHistory: [
+                    { date: targetDate, gameNumber: 1, prediction: '아웃', points: 6000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 2, prediction: '1루', points: 10000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 3, prediction: '홈런', points: 18000, gameType: '타자' }
+                ]
+            },
+            {
+                userId: 'user005',
+                name: '정수민',
+                bettingHistory: [
+                    { date: targetDate, gameNumber: 1, prediction: '3루', points: 14000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 2, prediction: '2루', points: 12000, gameType: '타자' },
+                    { date: targetDate, gameNumber: 3, prediction: '아웃', points: 7000, gameType: '타자' }
+                ]
+            }
+        ];
+        
+        // 기존 테스트 데이터 삭제
+        await memberCollection.deleteMany({ userId: { $in: ['user001', 'user002', 'user003', 'user004', 'user005'] } });
+        
+        // 새 테스트 데이터 삽입
+        const result = await memberCollection.insertMany(testBettingData);
+        
+        console.log(`테스트 배팅 데이터 생성 완료: ${result.insertedCount}개`);
+        
+        res.json({
+            success: true,
+            message: '테스트 배팅 데이터가 생성되었습니다.',
+            insertedCount: result.insertedCount
+        });
+    } catch (error) {
+        console.error('테스트 배팅 데이터 생성 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '테스트 배팅 데이터 생성 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 // 실시간 모니터링 API - 경기별 배팅선택자 수 및 배팅포인트 합계 (team-games 기반)
 app.get('/api/monitoring/game-betting-stats', async (req, res) => {
     try {

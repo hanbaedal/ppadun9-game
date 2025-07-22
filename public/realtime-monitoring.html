@@ -260,7 +260,7 @@
                 <div class="stats-item">
                     <div class="stats-value" id="totalGames">0</div>
                     <div class="stats-label">총 경기수</div>
-                </div>
+                    </div>
                 <div class="stats-item">
                     <div class="stats-value" id="totalBettors">0</div>
                     <div class="stats-label">총 배팅자</div>
@@ -268,7 +268,7 @@
                 <div class="stats-item">
                     <div class="stats-value" id="totalPoints">₩0</div>
                     <div class="stats-label">총 배팅포인트</div>
-                </div>
+            </div>
                 <div class="stats-item">
                     <div class="stats-value" id="totalWinners">0</div>
                     <div class="stats-label">총 승리자</div>
@@ -368,21 +368,11 @@
                         
                         console.log(`[Monitoring] ${game.gameNumber}경기 배팅 데이터:`, bettingData);
                         
-                        // 테스트용 더미 데이터 (실제 배팅 데이터가 없을 때)
-                        const dummyBettingChoices = {
-                            '1루': { count: 5, totalPoints: 50000 },
-                            '2루': { count: 3, totalPoints: 30000 },
-                            '3루': { count: 2, totalPoints: 20000 },
-                            '홈런': { count: 4, totalPoints: 40000 },
-                            '삼진': { count: 1, totalPoints: 10000 },
-                            '아웃': { count: 6, totalPoints: 60000 }
-                        };
-                        
                         return {
                             ...game,
-                            bettingChoices: bettingData ? bettingData.bettingChoices : dummyBettingChoices,
-                            totalBettors: bettingData ? bettingData.totalBettors : 21,
-                            totalPoints: bettingData ? bettingData.totalPoints : 210000
+                            bettingChoices: bettingData ? bettingData.bettingChoices : {},
+                            totalBettors: bettingData ? bettingData.totalBettors : 0,
+                            totalPoints: bettingData ? bettingData.totalPoints : 0
                         };
                     });
                     
@@ -605,6 +595,8 @@
             modal.show();
         }
 
+
+
         // 페이지 로드 시 초기화
         window.onload = function() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -612,7 +604,7 @@
                 document.getElementById('userName').textContent = currentUser.name || currentUser.username;
                 document.getElementById('logoutItem').style.display = 'block';
             }
-            
+
             loadTeamGamesData();
             setInterval(loadTeamGamesData, 2000); // 2초마다 업데이트
             
