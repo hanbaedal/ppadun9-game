@@ -2,7 +2,7 @@ services:
   - type: web
     name: ppadun9-project-management
     env: node
-    buildCommand: npm install
+    buildCommand: npm install && npm audit fix --force
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -13,6 +13,15 @@ services:
         value: member-management
       - key: SESSION_SECRET
         generateValue: true
+      - key: PORT
+        value: 10000
     healthCheckPath: /
     autoDeploy: true
     plan: free
+    buildFilter:
+      paths:
+        - "**/*"
+      ignore:
+        - "node_modules/**"
+        - ".git/**"
+        - "*.log"

@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 const session = require('express-session');
@@ -8,8 +7,14 @@ const cron = require('node-cron');
 const { connectDB, getDb } = require('./config/db');
 const { getKoreanTime, toKoreanTime, formatKoreanTime, getKoreanDateString } = require('./utils/korean-time');
 
-// 환경 변수 설정
-dotenv.config();
+// dotenv 조건부 로딩
+try {
+    const dotenv = require('dotenv');
+    dotenv.config();
+    console.log('[Config] dotenv 로드됨');
+} catch (error) {
+    console.log('[Config] dotenv 없음 - 환경변수 직접 사용');
+}
 
 // 환경 변수 검증
 if (!process.env.MONGODB_URI) {

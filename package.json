@@ -21,10 +21,14 @@
     "helmet": "^7.1.0",
     "express-rate-limit": "^7.1.5",
     "axios": "^1.6.0",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.5.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
+  },
+  "overrides": {
+    "semver": "^7.5.4"
   },
   "keywords": [
     "야구",
