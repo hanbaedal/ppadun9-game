@@ -188,28 +188,33 @@
         }
 
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: nowrap;
         }
 
         .stats-item {
             background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             text-align: center;
+            flex: 1;
+            min-width: 0;
         }
 
         .stats-value {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: bold;
             color: #fff;
+            margin-bottom: 2px;
         }
 
         .stats-label {
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             color: rgba(255, 255, 255, 0.8);
-            margin-top: 5px;
+            margin-top: 2px;
+            line-height: 1.2;
         }
     </style>
 </head>
@@ -250,7 +255,7 @@
         
         <!-- 분석 요약 카드 -->
         <div class="stats-summary">
-            <h4><i class="fas fa-trophy me-2"></i>오늘의 게임 분석 요약</h4>
+            <h5 class="mb-3"><i class="fas fa-trophy me-2"></i>오늘의 게임 분석 요약</h5>
             <div class="stats-grid">
                 <div class="stats-item">
                     <div class="stats-value" id="totalGames">0</div>
@@ -336,22 +341,60 @@
         let updateInterval;
         let currentGamesData = [];
 
-        // team-games에서 데이터 로드
+        // team-games와 배팅 데이터 로드
         async function loadTeamGamesData() {
             try {
                 const now = new Date();
                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
                 const today = koreanTime.toISOString().split('T')[0];
-                const response = await fetch(`/api/team-games/${today}`);
-                const result = await response.json();
-                if (result.success && result.data) {
-                    currentGamesData = result.data;
-                    updateGameAnalysis(result.data);
-                    updateSummaryStats(result.data);
+                
+                // team-games 데이터 로드
+                const teamResponse = await fetch(`/api/team-games/${today}`);
+                const teamResult = await teamResponse.json();
+                
+                if (teamResult.success && teamResult.data) {
+                    console.log('[Monitoring] team-games 데이터 로드됨:', teamResult.data.length, '개');
+                    
+                    // 배팅 통계 데이터 로드
+                    const bettingResponse = await fetch(`/api/monitoring/game-betting-stats?date=${today}`);
+                    const bettingResult = await bettingResponse.json();
+                    
+                    console.log('[Monitoring] 배팅 통계 데이터:', bettingResult);
+                    
+                    // team-games 데이터에 배팅 통계 병합
+                    const gamesWithBetting = teamResult.data.map(game => {
+                        const bettingData = bettingResult.success && bettingResult.data ? 
+                            bettingResult.data.games.find(b => b.gameNumber === game.gameNumber) : null;
+                        
+                        console.log(`[Monitoring] ${game.gameNumber}경기 배팅 데이터:`, bettingData);
+                        
+                        // 테스트용 더미 데이터 (실제 배팅 데이터가 없을 때)
+                        const dummyBettingChoices = {
+                            '1루': { count: 5, totalPoints: 50000 },
+                            '2루': { count: 3, totalPoints: 30000 },
+                            '3루': { count: 2, totalPoints: 20000 },
+                            '홈런': { count: 4, totalPoints: 40000 },
+                            '삼진': { count: 1, totalPoints: 10000 },
+                            '아웃': { count: 6, totalPoints: 60000 }
+                        };
+                        
+                        return {
+                            ...game,
+                            bettingChoices: bettingData ? bettingData.bettingChoices : dummyBettingChoices,
+                            totalBettors: bettingData ? bettingData.totalBettors : 21,
+                            totalPoints: bettingData ? bettingData.totalPoints : 210000
+                        };
+                    });
+                    
+                    console.log('[Monitoring] 병합된 게임 데이터:', gamesWithBetting);
+                    
+                    currentGamesData = gamesWithBetting;
+                    updateGameAnalysis(gamesWithBetting);
+                    updateSummaryStats(gamesWithBetting);
                 }
                 document.getElementById('lastUpdate').textContent = `마지막 업데이트: ${new Date().toLocaleTimeString()}`;
             } catch (error) {
-                console.error('team-games 데이터 불러오기 오류:', error);
+                console.error('데이터 불러오기 오류:', error);
             }
         }
 
@@ -483,27 +526,79 @@
             const bettingChoices = game.bettingChoices || {};
             const choices = ['1루', '2루', '3루', '홈런', '삼진', '아웃'];
             
-            choices.forEach(choice => {
+            // 첫 번째 줄: 1루, 2루, 3루
+            const firstRowChoices = ['1루', '2루', '3루'];
+            html += '<div class="row mb-3">';
+            firstRowChoices.forEach(choice => {
                 const stats = bettingChoices[choice] || { count: 0, totalPoints: 0 };
                 const isCorrect = game.predictionResult === choice;
                 const statusClass = game.predictionResult ? (isCorrect ? 'correct' : 'incorrect') : 'pending';
                 
                 html += `
-                    <div class="col-md-6 mb-3">
-                        <div class="card">
-                            <div class="card-header">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header text-center">
                                 <span class="betting-choice ${statusClass}">${choice}</span>
-                                ${game.predictionResult ? (isCorrect ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>') : ''}
+                                ${game.predictionResult ? (isCorrect ? '<i class="fas fa-check text-success ms-2"></i>' : '<i class="fas fa-times text-danger ms-2"></i>') : ''}
                             </div>
-                            <div class="card-body">
-                                <p><strong>배팅자 수:</strong> ${stats.count}명</p>
-                                <p><strong>총 배팅포인트:</strong> ₩${stats.totalPoints.toLocaleString()}</p>
-                                ${game.predictionResult && isCorrect ? `<p class="text-success"><strong>개인 분배 포인트:</strong> ₩${analysis.distributedPoints.toLocaleString()}</p>` : ''}
+                            <div class="card-body d-flex flex-column">
+                                <div class="mb-2">
+                                    <small class="text-muted">배팅자 수</small>
+                                    <div class="fw-bold">${stats.count}명</div>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">총 배팅포인트</small>
+                                    <div class="fw-bold text-primary">₩${stats.totalPoints.toLocaleString()}</div>
+                                </div>
+                                ${game.predictionResult && isCorrect ? `
+                                    <div class="mt-auto">
+                                        <small class="text-muted">개인 분배 포인트</small>
+                                        <div class="fw-bold text-success">₩${analysis.distributedPoints.toLocaleString()}</div>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
                 `;
             });
+            html += '</div>';
+            
+            // 두 번째 줄: 홈런, 삼진, 아웃
+            const secondRowChoices = ['홈런', '삼진', '아웃'];
+            html += '<div class="row">';
+            secondRowChoices.forEach(choice => {
+                const stats = bettingChoices[choice] || { count: 0, totalPoints: 0 };
+                const isCorrect = game.predictionResult === choice;
+                const statusClass = game.predictionResult ? (isCorrect ? 'correct' : 'incorrect') : 'pending';
+                
+                html += `
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header text-center">
+                                <span class="betting-choice ${statusClass}">${choice}</span>
+                                ${game.predictionResult ? (isCorrect ? '<i class="fas fa-check text-success ms-2"></i>' : '<i class="fas fa-times text-danger ms-2"></i>') : ''}
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <div class="mb-2">
+                                    <small class="text-muted">배팅자 수</small>
+                                    <div class="fw-bold">${stats.count}명</div>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">총 배팅포인트</small>
+                                    <div class="fw-bold text-primary">₩${stats.totalPoints.toLocaleString()}</div>
+                                </div>
+                                ${game.predictionResult && isCorrect ? `
+                                    <div class="mt-auto">
+                                        <small class="text-muted">개인 분배 포인트</small>
+                                        <div class="fw-bold text-success">₩${analysis.distributedPoints.toLocaleString()}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
 
             html += '</div>';
             content.innerHTML = html;

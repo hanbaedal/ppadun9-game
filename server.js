@@ -2210,7 +2210,7 @@ app.get('/api/monitoring/game-participants', async (req, res) => {
     }
 });
 
-// 실시간 모니터링 API - 경기별 배팅선택자 수 및 배팅포인트 합계
+// 실시간 모니터링 API - 경기별 배팅선택자 수 및 배팅포인트 합계 (team-games 기반)
 app.get('/api/monitoring/game-betting-stats', async (req, res) => {
     try {
         const { date } = req.query;
@@ -2223,13 +2223,13 @@ app.get('/api/monitoring/game-betting-stats', async (req, res) => {
         }
         
         const memberCollection = db.collection('game-member');
-        const todayGamesCollection = db.collection('todaygames');
+        const teamGamesCollection = db.collection('team-games');
         
         // 오늘 날짜 (date 파라미터가 없으면 오늘 날짜 사용)
         const targetDate = date || new Date().toISOString().split('T')[0];
         
-        // 오늘의 경기 목록 조회
-        const todayGames = await todayGamesCollection.find({ 
+        // team-games에서 오늘의 경기 목록 조회
+        const todayGames = await teamGamesCollection.find({ 
             date: targetDate 
         }).toArray();
         
@@ -2285,11 +2285,11 @@ app.get('/api/monitoring/game-betting-stats', async (req, res) => {
             
             gameBettingStats.push({
                 gameNumber: game.gameNumber,
-                homeTeam: game.homeTeam,
-                awayTeam: game.awayTeam,
+                homeTeam: game.matchup ? game.matchup.split(' vs ')[0] : '-',
+                awayTeam: game.matchup ? game.matchup.split(' vs ')[1] : '-',
                 startTime: game.startTime,
                 endTime: game.endTime,
-                status: game.status || 'scheduled',
+                status: game.progressStatus || 'scheduled',
                 totalBettors: totalBettors,
                 totalPoints: totalPoints,
                 bettingChoices: bettingChoices
