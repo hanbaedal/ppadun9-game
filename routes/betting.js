@@ -9,103 +9,7 @@ const BETTING_PREDICTIONS_COLLECTION = 'betting-predictions';
 const BETTING_RESULTS_COLLECTION = 'betting-results';
 const BETTING_SYSTEM_COLLECTION = 'betting-system';
 
-// 배팅 시스템 활성화 API
-router.post('/activate', async (req, res) => {
-    try {
-        const db = req.app.locals.db;
-        const collection = db.collection(BETTING_SYSTEM_COLLECTION);
 
-        // 배팅 시스템 상태를 활성화로 설정
-        await collection.updateOne(
-            { _id: 'system' },
-            { 
-                $set: { 
-                    isActive: true,
-                    activatedAt: getKoreanTime(),
-                    updatedAt: getKoreanTime()
-                }
-            },
-            { upsert: true }
-        );
-
-        console.log('배팅 시스템 활성화됨');
-
-        res.json({ 
-            success: true, 
-            message: '배팅 시스템이 활성화되었습니다.' 
-        });
-
-    } catch (error) {
-        console.error('배팅 시스템 활성화 오류:', error);
-        res.json({ 
-            success: false, 
-            message: '배팅 시스템 활성화 중 오류가 발생했습니다.' 
-        });
-    }
-});
-
-// 배팅 시스템 비활성화 API
-router.post('/deactivate', async (req, res) => {
-    try {
-        const db = req.app.locals.db;
-        const collection = db.collection(BETTING_SYSTEM_COLLECTION);
-
-        // 배팅 시스템 상태를 비활성화로 설정
-        await collection.updateOne(
-            { _id: 'system' },
-            { 
-                $set: { 
-                    isActive: false,
-                    deactivatedAt: getKoreanTime(),
-                    updatedAt: getKoreanTime()
-                }
-            },
-            { upsert: true }
-        );
-
-        console.log('배팅 시스템 비활성화됨');
-
-        res.json({ 
-            success: true, 
-            message: '배팅 시스템이 비활성화되었습니다.' 
-        });
-
-    } catch (error) {
-        console.error('배팅 시스템 비활성화 오류:', error);
-        res.json({ 
-            success: false, 
-            message: '배팅 시스템 비활성화 중 오류가 발생했습니다.' 
-        });
-    }
-});
-
-// 배팅 시스템 상태 확인 API
-router.get('/status', async (req, res) => {
-    try {
-        const db = req.app.locals.db;
-        const collection = db.collection(BETTING_SYSTEM_COLLECTION);
-
-        // 배팅 시스템 상태 조회
-        const systemStatus = await collection.findOne({ _id: 'system' });
-
-        const isActive = systemStatus ? systemStatus.isActive : false;
-
-        res.json({ 
-            success: true, 
-            data: { 
-                isActive,
-                lastUpdated: systemStatus ? systemStatus.updatedAt : null
-            }
-        });
-
-    } catch (error) {
-        console.error('배팅 시스템 상태 확인 오류:', error);
-        res.json({ 
-            success: false, 
-            message: '배팅 시스템 상태 확인 중 오류가 발생했습니다.' 
-        });
-    }
-});
 
 // 배팅 시작 API
 router.post('/start', async (req, res) => {
@@ -418,17 +322,7 @@ router.post('/predict', async (req, res) => {
             });
         }
 
-        // 배팅 시스템 활성화 상태 확인
-        const bettingDb = req.app.locals.db;
-        const systemCollection = bettingDb.collection(BETTING_SYSTEM_COLLECTION);
-        const systemStatus = await systemCollection.findOne({ _id: 'system' });
-        
-        if (!systemStatus || !systemStatus.isActive) {
-            return res.json({ 
-                success: false, 
-                message: '현재 배팅이 활성화되지 않았습니다.' 
-            });
-        }
+
 
         // 배팅 세션 확인
         const sessionsCollection = bettingDb.collection(BETTING_SESSIONS_COLLECTION);

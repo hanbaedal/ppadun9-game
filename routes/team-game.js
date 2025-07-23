@@ -237,4 +237,213 @@ router.post('/:date/copy-from-daily', async (req, res) => {
     }
 });
 
+// 경기 시작 API
+router.post('/start-game', async (req, res) => {
+    try {
+        const { gameNumber, date } = req.body;
+        console.log('[Team Game] 경기 시작:', { date, gameNumber });
+        
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        // 경기 상태를 시작으로 변경
+        await collection.updateOne(
+            { date },
+            { 
+                $set: { 
+                    [`games.${gameNumber - 1}.status`]: '진행중',
+                    [`games.${gameNumber - 1}.startTime`]: getKoreanTime(),
+                    updatedAt: getKoreanTime()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: '경기가 시작되었습니다.'
+        });
+    } catch (error) {
+        console.error('[Team Game] 경기 시작 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '경기 시작에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 경기 일시정지 API
+router.post('/pause-game', async (req, res) => {
+    try {
+        const { gameNumber, date } = req.body;
+        console.log('[Team Game] 경기 일시정지:', { date, gameNumber });
+        
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        // 경기 상태를 일시정지로 변경
+        await collection.updateOne(
+            { date },
+            { 
+                $set: { 
+                    [`games.${gameNumber - 1}.status`]: '일시정지',
+                    [`games.${gameNumber - 1}.pauseTime`]: getKoreanTime(),
+                    updatedAt: getKoreanTime()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: '경기가 일시정지되었습니다.'
+        });
+    } catch (error) {
+        console.error('[Team Game] 경기 일시정지 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '경기 일시정지에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 경기 종료 API
+router.post('/end-game', async (req, res) => {
+    try {
+        const { gameNumber, date } = req.body;
+        console.log('[Team Game] 경기 종료:', { date, gameNumber });
+        
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        // 경기 상태를 종료로 변경
+        await collection.updateOne(
+            { date },
+            { 
+                $set: { 
+                    [`games.${gameNumber - 1}.status`]: '종료',
+                    [`games.${gameNumber - 1}.endTime`]: getKoreanTime(),
+                    updatedAt: getKoreanTime()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: '경기가 종료되었습니다.'
+        });
+    } catch (error) {
+        console.error('[Team Game] 경기 종료 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '경기 종료에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 예측 결과 설정 API
+router.post('/set-prediction-result', async (req, res) => {
+    try {
+        const { gameNumber, prediction, date } = req.body;
+        console.log('[Team Game] 예측 결과 설정:', { date, gameNumber, prediction });
+        
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        // 예측 결과 설정
+        await collection.updateOne(
+            { date },
+            { 
+                $set: { 
+                    [`games.${gameNumber - 1}.predictionResult`]: prediction,
+                    [`games.${gameNumber - 1}.resultSetTime`]: getKoreanTime(),
+                    updatedAt: getKoreanTime()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: '예측 결과가 설정되었습니다.'
+        });
+    } catch (error) {
+        console.error('[Team Game] 예측 결과 설정 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '예측 결과 설정에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 경기 상태 조회 API
+router.get('/game-status/:gameNumber', async (req, res) => {
+    try {
+        const { gameNumber } = req.params;
+        const today = new Date().toISOString().split('T')[0];
+        
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        // 오늘의 경기 데이터 조회
+        const data = await collection.findOne({ date: today });
+        
+        if (!data || !data.games) {
+            return res.json({
+                success: false,
+                message: '경기 데이터를 찾을 수 없습니다.'
+            });
+        }
+
+        const game = data.games[gameNumber - 1];
+        if (!game) {
+            return res.json({
+                success: false,
+                message: '해당 경기를 찾을 수 없습니다.'
+            });
+        }
+
+        // 배팅 통계 조회
+        const bettingCollection = db.collection('betting-predictions');
+        const bettingStats = await bettingCollection.aggregate([
+            {
+                $match: {
+                    gameNumber: parseInt(gameNumber),
+                    date: today
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    bettingCount: { $sum: 1 },
+                    totalBettingPoints: { $sum: '$points' }
+                }
+            }
+        ]).toArray();
+
+        const bettingData = bettingStats.length > 0 ? bettingStats[0] : { bettingCount: 0, totalBettingPoints: 0 };
+
+        res.json({
+            success: true,
+            data: {
+                gameNumber: parseInt(gameNumber),
+                status: game.status || '대기중',
+                startTime: game.startTime,
+                endTime: game.endTime,
+                predictionResult: game.predictionResult,
+                bettingCount: bettingData.bettingCount,
+                totalBettingPoints: bettingData.totalBettingPoints
+            }
+        });
+    } catch (error) {
+        console.error('[Team Game] 경기 상태 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '경기 상태 조회에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 
