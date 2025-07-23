@@ -90,7 +90,7 @@ router.get('/game-betting-stats', async (req, res) => {
                 $group: {
                     _id: {
                         gameNumber: '$gameNumber',
-                        choice: '$choice'
+                        prediction: '$prediction'
                     },
                     count: { $sum: 1 },
                     totalPoints: { $sum: '$points' }
@@ -102,7 +102,7 @@ router.get('/game-betting-stats', async (req, res) => {
         const games = {};
         bettingData.forEach(item => {
             const gameNumber = item._id.gameNumber;
-            const choice = item._id.choice;
+            const prediction = item._id.prediction;
             
             if (!games[gameNumber]) {
                 games[gameNumber] = {
@@ -113,7 +113,7 @@ router.get('/game-betting-stats', async (req, res) => {
                 };
             }
             
-            games[gameNumber].bettingChoices[choice] = {
+            games[gameNumber].bettingChoices[prediction] = {
                 count: item.count,
                 totalPoints: item.totalPoints
             };

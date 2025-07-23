@@ -307,6 +307,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-chart-line me-2"></i>사용자 게임 분석</h2>
             <div class="d-flex align-items-center">
+                <button class="btn btn-warning btn-sm me-2" onclick="initializeBettingSystem()">
+                    <i class="fas fa-play me-1"></i>배팅 시스템 초기화
+                </button>
                 <span class="badge bg-success me-2 live-indicator">
                     <i class="fas fa-circle"></i> LIVE
                 </span>
@@ -1002,6 +1005,32 @@
                 });
             }
         });
+
+        // 배팅 시스템 초기화
+        async function initializeBettingSystem() {
+            try {
+                const response = await fetch('/api/betting/initialize-system', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('배팅 시스템이 초기화되었습니다!');
+                    // 데이터 새로고침
+                    loadBettingData();
+                    loadGameBettingStats();
+                } else {
+                    alert('배팅 시스템 초기화에 실패했습니다: ' + result.message);
+                }
+            } catch (error) {
+                console.error('배팅 시스템 초기화 오류:', error);
+                alert('배팅 시스템 초기화 중 오류가 발생했습니다.');
+            }
+        }
 
         // 페이지 로드 시 초기화
         window.onload = function() {

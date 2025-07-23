@@ -712,4 +712,96 @@ router.get('/game-stats/:date', async (req, res) => {
     }
 });
 
+// 배팅 시스템 초기화 API
+router.post('/initialize-system', async (req, res) => {
+    try {
+        const db = req.app.locals.db;
+        
+        // 배팅 시스템 활성화
+        const systemCollection = db.collection(BETTING_SYSTEM_COLLECTION);
+        await systemCollection.updateOne(
+            { _id: 'system' },
+            { 
+                $set: { 
+                    isActive: true,
+                    updatedAt: getKoreanTime()
+                }
+            },
+            { upsert: true }
+        );
+
+        // 오늘 날짜
+        const today = new Date().toISOString().split('T')[0];
+
+        // 각 경기별 배팅 세션 생성
+        const sessionsCollection = db.collection(BETTING_SESSIONS_COLLECTION);
+        const sessions = [];
+        
+        for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
+            const session = {
+                gameNumber: gameNumber,
+                gameType: 'baseball',
+                date: today,
+                status: 'active',
+                startTime: new Date(),
+                createdAt: new Date(),
+                updatedAt: getKoreanTime()
+            };
+            
+            await sessionsCollection.insertOne(session);
+            sessions.push(session);
+        }
+
+        console.log(`배팅 시스템 초기화 완료: ${sessions.length}개 세션 생성`);
+
+        res.json({ 
+            success: true, 
+            message: '배팅 시스템이 초기화되었습니다.',
+            sessions: sessions
+        });
+
+    } catch (error) {
+        console.error('배팅 시스템 초기화 오류:', error);
+        res.json({ 
+            success: false, 
+            message: '배팅 시스템 초기화 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
+// 배팅 세션 상태 확인 API
+router.get('/session-status', async (req, res) => {
+    try {
+        const db = req.app.locals.db;
+        const today = new Date().toISOString().split('T')[0];
+        
+        // 배팅 시스템 상태 확인
+        const systemCollection = db.collection(BETTING_SYSTEM_COLLECTION);
+        const systemStatus = await systemCollection.findOne({ _id: 'system' });
+        
+        // 활성 배팅 세션 확인
+        const sessionsCollection = db.collection(BETTING_SESSIONS_COLLECTION);
+        const activeSessions = await sessionsCollection.find({
+            date: today,
+            status: 'active'
+        }).toArray();
+
+        res.json({
+            success: true,
+            data: {
+                systemActive: systemStatus ? systemStatus.isActive : false,
+                activeSessions: activeSessions,
+                totalSessions: activeSessions.length
+            }
+        });
+
+    } catch (error) {
+        console.error('배팅 세션 상태 확인 오류:', error);
+        res.json({ 
+            success: false, 
+            message: '배팅 세션 상태 확인 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
 module.exports = router; 
