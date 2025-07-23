@@ -199,10 +199,7 @@ const videoWatchRoutes = require('./routes/video-watch');
 const bettingRoutes = require('./routes/betting');
 const gameStatsRoutes = require('./routes/game-stats');
 
-// 정적 파일 제공
-app.use(express.static(path.join(__dirname, 'public')));
-
-// API 라우트 사용 (순서 중요!)
+// API 라우트 사용 (순서 중요!) - 정적 파일보다 먼저 정의
 app.use('/api/game', gameRoutes);
 app.use('/api/dailygames', dailygamesRoutes);
 app.use('/api/daily-games', dailyGamesRoutes);
@@ -219,6 +216,9 @@ app.use('/api/game-stats', gameStatsRoutes);
 
 // members 라우트는 /api/members로 접근하도록 변경
 app.use('/api/members', membersRoutes);
+
+// 정적 파일 제공 (API 라우트 이후에 정의)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 메인 페이지
 app.get('/', (req, res) => {
