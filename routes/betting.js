@@ -325,7 +325,7 @@ router.post('/predict', async (req, res) => {
 
 
         // 배팅 세션 확인
-        const sessionsCollection = bettingDb.collection(BETTING_SESSIONS_COLLECTION);
+        const sessionsCollection = db.collection(BETTING_SESSIONS_COLLECTION);
         const bettingSession = await sessionsCollection.findOne({
             _id: new ObjectId(sessionId),
             status: 'active'
@@ -339,7 +339,7 @@ router.post('/predict', async (req, res) => {
         }
 
         // 회원 포인트 확인
-        const memberCollection = bettingDb.collection('game-member');
+        const memberCollection = db.collection('game-member');
         const member = await memberCollection.findOne({ _id: new ObjectId(userId) });
 
         if (!member) {
@@ -357,7 +357,7 @@ router.post('/predict', async (req, res) => {
         }
 
         // 중복 예측 확인
-        const predictionsCollection = bettingDb.collection(BETTING_PREDICTIONS_COLLECTION);
+        const predictionsCollection = db.collection(BETTING_PREDICTIONS_COLLECTION);
         const existingPrediction = await predictionsCollection.findOne({
             sessionId: new ObjectId(sessionId),
             userId: userId
@@ -374,6 +374,7 @@ router.post('/predict', async (req, res) => {
         const predictionData = {
             sessionId: new ObjectId(sessionId),
             userId: userId,
+            memberId: userId, // 실시간 모니터링에서 사용
             prediction: prediction,
             points: points,
             gameNumber: bettingSession.gameNumber,
@@ -399,7 +400,7 @@ router.post('/predict', async (req, res) => {
         );
 
         // 포인트 사용 내역 기록
-        const pointHistoryCollection = bettingDb.collection('point-history');
+        const pointHistoryCollection = db.collection('point-history');
         await pointHistoryCollection.insertOne({
             userId: userId,
             type: 'betting_use',
