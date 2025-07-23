@@ -192,6 +192,7 @@ const friendInviteRoutes = require('./routes/friend-invite');
 const customerInquiriesRoutes = require('./routes/customer-inquiries');
 const videoWatchRoutes = require('./routes/video-watch');
 const bettingRoutes = require('./routes/betting');
+const monitoringRoutes = require('./routes/monitoring');
 const gameStatsRoutes = require('./routes/game-stats');
 
 // API 라우트 사용 (순서 중요!) - 정적 파일보다 먼저 정의
@@ -207,6 +208,7 @@ app.use('/api/friend-invite', friendInviteRoutes);
 app.use('/api/customer-inquiries', customerInquiriesRoutes);
 app.use('/api/video-watch', videoWatchRoutes);
 app.use('/api/betting', bettingRoutes);
+app.use('/api/monitoring', monitoringRoutes);
 app.use('/api/game-stats', gameStatsRoutes);
 
 // members 라우트는 /api/members로 접근하도록 변경

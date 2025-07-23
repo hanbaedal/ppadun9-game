@@ -345,6 +345,94 @@
             </div>
         </div>
 
+        <!-- 배팅 활성화 제어 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-toggle-on me-2"></i>배팅 시스템 제어</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="badge bg-secondary me-2" id="bettingStatus">비활성화</span>
+                                    <button class="btn btn-success btn-sm me-2" id="activateBettingBtn" onclick="activateBetting()">
+                                        <i class="fas fa-play"></i> 배팅 활성화
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" id="deactivateBettingBtn" onclick="deactivateBetting()" style="display: none;">
+                                        <i class="fas fa-stop"></i> 배팅 비활성화
+                                    </button>
+                                </div>
+                                <small class="text-muted">배팅 시스템을 활성화하면 회원들이 배팅에 참여할 수 있습니다.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <div class="text-center">
+                                            <div class="h4 mb-0" id="currentLoggedInUsers">0</div>
+                                            <small class="text-muted">현재 로그인</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-center">
+                                            <div class="h4 mb-0" id="currentBettingUsers">0</div>
+                                            <small class="text-muted">배팅 참여</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-center">
+                                            <div class="h4 mb-0" id="totalBettingChoices">0</div>
+                                            <small class="text-muted">배팅 선택</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 실시간 사용자 현황 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users me-2"></i>실시간 사용자 현황</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="loggedInCount">0</h4>
+                                        <p class="mb-0">현재 로그인한 회원</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="bettingCount">0</h4>
+                                        <p class="mb-0">현재 배팅에 참여한 인원</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="choiceCount">0</h4>
+                                        <p class="mb-0">현재 회원이 배팅선택한 것</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 경기별 사용자 분석 -->
         <div class="row">
             <div class="col-12">
@@ -401,6 +489,97 @@
     <script>
         let updateInterval;
         let currentGamesData = [];
+        let bettingStatus = false; // 배팅 활성화 상태
+
+        // 배팅 활성화 함수
+        async function activateBetting() {
+            try {
+                const response = await fetch('/api/betting/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    bettingStatus = true;
+                    updateBettingStatus();
+                    alert('배팅이 활성화되었습니다.');
+                } else {
+                    alert('배팅 활성화에 실패했습니다: ' + result.message);
+                }
+            } catch (error) {
+                console.error('배팅 활성화 오류:', error);
+                alert('배팅 활성화 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 배팅 비활성화 함수
+        async function deactivateBetting() {
+            try {
+                const response = await fetch('/api/betting/deactivate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    bettingStatus = false;
+                    updateBettingStatus();
+                    alert('배팅이 비활성화되었습니다.');
+                } else {
+                    alert('배팅 비활성화에 실패했습니다: ' + result.message);
+                }
+            } catch (error) {
+                console.error('배팅 비활성화 오류:', error);
+                alert('배팅 비활성화 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 배팅 상태 업데이트
+        function updateBettingStatus() {
+            const statusBadge = document.getElementById('bettingStatus');
+            const activateBtn = document.getElementById('activateBettingBtn');
+            const deactivateBtn = document.getElementById('deactivateBettingBtn');
+            
+            if (bettingStatus) {
+                statusBadge.textContent = '활성화';
+                statusBadge.className = 'badge bg-success me-2';
+                activateBtn.style.display = 'none';
+                deactivateBtn.style.display = 'inline-block';
+            } else {
+                statusBadge.textContent = '비활성화';
+                statusBadge.className = 'badge bg-secondary me-2';
+                activateBtn.style.display = 'inline-block';
+                deactivateBtn.style.display = 'none';
+            }
+        }
+
+        // 실시간 사용자 현황 업데이트
+        async function updateUserStats() {
+            try {
+                const response = await fetch('/api/monitoring/user-stats');
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('loggedInCount').textContent = result.data.loggedInUsers || 0;
+                    document.getElementById('bettingCount').textContent = result.data.bettingUsers || 0;
+                    document.getElementById('choiceCount').textContent = result.data.totalChoices || 0;
+                    
+                    // 상단 요약 통계도 업데이트
+                    document.getElementById('currentLoggedInUsers').textContent = result.data.loggedInUsers || 0;
+                    document.getElementById('currentBettingUsers').textContent = result.data.bettingUsers || 0;
+                    document.getElementById('totalBettingChoices').textContent = result.data.totalChoices || 0;
+                }
+            } catch (error) {
+                console.error('사용자 통계 업데이트 오류:', error);
+            }
+        }
 
         // team-games와 배팅 데이터 로드
         async function loadTeamGamesData() {
@@ -624,6 +803,21 @@
             modal.show();
         }
 
+        // 배팅 상태 확인
+        async function checkBettingStatus() {
+            try {
+                const response = await fetch('/api/betting/status');
+                const result = await response.json();
+                
+                if (result.success) {
+                    bettingStatus = result.data.isActive;
+                    updateBettingStatus();
+                }
+            } catch (error) {
+                console.error('배팅 상태 확인 오류:', error);
+            }
+        }
+
         // 페이지 로드 시 초기화
         window.onload = function() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -632,8 +826,18 @@
                 document.getElementById('logoutItem').style.display = 'block';
             }
 
+            // 배팅 상태 확인
+            checkBettingStatus();
+            
+            // 초기 데이터 로드
             loadTeamGamesData();
-            setInterval(loadTeamGamesData, 2000); // 2초마다 업데이트
+            updateUserStats();
+            
+            // 실시간 업데이트 설정
+            updateInterval = setInterval(() => {
+                loadTeamGamesData();
+                updateUserStats();
+            }, 2000); // 2초마다 업데이트
             
             document.getElementById('logoutBtn').addEventListener('click', function(e) {
                 e.preventDefault();
