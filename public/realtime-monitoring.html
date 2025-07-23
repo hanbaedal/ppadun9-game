@@ -537,7 +537,7 @@
         async function loadGameBettingStats() {
             try {
                 const today = new Date().toISOString().split('T')[0];
-                const response = await fetch(`/api/betting/game-stats/${today}`);
+                const response = await fetch(`/api/monitoring/game-betting-stats?date=${today}`);
                 const result = await response.json();
                 
                 const statsContainer = document.getElementById('gameBettingStats');

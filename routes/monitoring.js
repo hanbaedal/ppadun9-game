@@ -79,11 +79,25 @@ router.get('/game-betting-stats', async (req, res) => {
             });
         }
 
-        // 해당 날짜의 배팅 예측 데이터 조회
+        // 전체 배팅 데이터 확인 (디버깅용)
+        const allPredictions = await db.collection('betting-predictions').find({}).toArray();
+        console.log(`전체 배팅 예측 데이터: ${allPredictions.length}개`);
+        console.log('배팅 데이터 샘플:', allPredictions.slice(0, 3));
+
+        // 해당 날짜의 배팅 예측 데이터 조회 (날짜 형식 유연하게 처리)
         const bettingData = await db.collection('betting-predictions').aggregate([
             {
                 $match: {
-                    date: date
+                    $or: [
+                        { date: date },
+                        { date: new Date(date) },
+                        { 
+                            createdAt: {
+                                $gte: new Date(date + 'T00:00:00.000Z'),
+                                $lt: new Date(date + 'T23:59:59.999Z')
+                            }
+                        }
+                    ]
                 }
             },
             {
@@ -97,6 +111,9 @@ router.get('/game-betting-stats', async (req, res) => {
                 }
             }
         ]).toArray();
+
+        console.log(`필터링된 배팅 데이터: ${bettingData.length}개`);
+        console.log('필터링된 데이터:', bettingData);
 
         // 게임별로 데이터 정리
         const games = {};
