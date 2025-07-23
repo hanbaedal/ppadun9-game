@@ -307,6 +307,12 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-chart-line me-2"></i>사용자 게임 분석</h2>
             <div class="d-flex align-items-center">
+                <button class="btn btn-info btn-sm me-2" onclick="checkBettingSystemStatus()">
+                    <i class="fas fa-info-circle me-1"></i>배팅 시스템 상태
+                </button>
+                <button class="btn btn-warning btn-sm me-2" onclick="activateBettingSystem()">
+                    <i class="fas fa-play me-1"></i>배팅 시스템 활성화
+                </button>
                 <button class="btn btn-warning btn-sm me-2" onclick="initializeBettingSystem()">
                     <i class="fas fa-play me-1"></i>배팅 시스템 초기화
                 </button>
@@ -623,15 +629,24 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    document.getElementById('loggedInCount').textContent = result.data.loggedInUsers || 0;
-                    document.getElementById('bettingCount').textContent = result.data.bettingUsers || 0;
-                    document.getElementById('choiceCount').textContent = result.data.totalChoices || 0;
-                    document.getElementById('totalWinnings').textContent = `₩${(result.data.totalWinnings || 0).toLocaleString()}`;
+                    // DOM 요소가 존재하는지 확인 후 업데이트
+                    const loggedInCount = document.getElementById('loggedInCount');
+                    const bettingCount = document.getElementById('bettingCount');
+                    const choiceCount = document.getElementById('choiceCount');
+                    const totalWinnings = document.getElementById('totalWinnings');
+                    const currentLoggedInUsers = document.getElementById('currentLoggedInUsers');
+                    const currentBettingUsers = document.getElementById('currentBettingUsers');
+                    const totalBettingChoices = document.getElementById('totalBettingChoices');
+                    
+                    if (loggedInCount) loggedInCount.textContent = result.data.loggedInUsers || 0;
+                    if (bettingCount) bettingCount.textContent = result.data.bettingUsers || 0;
+                    if (choiceCount) choiceCount.textContent = result.data.totalChoices || 0;
+                    if (totalWinnings) totalWinnings.textContent = `₩${(result.data.totalWinnings || 0).toLocaleString()}`;
                     
                     // 상단 요약 통계도 업데이트
-                    document.getElementById('currentLoggedInUsers').textContent = result.data.loggedInUsers || 0;
-                    document.getElementById('currentBettingUsers').textContent = result.data.bettingUsers || 0;
-                    document.getElementById('totalBettingChoices').textContent = result.data.totalChoices || 0;
+                    if (currentLoggedInUsers) currentLoggedInUsers.textContent = result.data.loggedInUsers || 0;
+                    if (currentBettingUsers) currentBettingUsers.textContent = result.data.bettingUsers || 0;
+                    if (totalBettingChoices) totalBettingChoices.textContent = result.data.totalChoices || 0;
                 }
             } catch (error) {
                 console.error('사용자 통계 업데이트 오류:', error);
@@ -1005,6 +1020,62 @@
                 });
             }
         });
+
+        // 배팅 시스템 상태 확인
+        async function checkBettingSystemStatus() {
+            try {
+                const response = await fetch('/api/betting/system-status');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    let message = `배팅 시스템 상태:\n`;
+                    message += `- 시스템 활성화: ${data.systemActive ? '예' : '아니오'}\n`;
+                    message += `- 활성 세션 수: ${data.totalSessions}개\n`;
+                    message += `- 오늘 배팅 예측: ${data.totalPredictions}개\n`;
+                    
+                    if (data.predictions.length > 0) {
+                        message += `\n배팅 예측 데이터:\n`;
+                        data.predictions.forEach((pred, index) => {
+                            message += `${index + 1}. 사용자: ${pred.userId}, 예측: ${pred.prediction}, 포인트: ${pred.points}\n`;
+                        });
+                    }
+                    
+                    alert(message);
+                } else {
+                    alert('배팅 시스템 상태 확인에 실패했습니다: ' + result.message);
+                }
+            } catch (error) {
+                console.error('배팅 시스템 상태 확인 오류:', error);
+                alert('배팅 시스템 상태 확인 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 배팅 시스템 활성화
+        async function activateBettingSystem() {
+            try {
+                const response = await fetch('/api/betting/activate-system', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('배팅 시스템이 활성화되었습니다!');
+                    // 데이터 새로고침
+                    loadBettingData();
+                    loadGameBettingStats();
+                } else {
+                    alert('배팅 시스템 활성화에 실패했습니다: ' + result.message);
+                }
+            } catch (error) {
+                console.error('배팅 시스템 활성화 오류:', error);
+                alert('배팅 시스템 활성화 중 오류가 발생했습니다.');
+            }
+        }
 
         // 배팅 시스템 초기화
         async function initializeBettingSystem() {

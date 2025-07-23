@@ -804,4 +804,103 @@ router.get('/session-status', async (req, res) => {
     }
 });
 
+// 배팅 시스템 상태 확인 및 활성화 API
+router.get('/system-status', async (req, res) => {
+    try {
+        const db = req.app.locals.db;
+        const today = new Date().toISOString().split('T')[0];
+        
+        // 배팅 시스템 상태 확인
+        const systemCollection = db.collection(BETTING_SYSTEM_COLLECTION);
+        const systemStatus = await systemCollection.findOne({ _id: 'system' });
+        
+        // 활성 배팅 세션 확인
+        const sessionsCollection = db.collection(BETTING_SESSIONS_COLLECTION);
+        const activeSessions = await sessionsCollection.find({
+            date: today,
+            status: 'active'
+        }).toArray();
+
+        // 배팅 예측 데이터 확인
+        const predictionsCollection = db.collection(BETTING_PREDICTIONS_COLLECTION);
+        const todayPredictions = await predictionsCollection.find({
+            date: today
+        }).toArray();
+
+        res.json({
+            success: true,
+            data: {
+                systemActive: systemStatus ? systemStatus.isActive : false,
+                activeSessions: activeSessions,
+                totalSessions: activeSessions.length,
+                totalPredictions: todayPredictions.length,
+                predictions: todayPredictions
+            }
+        });
+
+    } catch (error) {
+        console.error('배팅 시스템 상태 확인 오류:', error);
+        res.json({ 
+            success: false, 
+            message: '배팅 시스템 상태 확인 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
+// 배팅 시스템 활성화 API
+router.post('/activate-system', async (req, res) => {
+    try {
+        const db = req.app.locals.db;
+        const today = new Date().toISOString().split('T')[0];
+        
+        // 배팅 시스템 활성화
+        const systemCollection = db.collection(BETTING_SYSTEM_COLLECTION);
+        await systemCollection.updateOne(
+            { _id: 'system' },
+            { 
+                $set: { 
+                    isActive: true,
+                    updatedAt: getKoreanTime()
+                }
+            },
+            { upsert: true }
+        );
+
+        // 1경기 배팅 세션 생성 (이미 5명이 배팅했다고 하니)
+        const sessionsCollection = db.collection(BETTING_SESSIONS_COLLECTION);
+        const existingSession = await sessionsCollection.findOne({
+            gameNumber: 1,
+            date: today,
+            status: 'active'
+        });
+
+        if (!existingSession) {
+            const session = {
+                gameNumber: 1,
+                gameType: 'baseball',
+                date: today,
+                status: 'active',
+                startTime: new Date(),
+                createdAt: new Date(),
+                updatedAt: getKoreanTime()
+            };
+            
+            await sessionsCollection.insertOne(session);
+            console.log('1경기 배팅 세션 생성 완료');
+        }
+
+        res.json({ 
+            success: true, 
+            message: '배팅 시스템이 활성화되었습니다.'
+        });
+
+    } catch (error) {
+        console.error('배팅 시스템 활성화 오류:', error);
+        res.json({ 
+            success: false, 
+            message: '배팅 시스템 활성화 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
 module.exports = router; 
