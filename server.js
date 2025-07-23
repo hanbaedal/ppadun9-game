@@ -164,7 +164,7 @@ const sessionConfig = {
     resave: true, // 세션 변경 시 자동 저장
     saveUninitialized: true, // 초기화되지 않은 세션도 저장
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Render에서는 HTTPS 사용
+        secure: false, // Render에서도 false로 설정하여 세션 문제 해결
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         httpOnly: true,
         sameSite: 'lax', // strict에서 lax로 변경하여 400 오류 방지
@@ -173,13 +173,8 @@ const sessionConfig = {
     name: 'ppadun9.sid' // 세션 쿠키 이름 명시
 };
 
-// 세션 스토어 설정
-if (process.env.NODE_ENV === 'production') {
-    // Production 환경에서는 Redis나 다른 영구 스토어 사용 권장
-    // 현재는 기본 MemoryStore 사용
-} else {
-    sessionConfig.store = new session.MemoryStore();
-}
+// 세션 스토어 설정 - 모든 환경에서 MemoryStore 사용
+sessionConfig.store = new session.MemoryStore();
 
 app.use(session(sessionConfig));
 
