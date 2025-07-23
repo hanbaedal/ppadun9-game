@@ -604,4 +604,111 @@ router.post('/distribute-winnings', async (req, res) => {
     }
 });
 
+// 오늘의 배팅 데이터 조회 API
+router.get('/today-bets/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        console.log('[Betting] 오늘 배팅 데이터 조회:', date);
+        
+        const db = req.app.locals.db;
+        const collection = db.collection('betting-predictions');
+        
+        // 오늘의 배팅 데이터 조회
+        const bets = await collection.find({ 
+            date: date 
+        }).sort({ createdAt: -1 }).toArray();
+        
+        // 회원 정보와 함께 조회
+        const memberCollection = db.collection('game-member');
+        const betsWithMemberInfo = await Promise.all(bets.map(async (bet) => {
+            const member = await memberCollection.findOne({ _id: bet.memberId });
+            return {
+                ...bet,
+                memberName: member ? member.name : '알 수 없음',
+                memberId: member ? member.memberId : bet.memberId
+            };
+        }));
+
+        res.json({
+            success: true,
+            data: betsWithMemberInfo
+        });
+
+    } catch (error) {
+        console.error('[Betting] 오늘 배팅 데이터 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '배팅 데이터 조회에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 경기별 배팅 통계 API
+router.get('/game-stats/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        console.log('[Betting] 경기별 배팅 통계 조회:', date);
+        
+        const db = req.app.locals.db;
+        const collection = db.collection('betting-predictions');
+        
+        // 경기별 배팅 통계 조회
+        const gameStats = await collection.aggregate([
+            {
+                $match: { date: date }
+            },
+            {
+                $group: {
+                    _id: '$gameNumber',
+                    bettingCount: { $sum: 1 },
+                    totalPoints: { $sum: '$points' },
+                    predictions: {
+                        $push: '$prediction'
+                    }
+                }
+            },
+            {
+                $project: {
+                    gameNumber: '$_id',
+                    bettingCount: 1,
+                    totalPoints: 1,
+                    predictions: 1
+                }
+            },
+            {
+                $sort: { gameNumber: 1 }
+            }
+        ]).toArray();
+        
+        // 예측 분포 계산
+        const statsWithPredictions = gameStats.map(game => {
+            const predictionCounts = {};
+            game.predictions.forEach(prediction => {
+                predictionCounts[prediction] = (predictionCounts[prediction] || 0) + 1;
+            });
+            
+            return {
+                gameNumber: game.gameNumber,
+                bettingCount: game.bettingCount,
+                totalPoints: game.totalPoints,
+                predictions: predictionCounts
+            };
+        });
+
+        res.json({
+            success: true,
+            data: statsWithPredictions
+        });
+
+    } catch (error) {
+        console.error('[Betting] 경기별 배팅 통계 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '배팅 통계 조회에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 
