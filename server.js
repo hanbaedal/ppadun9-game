@@ -116,20 +116,15 @@ async function initializeBettingCollections() {
         const existingPredictions = await predictionsCollection.countDocuments();
         
         if (existingPredictions === 0) {
-            const dummyPrediction = {
-                memberId: 'system-init',
-                memberName: '시스템',
-                gameNumber: 1,
-                prediction: 'home',
-                points: 0,
-                betTime: new Date(),
-                createdAt: new Date(),
-                status: 'dummy'
-            };
-            
-            await predictionsCollection.insertOne(dummyPrediction);
+            // 컬렉션만 생성하고 더미 데이터는 삽입하지 않음
             console.log('betting-predictions 컬렉션이 자동으로 생성되었습니다.');
         } else {
+            // 더미 데이터가 있다면 제거
+            const dummyData = await predictionsCollection.find({ status: 'dummy' }).toArray();
+            if (dummyData.length > 0) {
+                await predictionsCollection.deleteMany({ status: 'dummy' });
+                console.log(`${dummyData.length}개의 더미 데이터가 제거되었습니다.`);
+            }
             console.log('betting-predictions 컬렉션이 이미 존재합니다.');
         }
 
@@ -247,10 +242,10 @@ app.use(express.urlencoded({ extended: true }));
 // 세션 설정
 const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
-    resave: true, // 세션 변경 시 자동 저장
-    saveUninitialized: true, // 초기화되지 않은 세션도 저장
+    resave: false, // 세션 변경 시에만 저장
+    saveUninitialized: false, // 초기화된 세션만 저장
     cookie: {
-        secure: false, // Render에서도 false로 설정하여 세션 문제 해결
+        secure: process.env.NODE_ENV === 'production', // 프로덕션에서만 secure
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         httpOnly: true,
         sameSite: 'lax', // strict에서 lax로 변경하여 400 오류 방지
@@ -259,7 +254,7 @@ const sessionConfig = {
     name: 'ppadun9.sid' // 세션 쿠키 이름 명시
 };
 
-// 세션 스토어 설정 - 모든 환경에서 MemoryStore 사용
+// 세션 스토어 설정 - 개발환경에서는 MemoryStore, 프로덕션에서는 다른 스토어 고려
 sessionConfig.store = new session.MemoryStore();
 
 app.use(session(sessionConfig));
@@ -299,6 +294,47 @@ app.use('/api/game-stats', gameStatsRoutes);
 
 // members 라우트는 /api/members로 접근하도록 변경
 app.use('/api/members', membersRoutes);
+
+// 로그인 상태 통계 API
+app.get('/api/system/login-stats', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        // 직원 로그인 수
+        const employeeCollection = db.collection('employee-member');
+        const loggedInEmployees = await employeeCollection.countDocuments({
+            isLoggedIn: true
+        });
+
+        // 회원 로그인 수
+        const memberCollection = db.collection('game-member');
+        const loggedInMembers = await memberCollection.countDocuments({
+            isLoggedIn: true
+        });
+
+        // 전체 로그인 수
+        const totalLoggedIn = loggedInEmployees + loggedInMembers;
+
+        res.json({
+            success: true,
+            data: {
+                employees: loggedInEmployees,
+                members: loggedInMembers,
+                total: totalLoggedIn,
+                timestamp: new Date().toISOString()
+            }
+        });
+
+    } catch (error) {
+        console.error('로그인 상태 통계 조회 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: '로그인 상태 통계 조회 중 오류가 발생했습니다.' 
+        });
+    }
+});
 
 // 직원 API 라우트들 (정적 파일보다 먼저 정의)
 app.get('/api/employee/current-user', (req, res) => {
@@ -907,6 +943,21 @@ app.post('/api/employee/login', async (req, res) => {
 });
 
 
+
+// 세션 디버깅 API
+app.get('/api/debug/session', (req, res) => {
+    console.log('=== 세션 디버깅 요청 ===');
+    console.log('세션 ID:', req.sessionID);
+    console.log('세션 정보:', req.session);
+    console.log('쿠키 정보:', req.headers.cookie);
+    
+    res.json({
+        sessionID: req.sessionID,
+        session: req.session,
+        cookies: req.headers.cookie,
+        userAgent: req.headers['user-agent']
+    });
+});
 
 // 세션 상태 체크 및 정리 API
 app.get('/api/employee/check-session-status', async (req, res) => {

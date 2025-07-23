@@ -374,11 +374,14 @@ router.post('/predict', async (req, res) => {
         const predictionData = {
             sessionId: new ObjectId(sessionId),
             userId: userId,
-            memberId: userId, // 실시간 모니터링에서 사용
+            memberId: userId,
+            memberName: member.name || member.username, // 회원 이름 추가
             prediction: prediction,
             points: points,
             gameNumber: bettingSession.gameNumber,
             date: bettingSession.date,
+            betTime: getKoreanTime(), // 배팅 시간 추가
+            status: 'active', // 배팅 상태 추가
             createdAt: getKoreanTime()
         };
 
@@ -820,6 +823,101 @@ router.get('/session-status', async (req, res) => {
         res.json({ 
             success: false, 
             message: '배팅 세션 상태 확인 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
+// 테스트용 배팅 데이터 생성 API
+router.post('/create-test-data', async (req, res) => {
+    try {
+        const db = req.app.locals.db;
+        const predictionsCollection = db.collection(BETTING_PREDICTIONS_COLLECTION);
+        const today = new Date().toISOString().split('T')[0];
+        
+        // 테스트 배팅 데이터 생성
+        const testPredictions = [
+            {
+                sessionId: new ObjectId(),
+                userId: 'test-user-1',
+                memberId: 'test-user-1',
+                memberName: '테스트사용자1',
+                prediction: 'home',
+                points: 1000,
+                gameNumber: 1,
+                date: today,
+                betTime: getKoreanTime(),
+                status: 'active',
+                createdAt: getKoreanTime()
+            },
+            {
+                sessionId: new ObjectId(),
+                userId: 'test-user-2',
+                memberId: 'test-user-2',
+                memberName: '테스트사용자2',
+                prediction: 'away',
+                points: 2000,
+                gameNumber: 1,
+                date: today,
+                betTime: getKoreanTime(),
+                status: 'active',
+                createdAt: getKoreanTime()
+            },
+            {
+                sessionId: new ObjectId(),
+                userId: 'test-user-3',
+                memberId: 'test-user-3',
+                memberName: '테스트사용자3',
+                prediction: 'home',
+                points: 1500,
+                gameNumber: 1,
+                date: today,
+                betTime: getKoreanTime(),
+                status: 'active',
+                createdAt: getKoreanTime()
+            },
+            {
+                sessionId: new ObjectId(),
+                userId: 'test-user-4',
+                memberId: 'test-user-4',
+                memberName: '테스트사용자4',
+                prediction: 'away',
+                points: 3000,
+                gameNumber: 1,
+                date: today,
+                betTime: getKoreanTime(),
+                status: 'active',
+                createdAt: getKoreanTime()
+            },
+            {
+                sessionId: new ObjectId(),
+                userId: 'test-user-5',
+                memberId: 'test-user-5',
+                memberName: '테스트사용자5',
+                prediction: 'home',
+                points: 2500,
+                gameNumber: 1,
+                date: today,
+                betTime: getKoreanTime(),
+                status: 'active',
+                createdAt: getKoreanTime()
+            }
+        ];
+        
+        await predictionsCollection.insertMany(testPredictions);
+        
+        console.log('테스트 배팅 데이터 5개가 생성되었습니다.');
+        
+        res.json({
+            success: true,
+            message: '테스트 배팅 데이터가 생성되었습니다.',
+            count: testPredictions.length
+        });
+        
+    } catch (error) {
+        console.error('테스트 데이터 생성 오류:', error);
+        res.json({
+            success: false,
+            message: '테스트 데이터 생성 중 오류가 발생했습니다.'
         });
     }
 });

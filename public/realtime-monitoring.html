@@ -317,6 +317,37 @@
             </div>
         </div>
         
+        <!-- 로그인 상태 요약 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5><i class="fas fa-users me-2"></i>실시간 로그인 현황</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="h3 mb-0 text-primary" id="loggedInEmployees">0</div>
+                                <small class="text-muted">직원 로그인</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h3 mb-0 text-success" id="loggedInMembers">0</div>
+                                <small class="text-muted">회원 로그인</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h3 mb-0 text-info" id="totalLoggedIn">0</div>
+                                <small class="text-muted">전체 로그인</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h3 mb-0 text-warning" id="lastUpdateTime">--</div>
+                                <small class="text-muted">마지막 업데이트</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 분석 요약 카드 -->
         <div class="stats-summary">
             <h5 class="mb-3"><i class="fas fa-trophy me-2"></i>오늘의 게임 분석 요약</h5>
@@ -644,6 +675,31 @@
                 }
             } catch (error) {
                 console.error('사용자 통계 업데이트 오류:', error);
+            }
+        }
+
+        // 로그인 상태 업데이트
+        async function updateLoginStats() {
+            try {
+                const response = await fetch('/api/system/login-stats');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const loggedInEmployees = document.getElementById('loggedInEmployees');
+                    const loggedInMembers = document.getElementById('loggedInMembers');
+                    const totalLoggedIn = document.getElementById('totalLoggedIn');
+                    const lastUpdateTime = document.getElementById('lastUpdateTime');
+                    
+                    if (loggedInEmployees) loggedInEmployees.textContent = result.data.employees || 0;
+                    if (loggedInMembers) loggedInMembers.textContent = result.data.members || 0;
+                    if (totalLoggedIn) totalLoggedIn.textContent = result.data.total || 0;
+                    if (lastUpdateTime) {
+                        const updateTime = new Date(result.data.timestamp);
+                        lastUpdateTime.textContent = updateTime.toLocaleTimeString('ko-KR');
+                    }
+                }
+            } catch (error) {
+                console.error('로그인 상태 업데이트 오류:', error);
             }
         }
 
@@ -1028,6 +1084,7 @@
             // 초기 데이터 로드
             loadTeamGamesData();
             updateUserStats();
+            updateLoginStats();
             loadBettingData();
             loadGameBettingStats();
             
@@ -1035,6 +1092,7 @@
             updateInterval = setInterval(() => {
                 loadTeamGamesData();
                 updateUserStats();
+                updateLoginStats();
                 loadBettingData();
                 loadGameBettingStats();
             }, 2000); // 2초마다 업데이트

@@ -13,15 +13,17 @@ router.get('/user-stats', async (req, res) => {
             isLoggedIn: true
         });
 
-        // 현재 배팅에 참여한 인원 수
+        // 현재 배팅에 참여한 인원 수 (더미 데이터 제외)
         const bettingUsers = await db.collection('betting-predictions').distinct('userId', {
+            status: { $ne: 'dummy' },
             createdAt: {
                 $gte: new Date(new Date().setHours(0, 0, 0, 0))
             }
         });
 
-        // 오늘 배팅 선택한 총 개수
+        // 오늘 배팅 선택한 총 개수 (더미 데이터 제외)
         const totalChoices = await db.collection('betting-predictions').countDocuments({
+            status: { $ne: 'dummy' },
             createdAt: {
                 $gte: new Date(new Date().setHours(0, 0, 0, 0))
             }
@@ -79,15 +81,16 @@ router.get('/game-betting-stats', async (req, res) => {
             });
         }
 
-        // 전체 배팅 데이터 확인 (디버깅용)
-        const allPredictions = await db.collection('betting-predictions').find({}).toArray();
-        console.log(`전체 배팅 예측 데이터: ${allPredictions.length}개`);
+        // 전체 배팅 데이터 확인 (디버깅용, 더미 데이터 제외)
+        const allPredictions = await db.collection('betting-predictions').find({ status: { $ne: 'dummy' } }).toArray();
+        console.log(`실제 배팅 예측 데이터: ${allPredictions.length}개`);
         console.log('배팅 데이터 샘플:', allPredictions.slice(0, 3));
 
-        // 해당 날짜의 배팅 예측 데이터 조회 (날짜 형식 유연하게 처리)
+        // 해당 날짜의 배팅 예측 데이터 조회 (더미 데이터 제외, 날짜 형식 유연하게 처리)
         const bettingData = await db.collection('betting-predictions').aggregate([
             {
                 $match: {
+                    status: { $ne: 'dummy' },
                     $or: [
                         { date: date },
                         { date: new Date(date) },
