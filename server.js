@@ -103,6 +103,89 @@ async function autoLogoutAllMembers() {
     }
 }
 
+// 배팅 시스템 자동 초기화 함수
+async function initializeBettingCollections() {
+    try {
+        if (!db) {
+            console.log('데이터베이스 연결이 없어 배팅 컬렉션 초기화를 건너뜁니다.');
+            return;
+        }
+
+        // 1. betting-predictions 컬렉션 자동 생성
+        const predictionsCollection = db.collection('betting-predictions');
+        const existingPredictions = await predictionsCollection.countDocuments();
+        
+        if (existingPredictions === 0) {
+            const dummyPrediction = {
+                memberId: 'system-init',
+                memberName: '시스템',
+                gameNumber: 1,
+                prediction: 'home',
+                points: 0,
+                betTime: new Date(),
+                createdAt: new Date(),
+                status: 'dummy'
+            };
+            
+            await predictionsCollection.insertOne(dummyPrediction);
+            console.log('betting-predictions 컬렉션이 자동으로 생성되었습니다.');
+        } else {
+            console.log('betting-predictions 컬렉션이 이미 존재합니다.');
+        }
+
+        // 2. 배팅 시스템 자동 활성화
+        const systemCollection = db.collection('betting-system');
+        const systemStatus = await systemCollection.findOne({ _id: 'system' });
+        
+        if (!systemStatus || !systemStatus.isActive) {
+            await systemCollection.updateOne(
+                { _id: 'system' },
+                { 
+                    $set: { 
+                        isActive: true,
+                        updatedAt: getKoreanTime()
+                    }
+                },
+                { upsert: true }
+            );
+            console.log('배팅 시스템이 자동으로 활성화되었습니다.');
+        } else {
+            console.log('배팅 시스템이 이미 활성화되어 있습니다.');
+        }
+
+        // 3. 오늘 날짜의 배팅 세션 자동 생성
+        const today = new Date().toISOString().split('T')[0];
+        const sessionsCollection = db.collection('betting-sessions');
+        const existingSessions = await sessionsCollection.countDocuments({
+            date: today,
+            status: 'active'
+        });
+
+        if (existingSessions === 0) {
+            // 각 경기별 배팅 세션 자동 생성
+            for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
+                const session = {
+                    gameNumber: gameNumber,
+                    gameType: 'baseball',
+                    date: today,
+                    status: 'active',
+                    startTime: new Date(),
+                    createdAt: new Date(),
+                    updatedAt: getKoreanTime()
+                };
+                
+                await sessionsCollection.insertOne(session);
+            }
+            console.log('오늘의 배팅 세션이 자동으로 생성되었습니다. (5경기)');
+        } else {
+            console.log('오늘의 배팅 세션이 이미 존재합니다.');
+        }
+        
+    } catch (error) {
+        console.error('배팅 시스템 자동 초기화 오류:', error);
+    }
+}
+
 // MongoDB 연결
 async function connectToMongoDB() {
     try {
@@ -112,6 +195,9 @@ async function connectToMongoDB() {
         
         // 데이터베이스 연결 후 cron job 설정
         setupAutoLogoutCron();
+        
+        // 배팅 컬렉션 자동 초기화
+        await initializeBettingCollections();
         
     } catch (error) {
         console.error('MongoDB 연결 오류:', error);

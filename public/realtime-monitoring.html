@@ -307,15 +307,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-chart-line me-2"></i>사용자 게임 분석</h2>
             <div class="d-flex align-items-center">
-                <button class="btn btn-info btn-sm me-2" onclick="checkBettingSystemStatus()">
-                    <i class="fas fa-info-circle me-1"></i>배팅 시스템 상태
-                </button>
-                <button class="btn btn-warning btn-sm me-2" onclick="activateBettingSystem()">
-                    <i class="fas fa-play me-1"></i>배팅 시스템 활성화
-                </button>
-                <button class="btn btn-warning btn-sm me-2" onclick="initializeBettingSystem()">
-                    <i class="fas fa-play me-1"></i>배팅 시스템 초기화
-                </button>
+                <span class="badge bg-success me-2">
+                    <i class="fas fa-check-circle me-1"></i>자동 초기화됨
+                </span>
                 <span class="badge bg-success me-2 live-indicator">
                     <i class="fas fa-circle"></i> LIVE
                 </span>
@@ -1021,87 +1015,7 @@
             }
         });
 
-        // 배팅 시스템 상태 확인
-        async function checkBettingSystemStatus() {
-            try {
-                const response = await fetch('/api/betting/system-status');
-                const result = await response.json();
-                
-                if (result.success) {
-                    const data = result.data;
-                    let message = `배팅 시스템 상태:\n`;
-                    message += `- 시스템 활성화: ${data.systemActive ? '예' : '아니오'}\n`;
-                    message += `- 활성 세션 수: ${data.totalSessions}개\n`;
-                    message += `- 오늘 배팅 예측: ${data.totalPredictions}개\n`;
-                    
-                    if (data.predictions.length > 0) {
-                        message += `\n배팅 예측 데이터:\n`;
-                        data.predictions.forEach((pred, index) => {
-                            message += `${index + 1}. 사용자: ${pred.userId}, 예측: ${pred.prediction}, 포인트: ${pred.points}\n`;
-                        });
-                    }
-                    
-                    alert(message);
-                } else {
-                    alert('배팅 시스템 상태 확인에 실패했습니다: ' + result.message);
-                }
-            } catch (error) {
-                console.error('배팅 시스템 상태 확인 오류:', error);
-                alert('배팅 시스템 상태 확인 중 오류가 발생했습니다.');
-            }
-        }
 
-        // 배팅 시스템 활성화
-        async function activateBettingSystem() {
-            try {
-                const response = await fetch('/api/betting/activate-system', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('배팅 시스템이 활성화되었습니다!');
-                    // 데이터 새로고침
-                    loadBettingData();
-                    loadGameBettingStats();
-                } else {
-                    alert('배팅 시스템 활성화에 실패했습니다: ' + result.message);
-                }
-            } catch (error) {
-                console.error('배팅 시스템 활성화 오류:', error);
-                alert('배팅 시스템 활성화 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 배팅 시스템 초기화
-        async function initializeBettingSystem() {
-            try {
-                const response = await fetch('/api/betting/initialize-system', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('배팅 시스템이 초기화되었습니다!');
-                    // 데이터 새로고침
-                    loadBettingData();
-                    loadGameBettingStats();
-                } else {
-                    alert('배팅 시스템 초기화에 실패했습니다: ' + result.message);
-                }
-            } catch (error) {
-                console.error('배팅 시스템 초기화 오류:', error);
-                alert('배팅 시스템 초기화 중 오류가 발생했습니다.');
-            }
-        }
 
         // 페이지 로드 시 초기화
         window.onload = function() {

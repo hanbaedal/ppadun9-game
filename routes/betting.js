@@ -730,6 +730,26 @@ router.post('/initialize-system', async (req, res) => {
             { upsert: true }
         );
 
+        // betting-predictions 컬렉션 자동 생성 (더미 데이터로 초기화)
+        const predictionsCollection = db.collection(BETTING_PREDICTIONS_COLLECTION);
+        const dummyPrediction = {
+            memberId: 'system-init',
+            memberName: '시스템',
+            gameNumber: 1,
+            prediction: 'home',
+            points: 0,
+            betTime: new Date(),
+            createdAt: new Date(),
+            status: 'dummy'
+        };
+        
+        // 컬렉션이 비어있는지 확인하고 더미 데이터 삽입
+        const existingPredictions = await predictionsCollection.countDocuments();
+        if (existingPredictions === 0) {
+            await predictionsCollection.insertOne(dummyPrediction);
+            console.log('betting-predictions 컬렉션이 생성되었습니다.');
+        }
+
         // 오늘 날짜
         const today = new Date().toISOString().split('T')[0];
 
@@ -756,7 +776,7 @@ router.post('/initialize-system', async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: '배팅 시스템이 초기화되었습니다.',
+            message: '배팅 시스템이 초기화되었습니다. (betting-predictions 컬렉션 생성됨)',
             sessions: sessions
         });
 
