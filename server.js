@@ -217,6 +217,84 @@ app.use('/api/game-stats', gameStatsRoutes);
 // members 라우트는 /api/members로 접근하도록 변경
 app.use('/api/members', membersRoutes);
 
+// 직원 API 라우트들 (정적 파일보다 먼저 정의)
+app.get('/api/employee/current-user', (req, res) => {
+    try {
+        console.log('=== 현재 사용자 정보 요청 ===');
+        console.log('세션 ID:', req.sessionID);
+        console.log('세션 정보:', req.session);
+        
+        // 세션 기반 대신 간단한 응답
+        if (req.session && req.session.user) {
+            console.log('세션에서 사용자 발견:', req.session.user);
+            res.json({ 
+                success: true, 
+                user: req.session.user 
+            });
+        } else {
+            console.log('세션에 사용자 정보 없음 - 기본 응답');
+            // 세션이 없어도 400 오류 대신 기본 응답
+            res.json({ 
+                success: false, 
+                message: '로그인되지 않았습니다.',
+                user: null
+            });
+        }
+    } catch (error) {
+        console.error('현재 사용자 정보 조회 오류:', error);
+        // 오류가 발생해도 400 대신 500 사용
+        res.status(500).json({ 
+            success: false,
+            error: '서버 오류가 발생했습니다.',
+            user: null
+        });
+    }
+});
+
+// 로그아웃 API
+app.post('/api/employee/logout', async (req, res) => {
+    try {
+        // 로그아웃 시간을 데이터베이스에 기록
+        if (req.session && req.session.user && req.session.user.username) {
+            if (!db) {
+                console.error('MongoDB 연결이 설정되지 않았습니다.');
+                return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+            }
+
+            const collection = db.collection(COLLECTION_NAME);
+            
+            // 로그아웃 시간 업데이트
+            await collection.updateOne(
+                { username: req.session.user.username },
+                { 
+                    $set: { 
+                        lastLogoutAt: getKoreanTime(),
+                        isLoggedIn: false,
+                        currentSessionId: null, // 세션 ID 초기화
+                        updatedAt: getKoreanTime()
+                    } 
+                }
+            );
+            
+            console.log('로그아웃 시간 기록 완료:', req.session.user.username);
+        }
+
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('세션 삭제 오류:', err);
+                return res.status(500).json({ error: '로그아웃 중 오류가 발생했습니다.' });
+            }
+            res.json({ 
+                success: true, 
+                message: '로그아웃되었습니다.' 
+            });
+        });
+    } catch (error) {
+        console.error('로그아웃 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
 // 정적 파일 제공 (API 라우트 이후에 정의)
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -745,83 +823,7 @@ app.post('/api/employee/login', async (req, res) => {
     }
 });
 
-// 현재 로그인한 사용자 정보 가져오기 API (무료 플랜 최적화)
-app.get('/api/employee/current-user', (req, res) => {
-    try {
-        console.log('=== 현재 사용자 정보 요청 ===');
-        console.log('세션 ID:', req.sessionID);
-        console.log('세션 정보:', req.session);
-        
-        // 세션 기반 대신 간단한 응답
-        if (req.session && req.session.user) {
-            console.log('세션에서 사용자 발견:', req.session.user);
-            res.json({ 
-                success: true, 
-                user: req.session.user 
-            });
-        } else {
-            console.log('세션에 사용자 정보 없음 - 기본 응답');
-            // 세션이 없어도 400 오류 대신 기본 응답
-            res.json({ 
-                success: false, 
-                message: '로그인되지 않았습니다.',
-                user: null
-            });
-        }
-    } catch (error) {
-        console.error('현재 사용자 정보 조회 오류:', error);
-        // 오류가 발생해도 400 대신 500 사용
-        res.status(500).json({ 
-            success: false,
-            error: '서버 오류가 발생했습니다.',
-            user: null
-        });
-    }
-});
 
-// 로그아웃 API
-app.post('/api/employee/logout', async (req, res) => {
-    try {
-        // 로그아웃 시간을 데이터베이스에 기록
-        if (req.session && req.session.user && req.session.user.username) {
-            if (!db) {
-                console.error('MongoDB 연결이 설정되지 않았습니다.');
-                return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
-            }
-
-            const collection = db.collection(COLLECTION_NAME);
-            
-            // 로그아웃 시간 업데이트
-            await collection.updateOne(
-                { username: req.session.user.username },
-                { 
-                    $set: { 
-                        lastLogoutAt: getKoreanTime(),
-                        isLoggedIn: false,
-                        currentSessionId: null, // 세션 ID 초기화
-                        updatedAt: getKoreanTime()
-                    } 
-                }
-            );
-            
-            console.log('로그아웃 시간 기록 완료:', req.session.user.username);
-        }
-
-        req.session.destroy((err) => {
-            if (err) {
-                console.error('세션 삭제 오류:', err);
-                return res.status(500).json({ error: '로그아웃 중 오류가 발생했습니다.' });
-            }
-            res.json({ 
-                success: true, 
-                message: '로그아웃되었습니다.' 
-            });
-        });
-    } catch (error) {
-        console.error('로그아웃 오류:', error);
-        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
-    }
-});
 
 // 세션 상태 체크 및 정리 API
 app.get('/api/employee/check-session-status', async (req, res) => {
