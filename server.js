@@ -287,10 +287,10 @@ app.use(express.urlencoded({ extended: true }));
 // 세션 설정
 const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
-    resave: false, // 세션 변경 시에만 저장
-    saveUninitialized: false, // 초기화된 세션만 저장
+    resave: true, // 세션 변경 시 저장
+    saveUninitialized: true, // 초기화되지 않은 세션도 저장
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // 프로덕션에서만 secure
+        secure: false, // 개발환경에서는 false로 설정
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         httpOnly: true,
         sameSite: 'lax', // strict에서 lax로 변경하여 400 오류 방지
@@ -299,7 +299,7 @@ const sessionConfig = {
     name: 'ppadun9.sid' // 세션 쿠키 이름 명시
 };
 
-// 세션 스토어 설정 - 개발환경에서는 MemoryStore, 프로덕션에서는 다른 스토어 고려
+// 세션 스토어 설정 - MemoryStore 사용
 sessionConfig.store = new session.MemoryStore();
 
 app.use(session(sessionConfig));

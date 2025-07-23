@@ -192,6 +192,11 @@ router.post('/login', async (req, res) => {
             }
         );
         
+        // 세션에 사용자 정보 저장
+        req.session.userId = userId;
+        req.session.userType = 'member';
+        req.session.isLoggedIn = true;
+        
         // 비밀번호 제외하고 회원 정보 반환
         const { password: _, ...memberInfo } = member;
         const updatedMemberInfo = {
@@ -242,12 +247,62 @@ router.post('/logout', async (req, res) => {
             }
         );
         
+        // 세션 정리
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('세션 정리 오류:', err);
+            }
+        });
+        
         res.json({
             success: true,
             message: '로그아웃되었습니다.'
         });
     } catch (error) {
         console.error('회원 로그아웃 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 로그인 상태 확인 API
+router.get('/check-login', async (req, res) => {
+    try {
+        // 세션에서 로그인 상태 확인
+        if (req.session && req.session.isLoggedIn && req.session.userId) {
+            const db = getDb();
+            const collection = db.collection('game-member');
+            
+            // 데이터베이스에서 최신 회원 정보 조회
+            const member = await collection.findOne({ userId: req.session.userId });
+            
+            if (member) {
+                const { password, ...memberInfo } = member;
+                res.json({
+                    success: true,
+                    message: '로그인된 상태입니다.',
+                    user: memberInfo
+                });
+            } else {
+                // 세션은 있지만 데이터베이스에 없는 경우
+                req.session.destroy();
+                res.json({
+                    success: false,
+                    message: '로그인되지 않았습니다.',
+                    user: null
+                });
+            }
+        } else {
+            res.json({
+                success: false,
+                message: '로그인되지 않았습니다.',
+                user: null
+            });
+        }
+    } catch (error) {
+        console.error('로그인 상태 확인 오류:', error);
         res.status(500).json({
             success: false,
             message: '서버 오류가 발생했습니다.'
