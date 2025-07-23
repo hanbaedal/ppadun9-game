@@ -621,13 +621,35 @@
                 const logoutItem = document.getElementById('logoutItem');
                 const logoutBtn = document.getElementById('logoutBtn');
                 
-                // 먼저 API 호출로 실제 로그인 상태 확인
+                // 먼저 세션 디버깅 API 호출
                 try {
-                    const response = await fetch('/api/employee/current-user', {
+                    const debugResponse = await fetch('/api/debug/session', {
+                        method: 'GET',
                         credentials: 'include',
                         headers: {
                             'Accept': 'application/json',
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+                    
+                    if (debugResponse.ok) {
+                        const debugData = await debugResponse.json();
+                        console.log('세션 디버깅 정보:', debugData);
+                    }
+                } catch (debugError) {
+                    console.error('세션 디버깅 API 호출 오류:', debugError);
+                }
+                
+                // 현재 사용자 정보 API 호출
+                try {
+                    const response = await fetch('/api/employee/current-user', {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Cache-Control': 'no-cache'
                         }
                     });
                     console.log('API 응답 상태:', response.status);
@@ -645,19 +667,31 @@
                             userNameElement.textContent = data.user.name || data.user.username;
                             logoutItem.style.display = 'block';
                             
-                            // 로그아웃 버튼 이벤트 리스너
-                            logoutBtn.addEventListener('click', function(e) {
+                            // 로그아웃 버튼 이벤트 리스너 (기존 리스너 제거 후 추가)
+                            logoutBtn.removeEventListener('click', logoutBtn._logoutHandler);
+                            logoutBtn._logoutHandler = function(e) {
                                 e.preventDefault();
                                 showLogoutConfirm();
-                            });
+                            };
+                            logoutBtn.addEventListener('click', logoutBtn._logoutHandler);
                             
                             // 모든 메뉴 활성화
                             enableAllMenus();
                             return;
+                        } else {
+                            console.log('API에서 로그인되지 않은 상태 확인');
+                            // 로컬 스토리지에서 사용자 정보 제거
+                            localStorage.removeItem('currentUser');
                         }
+                    } else {
+                        console.log('API 응답이 성공하지 않음, 상태:', response.status);
+                        // 로컬 스토리지에서 사용자 정보 제거
+                        localStorage.removeItem('currentUser');
                     }
                 } catch (apiError) {
                     console.error('API 호출 오류:', apiError);
+                    // API 호출 실패 시 로컬 스토리지에서 사용자 정보 제거
+                    localStorage.removeItem('currentUser');
                 }
                 
                 // API에서 로그인 정보를 가져올 수 없는 경우, 로컬 스토리지 확인
@@ -665,56 +699,56 @@
                 console.log('로컬 스토리지 사용자 정보:', storedUser);
                 
                 if (storedUser) {
-                    const user = JSON.parse(storedUser);
-                    console.log('로컬 스토리지 사용자 정보:', user);
-                    
-                    // 로그인된 사용자가 있는 경우 - 실제 이름을 헤더 중간에 표시
-                    userNameElement.textContent = user.name || user.username;
-                    console.log('사용자 이름 표시:', user.name || user.username);
-                    
-                    // 로그아웃 버튼 표시
-                    logoutItem.style.display = 'block';
-                    
-                    // 로그아웃 버튼 이벤트 리스너
-                    logoutBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        showLogoutConfirm();
-                    });
-                    
-                    // 모든 메뉴 활성화
-                    enableAllMenus();
+                    try {
+                        const user = JSON.parse(storedUser);
+                        console.log('로컬 스토리지 사용자 정보:', user);
+                        
+                        // 로그인된 사용자가 있는 경우 - 실제 이름을 헤더 중간에 표시
+                        userNameElement.textContent = user.name || user.username;
+                        console.log('사용자 이름 표시:', user.name || user.username);
+                        
+                        // 로그아웃 버튼 표시
+                        logoutItem.style.display = 'block';
+                        
+                        // 로그아웃 버튼 이벤트 리스너 (기존 리스너 제거 후 추가)
+                        logoutBtn.removeEventListener('click', logoutBtn._logoutHandler);
+                        logoutBtn._logoutHandler = function(e) {
+                            e.preventDefault();
+                            showLogoutConfirm();
+                        };
+                        logoutBtn.addEventListener('click', logoutBtn._logoutHandler);
+                        
+                        // 모든 메뉴 활성화
+                        enableAllMenus();
+                    } catch (parseError) {
+                        console.error('로컬 스토리지 파싱 오류:', parseError);
+                        localStorage.removeItem('currentUser');
+                        showLoginState();
+                    }
                 } else {
                     console.log('로그인되지 않은 상태');
-                    // 로그인되지 않은 경우 - '로그인' 표시
-                    userNameElement.textContent = '로그인';
-                    userNameElement.onclick = function(e) {
-                        e.preventDefault();
-                        window.location.href = '/employee-login.html';
-                    };
-                    userNameElement.title = '로그인하기';
-                    userNameElement.style.cursor = 'pointer';
-                    
-                    // 로그아웃 버튼 숨기기
-                    logoutItem.style.display = 'none';
-                    
-                    // 메뉴 비활성화 (로그인 필요)
-                    disableAllMenus();
+                    showLoginState();
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
-                const userNameElement = document.getElementById('userName');
-                const logoutItem = document.getElementById('logoutItem');
-                
-                userNameElement.textContent = '로그인';
-                userNameElement.onclick = function(e) {
-                    e.preventDefault();
-                    window.location.href = '/employee-login.html';
-                };
-                userNameElement.title = '로그인하기';
-                userNameElement.style.cursor = 'pointer';
-                logoutItem.style.display = 'none';
-                disableAllMenus();
+                showLoginState();
             }
+        }
+        
+        // 로그인 상태 표시 함수
+        function showLoginState() {
+            const userNameElement = document.getElementById('userName');
+            const logoutItem = document.getElementById('logoutItem');
+            
+            userNameElement.textContent = '로그인';
+            userNameElement.onclick = function(e) {
+                e.preventDefault();
+                window.location.href = '/employee-login.html';
+            };
+            userNameElement.title = '로그인하기';
+            userNameElement.style.cursor = 'pointer';
+            logoutItem.style.display = 'none';
+            disableAllMenus();
         }
         
         // 모든 메뉴 활성화

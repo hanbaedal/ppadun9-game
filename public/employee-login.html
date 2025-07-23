@@ -370,10 +370,29 @@
                         console.log('사용자 정보를 로컬 스토리지에 저장:', data.user);
                     }
                     
-                    // 로그인 성공 시 메인 페이지로 이동
-                    setTimeout(() => {
+                    // 세션 설정 확인을 위한 디버깅 API 호출
+                    setTimeout(async () => {
+                        try {
+                            const debugResponse = await fetch('/api/debug/session', {
+                                method: 'GET',
+                                credentials: 'include',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            if (debugResponse.ok) {
+                                const debugData = await debugResponse.json();
+                                console.log('로그인 후 세션 디버깅 정보:', debugData);
+                            }
+                        } catch (debugError) {
+                            console.error('세션 디버깅 API 호출 오류:', debugError);
+                        }
+                        
+                        // 메인 페이지로 이동
                         window.location.href = '/';
-                    }, 1500);
+                    }, 2000);
                 } else {
                     showAlert(data.error || '로그인에 실패했습니다.', 'danger');
                 }

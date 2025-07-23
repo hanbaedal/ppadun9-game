@@ -161,14 +161,16 @@ app.use(express.urlencoded({ extended: true }));
 // 세션 설정
 const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // 세션 변경 시 자동 저장
+    saveUninitialized: true, // 초기화되지 않은 세션도 저장
     cookie: {
         secure: process.env.NODE_ENV === 'production', // Render에서는 HTTPS 사용
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         httpOnly: true,
-        sameSite: 'lax' // strict에서 lax로 변경하여 400 오류 방지
-    }
+        sameSite: 'lax', // strict에서 lax로 변경하여 400 오류 방지
+        path: '/' // 모든 경로에서 쿠키 접근 가능
+    },
+    name: 'ppadun9.sid' // 세션 쿠키 이름 명시
 };
 
 // 세션 스토어 설정
@@ -725,10 +727,12 @@ app.post('/api/employee/login', async (req, res) => {
         };
         
         console.log('로그인 성공, 세션에 저장할 사용자 정보:', updatedUserInfo);
+        console.log('세션 ID:', req.sessionID);
         
         // 세션에 사용자 정보 저장
         req.session.user = updatedUserInfo;
         console.log('세션 저장 완료:', req.session.user);
+        console.log('세션 정보:', req.session);
         
         res.json({ 
             success: true, 
@@ -745,6 +749,8 @@ app.post('/api/employee/login', async (req, res) => {
 app.get('/api/employee/current-user', (req, res) => {
     try {
         console.log('=== 현재 사용자 정보 요청 ===');
+        console.log('세션 ID:', req.sessionID);
+        console.log('세션 정보:', req.session);
         
         // 세션 기반 대신 간단한 응답
         if (req.session && req.session.user) {
@@ -1150,6 +1156,27 @@ app.get('/api/employee/validate-session', async (req, res) => {
             valid: false,
             error: '서버 오류가 발생했습니다.' 
         });
+    }
+});
+
+// 세션 디버깅 API
+app.get('/api/debug/session', (req, res) => {
+    try {
+        console.log('=== 세션 디버깅 요청 ===');
+        console.log('세션 ID:', req.sessionID);
+        console.log('세션 정보:', req.session);
+        console.log('쿠키 정보:', req.headers.cookie);
+        
+        res.json({
+            sessionId: req.sessionID,
+            session: req.session,
+            hasUser: !!(req.session && req.session.user),
+            user: req.session && req.session.user ? req.session.user : null,
+            cookies: req.headers.cookie
+        });
+    } catch (error) {
+        console.error('세션 디버깅 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
 
