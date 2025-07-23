@@ -27,12 +27,33 @@ router.get('/user-stats', async (req, res) => {
             }
         });
 
+        // 오늘 총 승리 포인트
+        const today = new Date().toISOString().split('T')[0];
+        const pointHistoryCollection = db.collection('point-history');
+        const todayWinnings = await pointHistoryCollection.aggregate([
+            {
+                $match: {
+                    type: 'betting_win',
+                    date: today
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalWinnings: { $sum: '$amount' }
+                }
+            }
+        ]).toArray();
+
+        const totalWinnings = todayWinnings.length > 0 ? todayWinnings[0].totalWinnings : 0;
+
         res.json({
             success: true,
             data: {
                 loggedInUsers,
                 bettingUsers: bettingUsers.length,
-                totalChoices
+                totalChoices,
+                totalWinnings
             }
         });
 

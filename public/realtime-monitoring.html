@@ -403,7 +403,7 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card bg-primary text-white">
                                     <div class="card-body text-center">
                                         <h4 id="loggedInCount">0</h4>
@@ -411,7 +411,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card bg-success text-white">
                                     <div class="card-body text-center">
                                         <h4 id="bettingCount">0</h4>
@@ -419,11 +419,70 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card bg-info text-white">
                                     <div class="card-body text-center">
                                         <h4 id="choiceCount">0</h4>
                                         <p class="mb-0">현재 회원이 배팅선택한 것</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h4 id="totalWinnings">₩0</h4>
+                                        <p class="mb-0">오늘 총 승리 포인트</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 승리 포인트 계산 및 보상 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-trophy me-2"></i>승리 포인트 계산 및 보상</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">경기 선택</label>
+                                    <select class="form-select" id="gameSelect">
+                                        <option value="">경기를 선택하세요</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">예측 결과</label>
+                                    <select class="form-select" id="predictionResult">
+                                        <option value="">결과를 선택하세요</option>
+                                        <option value="1루">1루</option>
+                                        <option value="2루">2루</option>
+                                        <option value="3루">3루</option>
+                                        <option value="홈런">홈런</option>
+                                        <option value="삼진">삼진</option>
+                                        <option value="아웃">아웃</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="calculateWinnings()">
+                                    <i class="fas fa-calculator"></i> 승리 포인트 계산
+                                </button>
+                                <button class="btn btn-success ms-2" onclick="distributeWinnings()" id="distributeBtn" style="display: none;">
+                                    <i class="fas fa-gift"></i> 보상 지급
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6>계산 결과</h6>
+                                        <div id="calculationResult">
+                                            <p class="text-muted">경기와 결과를 선택한 후 계산 버튼을 클릭하세요.</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -570,6 +629,7 @@
                     document.getElementById('loggedInCount').textContent = result.data.loggedInUsers || 0;
                     document.getElementById('bettingCount').textContent = result.data.bettingUsers || 0;
                     document.getElementById('choiceCount').textContent = result.data.totalChoices || 0;
+                    document.getElementById('totalWinnings').textContent = `₩${(result.data.totalWinnings || 0).toLocaleString()}`;
                     
                     // 상단 요약 통계도 업데이트
                     document.getElementById('currentLoggedInUsers').textContent = result.data.loggedInUsers || 0;
@@ -578,6 +638,114 @@
                 }
             } catch (error) {
                 console.error('사용자 통계 업데이트 오류:', error);
+            }
+        }
+
+        // 승리 포인트 계산
+        async function calculateWinnings() {
+            const gameNumber = document.getElementById('gameSelect').value;
+            const prediction = document.getElementById('predictionResult').value;
+            
+            if (!gameNumber || !prediction) {
+                alert('경기와 결과를 모두 선택해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/betting/calculate-winnings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gameNumber: parseInt(gameNumber),
+                        prediction: prediction,
+                        date: new Date().toISOString().split('T')[0]
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    const calculationResult = document.getElementById('calculationResult');
+                    calculationResult.innerHTML = `
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>총 배팅자:</strong> ${result.data.totalBettors}명<br>
+                                <strong>총 배팅 포인트:</strong> ₩${result.data.totalPoints.toLocaleString()}<br>
+                                <strong>승리자 수:</strong> ${result.data.winners.length}명<br>
+                                <strong>실패자 수:</strong> ${result.data.losers.length}명
+                            </div>
+                            <div class="col-6">
+                                <strong>실패자 총 포인트:</strong> ₩${result.data.totalLoserPoints.toLocaleString()}<br>
+                                <strong>승리자당 지급 포인트:</strong> ₩${result.data.pointsPerWinner.toLocaleString()}<br>
+                                <strong>총 지급 포인트:</strong> ₩${result.data.totalWinnings.toLocaleString()}
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mt-3">
+                            <strong>승리자 목록:</strong><br>
+                            ${result.data.winners.map(winner => 
+                                `${winner.userName} (${winner.points}포인트 배팅)`
+                            ).join('<br>')}
+                        </div>
+                    `;
+                    
+                    // 보상 지급 버튼 표시
+                    document.getElementById('distributeBtn').style.display = 'inline-block';
+                    
+                    // 전역 변수에 계산 결과 저장
+                    window.calculationData = result.data;
+                } else {
+                    alert('계산 중 오류가 발생했습니다: ' + result.message);
+                }
+            } catch (error) {
+                console.error('승리 포인트 계산 오류:', error);
+                alert('계산 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 보상 지급
+        async function distributeWinnings() {
+            if (!window.calculationData) {
+                alert('먼저 승리 포인트를 계산해주세요.');
+                return;
+            }
+
+            if (!confirm('정말로 승리자들에게 보상을 지급하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/betting/distribute-winnings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gameNumber: window.calculationData.gameNumber,
+                        prediction: window.calculationData.prediction,
+                        date: window.calculationData.date,
+                        winners: window.calculationData.winners,
+                        pointsPerWinner: window.calculationData.pointsPerWinner
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('보상이 성공적으로 지급되었습니다!');
+                    document.getElementById('distributeBtn').style.display = 'none';
+                    document.getElementById('calculationResult').innerHTML = '<p class="text-success">보상 지급 완료!</p>';
+                    
+                    // 사용자 통계 업데이트
+                    updateUserStats();
+                } else {
+                    alert('보상 지급 중 오류가 발생했습니다: ' + result.message);
+                }
+            } catch (error) {
+                console.error('보상 지급 오류:', error);
+                alert('보상 지급 중 오류가 발생했습니다.');
             }
         }
 
