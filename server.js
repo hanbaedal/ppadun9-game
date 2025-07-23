@@ -111,21 +111,67 @@ async function initializeBettingCollections() {
             return;
         }
 
-        // 1. betting-predictions 컬렉션 자동 생성
-        const predictionsCollection = db.collection('betting-predictions');
-        const existingPredictions = await predictionsCollection.countDocuments();
+        // 1. 경기별 배팅 컬렉션 자동 생성
+        const today = new Date().toISOString().split('T')[0];
         
-        if (existingPredictions === 0) {
-            // 컬렉션만 생성하고 더미 데이터는 삽입하지 않음
-            console.log('betting-predictions 컬렉션이 자동으로 생성되었습니다.');
-        } else {
-            // 더미 데이터가 있다면 제거
-            const dummyData = await predictionsCollection.find({ status: 'dummy' }).toArray();
-            if (dummyData.length > 0) {
-                await predictionsCollection.deleteMany({ status: 'dummy' });
-                console.log(`${dummyData.length}개의 더미 데이터가 제거되었습니다.`);
+        for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
+            const collectionName = `betting-game-${gameNumber}`;
+            const gameCollection = db.collection(collectionName);
+            
+            // 컬렉션이 비어있는지 확인하고 더미 데이터 삽입
+            const existingData = await gameCollection.countDocuments();
+            if (existingData === 0) {
+                const dummyData = {
+                    userId: 'system-init',
+                    userName: '시스템',
+                    prediction: 'home',
+                    points: 0,
+                    date: today,
+                    status: 'dummy',
+                    betTime: new Date(),
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                await gameCollection.insertOne(dummyData);
+                console.log(`${collectionName} 컬렉션이 자동으로 생성되었습니다.`);
+            } else {
+                // 더미 데이터가 있다면 제거
+                const dummyData = await gameCollection.find({ userId: 'system-init' }).toArray();
+                if (dummyData.length > 0) {
+                    await gameCollection.deleteMany({ userId: 'system-init' });
+                    console.log(`${collectionName}에서 ${dummyData.length}개의 더미 데이터가 제거되었습니다.`);
+                }
+                console.log(`${collectionName} 컬렉션이 이미 존재합니다.`);
             }
-            console.log('betting-predictions 컬렉션이 이미 존재합니다.');
+        }
+
+        // 2. 경기별 통계 컬렉션 자동 생성
+        for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
+            const statsCollectionName = `game-stats-${gameNumber}`;
+            const statsCollection = db.collection(statsCollectionName);
+            
+            // 통계 컬렉션이 비어있는지 확인하고 더미 데이터 삽입
+            const existingStats = await statsCollection.countDocuments();
+            if (existingStats === 0) {
+                const dummyStats = {
+                    gameNumber: gameNumber,
+                    date: today,
+                    matchup: '매치업 없음',
+                    predictionResult: '-',
+                    totalBettors: 0,
+                    totalPoints: 0, // 고정 배팅 포인트 100
+                    winners: 0,
+                    winRate: 0,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                await statsCollection.insertOne(dummyStats);
+                console.log(`${statsCollectionName} 통계 컬렉션이 자동으로 생성되었습니다.`);
+            } else {
+                console.log(`${statsCollectionName} 통계 컬렉션이 이미 존재합니다.`);
+            }
         }
 
         // 2. 배팅 시스템 자동 활성화
@@ -149,7 +195,6 @@ async function initializeBettingCollections() {
         }
 
         // 3. 오늘 날짜의 배팅 세션 자동 생성
-        const today = new Date().toISOString().split('T')[0];
         const sessionsCollection = db.collection('betting-sessions');
         const existingSessions = await sessionsCollection.countDocuments({
             date: today,

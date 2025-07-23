@@ -564,11 +564,11 @@
             }
         }
 
-        // 경기별 배팅 통계 로드
+        // 경기별 배팅 통계 로드 (통계 컬렉션 사용)
         async function loadGameBettingStats() {
             try {
                 const today = new Date().toISOString().split('T')[0];
-                const response = await fetch(`/api/monitoring/game-betting-stats?date=${today}`);
+                const response = await fetch(`/api/betting/all-games-stats/${today}`);
                 const result = await response.json();
                 
                 const statsContainer = document.getElementById('gameBettingStats');
@@ -583,7 +583,7 @@
                                 <div class="card-body">
                                     <div class="row text-center">
                                         <div class="col-6">
-                                            <div class="h5 mb-0 text-primary">${game.bettingCount}</div>
+                                            <div class="h5 mb-0 text-primary">${game.totalBettors}</div>
                                             <small class="text-muted">배팅자</small>
                                         </div>
                                         <div class="col-6">
@@ -596,7 +596,7 @@
                                         <div class="col-12">
                                             <small class="text-muted">예측 분포:</small>
                                             <div class="mt-2">
-                                                ${Object.entries(game.predictions).map(([prediction, count]) => 
+                                                ${Object.entries(game.predictionCounts || {}).map(([prediction, count]) => 
                                                     `<span class="badge bg-secondary me-1 mb-1">${prediction}: ${count}명</span>`
                                                 ).join('')}
                                             </div>
@@ -620,6 +620,129 @@
                         <i class="fas fa-exclamation-triangle me-2"></i>통계 로드 중 오류가 발생했습니다.
                     </div>
                 `;
+            }
+        }
+
+        // 경기별 사용자 배팅 분석 테이블 업데이트
+        async function updateGameAnalysisTable() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const response = await fetch(`/api/betting/all-games-stats/${today}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const tbody = document.getElementById('gameAnalysisTableBody');
+                    let html = '';
+                    
+                    result.data.forEach(game => {
+                        html += `
+                            <tr>
+                                <td>${game.gameNumber}경기</td>
+                                <td>${game.matchup}</td>
+                                <td>
+                                    <span class="badge bg-${game.predictionResult !== '-' ? 'success' : 'warning'}">
+                                        ${game.predictionResult !== '-' ? '종료' : '경기중'}
+                                    </span>
+                                </td>
+                                <td>${game.predictionResult}</td>
+                                <td>${game.totalBettors}</td>
+                                <td>₩${game.totalPoints ? game.totalPoints.toLocaleString() : (game.totalBettors * 100).toLocaleString()}</td>
+                                <td>${game.winners}</td>
+                                <td>₩${game.winners > 0 ? (game.totalPoints ? (game.totalPoints / game.winners).toFixed(0) : (game.totalBettors * 100 / game.winners).toFixed(0)) : 0}</td>
+                                <td>${game.winRate}%</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="showGameDetail(${game.gameNumber})">
+                                        <i class="fas fa-eye"></i> 상세보기
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tbody.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('경기별 분석 테이블 업데이트 오류:', error);
+            }
+        }
+
+        // 경기별 상세 정보 표시
+        async function showGameDetail(gameNumber) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const response = await fetch(`/api/betting/game-stats/${gameNumber}/${today}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const game = result.data.find(g => g.gameNumber === gameNumber);
+                    if (!game) return;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+                    const content = document.getElementById('userDetailContent');
+                    
+                    let html = `
+                        <h6>${gameNumber}경기 - ${game.matchup}</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <strong>총 배팅자:</strong> ${game.totalBettors}명
+                            </div>
+                            <div class="col-md-3">
+                                <strong>총 배팅 포인트:</strong> ₩${game.totalPoints.toLocaleString()}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>승리자 수:</strong> ${game.winners || 0}명
+                            </div>
+                            <div class="col-md-3">
+                                <strong>승률:</strong> ${game.totalBettors > 0 ? 
+                                    ((game.winners || 0) / game.totalBettors * 100).toFixed(1) : 0}%
+                            </div>
+                        </div>
+                        <hr>
+                        <h6>배팅자 상세 목록</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>회원명</th>
+                                        <th>예측</th>
+                                        <th>배팅 포인트</th>
+                                        <th>배팅 시간</th>
+                                        <th>상태</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    game.predictions.forEach(pred => {
+                        const statusBadge = pred.status === 'won' ? 
+                            '<span class="badge bg-success">승리</span>' :
+                            pred.status === 'lost' ? 
+                            '<span class="badge bg-danger">실패</span>' :
+                            '<span class="badge bg-warning">대기</span>';
+                        
+                        html += `
+                            <tr>
+                                <td>${pred.userName}</td>
+                                <td>${pred.prediction}</td>
+                                <td>₩${pred.points.toLocaleString()}</td>
+                                <td>${new Date(pred.betTime).toLocaleString('ko-KR')}</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    
+                    content.innerHTML = html;
+                    modal.show();
+                }
+            } catch (error) {
+                console.error('경기별 상세 정보 조회 오류:', error);
             }
         }
 
@@ -1087,6 +1210,7 @@
             updateLoginStats();
             loadBettingData();
             loadGameBettingStats();
+            updateGameAnalysisTable();
             
             // 실시간 업데이트 설정
             updateInterval = setInterval(() => {
@@ -1095,6 +1219,7 @@
                 updateLoginStats();
                 loadBettingData();
                 loadGameBettingStats();
+                updateGameAnalysisTable();
             }, 2000); // 2초마다 업데이트
             
             document.getElementById('logoutBtn').addEventListener('click', function(e) {
