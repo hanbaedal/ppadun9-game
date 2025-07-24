@@ -270,6 +270,12 @@ router.post('/logout', async (req, res) => {
 // 로그인 상태 확인 API
 router.get('/check-login', async (req, res) => {
     try {
+        console.log('로그인 상태 확인 요청:', {
+            session: req.session,
+            sessionID: req.sessionID,
+            cookies: req.headers.cookie
+        });
+        
         // 세션에서 로그인 상태 확인
         if (req.session && req.session.isLoggedIn && req.session.userId) {
             const db = getDb();
@@ -280,6 +286,7 @@ router.get('/check-login', async (req, res) => {
             
             if (member) {
                 const { password, ...memberInfo } = member;
+                console.log('로그인된 사용자 확인:', memberInfo.userId);
                 res.json({
                     success: true,
                     message: '로그인된 상태입니다.',
@@ -287,6 +294,7 @@ router.get('/check-login', async (req, res) => {
                 });
             } else {
                 // 세션은 있지만 데이터베이스에 없는 경우
+                console.log('세션은 있지만 데이터베이스에 사용자 없음');
                 req.session.destroy();
                 res.json({
                     success: false,
@@ -295,6 +303,7 @@ router.get('/check-login', async (req, res) => {
                 });
             }
         } else {
+            console.log('세션에 로그인 정보 없음');
             res.json({
                 success: false,
                 message: '로그인되지 않았습니다.',

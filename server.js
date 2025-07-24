@@ -37,7 +37,16 @@ const TODAYGAMES_COLLECTION = 'todaygames';
 
 let db;
 
-// 자동 로그아웃 함수 (새벽 2시에 모든 직원 로그아웃)
+// 세션 만료 시간 계산 (당일 자정)
+function getSessionExpiryTime() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0); // 자정으로 설정
+    return tomorrow.getTime() - now.getTime(); // 밀리초 단위로 반환
+}
+
+// 자동 로그아웃 함수 (자정에 모든 직원 로그아웃)
 async function autoLogoutAllEmployees() {
     try {
         if (!db) {
@@ -70,7 +79,7 @@ async function autoLogoutAllEmployees() {
     }
 }
 
-// 회원 자동 로그아웃 함수 (새벽 1시에 모든 회원 로그아웃)
+// 회원 자동 로그아웃 함수 (자정에 모든 회원 로그아웃)
 async function autoLogoutAllMembers() {
     try {
         if (!db) {
@@ -252,18 +261,18 @@ async function connectToMongoDB() {
 
 // 자동 로그아웃 cron job 설정
 function setupAutoLogoutCron() {
-    // 매일 새벽 2시에 직원 자동 로그아웃 (한국 시간)
-    // cron 표현식: '0 2 * * *' (분 시 일 월 요일)
-    cron.schedule('0 2 * * *', async () => {
+    // 매일 자정에 직원 자동 로그아웃 (한국 시간)
+    // cron 표현식: '0 0 * * *' (분 시 일 월 요일)
+    cron.schedule('0 0 * * *', async () => {
         console.log('직원 자동 로그아웃 cron job 실행 중...');
         await autoLogoutAllEmployees();
     }, {
         timezone: 'Asia/Seoul' // 한국 시간대 설정
     });
     
-    // 매일 새벽 1시에 회원 자동 로그아웃 (한국 시간)
-    // cron 표현식: '0 1 * * *' (분 시 일 월 요일)
-    cron.schedule('0 1 * * *', async () => {
+    // 매일 자정에 회원 자동 로그아웃 (한국 시간)
+    // cron 표현식: '0 0 * * *' (분 시 일 월 요일)
+    cron.schedule('0 0 * * *', async () => {
         console.log('회원 자동 로그아웃 cron job 실행 중...');
         await autoLogoutAllMembers();
     }, {
@@ -271,8 +280,8 @@ function setupAutoLogoutCron() {
     });
     
     console.log('자동 로그아웃 cron job이 설정되었습니다.');
-    console.log('- 직원 자동 로그아웃: 매일 새벽 2시');
-    console.log('- 회원 자동 로그아웃: 매일 새벽 1시');
+    console.log('- 직원 자동 로그아웃: 매일 자정 (00:00)');
+    console.log('- 회원 자동 로그아웃: 매일 자정 (00:00)');
 }
 
 // 로깅 미들웨어
@@ -289,14 +298,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 세션 설정
+// 세션 설정 - 당일 자정까지 유지
 const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ppadun9-secret-key',
     resave: true, // 세션 변경 시 저장
     saveUninitialized: true, // 초기화되지 않은 세션도 저장
     cookie: {
         secure: false, // 개발환경에서는 false로 설정
-        maxAge: 24 * 60 * 60 * 1000, // 24시간
+        maxAge: getSessionExpiryTime(), // 당일 자정까지 유지
         httpOnly: true,
         sameSite: 'lax', // strict에서 lax로 변경하여 400 오류 방지
         path: '/' // 모든 경로에서 쿠키 접근 가능
@@ -308,6 +317,15 @@ const sessionConfig = {
 sessionConfig.store = new session.MemoryStore();
 
 app.use(session(sessionConfig));
+
+// 세션 만료 시간 자동 갱신 미들웨어
+app.use((req, res, next) => {
+    if (req.session && req.session.isLoggedIn) {
+        // 세션 쿠키 만료 시간을 자정으로 갱신
+        req.session.cookie.maxAge = getSessionExpiryTime();
+    }
+    next();
+});
 
 // API 라우트 설정
 const gameRoutes = require('./routes/game');
@@ -996,17 +1014,27 @@ app.post('/api/employee/login', async (req, res) => {
 
 // 세션 디버깅 API
 app.get('/api/debug/session', (req, res) => {
-    console.log('=== 세션 디버깅 요청 ===');
-    console.log('세션 ID:', req.sessionID);
-    console.log('세션 정보:', req.session);
-    console.log('쿠키 정보:', req.headers.cookie);
-    
-    res.json({
-        sessionID: req.sessionID,
-        session: req.session,
-        cookies: req.headers.cookie,
-        userAgent: req.headers['user-agent']
-    });
+    try {
+        const sessionInfo = {
+            sessionID: req.sessionID,
+            session: req.session,
+            cookies: req.headers.cookie,
+            userAgent: req.headers['user-agent']
+        };
+        
+        console.log('세션 디버깅 정보:', sessionInfo);
+        
+        res.json({
+            success: true,
+            data: sessionInfo
+        });
+    } catch (error) {
+        console.error('세션 디버깅 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '세션 디버깅 중 오류가 발생했습니다.'
+        });
+    }
 });
 
 // 세션 상태 체크 및 정리 API
