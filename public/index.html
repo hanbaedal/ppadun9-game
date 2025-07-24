@@ -612,7 +612,7 @@
             }
         }
         
-        // 현재 로그인한 사용자 정보 가져오기
+        // 현재 로그인한 사용자 정보 가져오기 (서버 세션만 사용)
         async function loadCurrentUser() {
             try {
                 console.log('사용자 정보 로드 시작');
@@ -622,31 +622,7 @@
                 const logoutItem = document.getElementById('logoutItem');
                 const logoutBtn = document.getElementById('logoutBtn');
                 
-                // 먼저 세션 디버깅 API 호출
-                try {
-                    const debugResponse = await fetch('/api/debug/session', {
-                        method: 'GET',
-                        credentials: 'include',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-                    
-                    if (debugResponse.ok) {
-                        const debugData = await debugResponse.json();
-                        console.log('세션 디버깅 정보:', debugData);
-                        console.log('세션에 사용자 있음:', debugData.data.hasUser);
-                        console.log('세션에 로그인 플래그 있음:', debugData.data.hasLoginFlag);
-                        console.log('세션 ID:', debugData.data.sessionID);
-                        console.log('세션 내용:', debugData.data.session);
-                    }
-                } catch (debugError) {
-                    console.error('세션 디버깅 API 호출 오류:', debugError);
-                }
-                
-                // 현재 사용자 정보 API 호출 (직원용)
+                // 서버에서 세션 상태 확인
                 try {
                     const response = await fetch('/api/employee/current-user', {
                         method: 'GET',
@@ -665,73 +641,28 @@
                         
                         if (data.success && data.user) {
                             console.log('API에서 로그인된 사용자 발견:', data.user);
-                            // 로컬 스토리지에 저장
-                            localStorage.setItem('currentUser', JSON.stringify(data.user));
                             
                             // UI 업데이트
                             userNameElement.textContent = data.user.name || data.user.username;
                             logoutItem.style.display = 'block';
-                            
-                            // 로그아웃 버튼 이벤트 리스너 (기존 리스너 제거 후 추가)
                             logoutBtn.removeEventListener('click', logoutBtn._logoutHandler);
                             logoutBtn._logoutHandler = function(e) {
                                 e.preventDefault();
                                 showLogoutConfirm();
                             };
                             logoutBtn.addEventListener('click', logoutBtn._logoutHandler);
-                            
-                            // 모든 메뉴 활성화
                             enableAllMenus();
                             return;
                         } else {
                             console.log('API에서 로그인되지 않은 상태 확인');
-                            // 로컬 스토리지에서 사용자 정보 제거
-                            localStorage.removeItem('currentUser');
+                            showLoginState();
                         }
                     } else {
                         console.log('API 응답이 성공하지 않음, 상태:', response.status);
-                        // 로컬 스토리지에서 사용자 정보 제거
-                        localStorage.removeItem('currentUser');
+                        showLoginState();
                     }
                 } catch (apiError) {
                     console.error('API 호출 오류:', apiError);
-                    // API 호출 실패 시 로컬 스토리지에서 사용자 정보 제거
-                    localStorage.removeItem('currentUser');
-                }
-                
-                // API에서 로그인 정보를 가져올 수 없는 경우, 로컬 스토리지 확인
-                const storedUser = localStorage.getItem('currentUser');
-                console.log('로컬 스토리지 사용자 정보:', storedUser);
-                
-                if (storedUser) {
-                    try {
-                        const user = JSON.parse(storedUser);
-                        console.log('로컬 스토리지 사용자 정보:', user);
-                        
-                        // 로그인된 사용자가 있는 경우 - 실제 이름을 헤더 중간에 표시
-                        userNameElement.textContent = user.name || user.username;
-                        console.log('사용자 이름 표시:', user.name || user.username);
-                        
-                        // 로그아웃 버튼 표시
-                        logoutItem.style.display = 'block';
-                        
-                        // 로그아웃 버튼 이벤트 리스너 (기존 리스너 제거 후 추가)
-                        logoutBtn.removeEventListener('click', logoutBtn._logoutHandler);
-                        logoutBtn._logoutHandler = function(e) {
-                            e.preventDefault();
-                            showLogoutConfirm();
-                        };
-                        logoutBtn.addEventListener('click', logoutBtn._logoutHandler);
-                        
-                        // 모든 메뉴 활성화
-                        enableAllMenus();
-                    } catch (parseError) {
-                        console.error('로컬 스토리지 파싱 오류:', parseError);
-                        localStorage.removeItem('currentUser');
-                        showLoginState();
-                    }
-                } else {
-                    console.log('로그인되지 않은 상태');
                     showLoginState();
                 }
             } catch (error) {
@@ -783,7 +714,7 @@
             }
         }
         
-        // 로그아웃 처리
+        // 로그아웃 처리 (서버 세션만 사용)
         async function logout() {
             try {
                 const response = await fetch('/api/employee/logout', {
@@ -797,10 +728,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // 로컬 스토리지에서 사용자 정보 제거
-                    localStorage.removeItem('currentUser');
-                    console.log('로컬 스토리지에서 사용자 정보 제거');
-                    
+                    console.log('로그아웃 성공');
                     alert('로그아웃되었습니다.');
                     // 로그인 페이지로 이동
                     window.location.href = '/employee-login.html';
@@ -813,45 +741,16 @@
             }
         }
         
-        // 브라우저 종료 시 로그아웃 처리 설정
+        // 브라우저 종료 시 로그아웃 처리 설정 (개선)
         function setupBrowserCloseLogout() {
-            // beforeunload 이벤트 (브라우저 탭/창 닫기)
-            window.addEventListener('beforeunload', function(e) {
-                const currentUser = localStorage.getItem('currentUser');
-                if (currentUser) {
-                    const user = JSON.parse(currentUser);
-                    // 로그아웃 API 호출
-                    navigator.sendBeacon('/api/employee/logout', JSON.stringify({
-                        userId: user.userId || user.id
-                    }));
-                }
-            });
+            // beforeunload 이벤트 (브라우저 탭/창 닫기) - 제거
+            // 너무 자주 호출되어 세션 문제를 일으킬 수 있음
             
-            // pagehide 이벤트 (페이지 숨김, 모바일에서 더 안정적)
-            window.addEventListener('pagehide', function(e) {
-                const currentUser = localStorage.getItem('currentUser');
-                if (currentUser) {
-                    const user = JSON.parse(currentUser);
-                    // 로그아웃 API 호출
-                    navigator.sendBeacon('/api/employee/logout', JSON.stringify({
-                        userId: user.userId || user.id
-                    }));
-                }
-            });
+            // pagehide 이벤트 (페이지 숨김, 모바일에서 더 안정적) - 제거
+            // 너무 자주 호출되어 세션 문제를 일으킬 수 있음
             
-            // visibilitychange 이벤트 (탭 전환 시)
-            document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'hidden') {
-                    const currentUser = localStorage.getItem('currentUser');
-                    if (currentUser) {
-                        const user = JSON.parse(currentUser);
-                        // 로그아웃 API 호출
-                        navigator.sendBeacon('/api/employee/logout', JSON.stringify({
-                            userId: user.userId || user.id
-                        }));
-                    }
-                }
-            });
+            // visibilitychange 이벤트 (탭 전환 시) - 제거
+            // 너무 자주 호출되어 세션 문제를 일으킬 수 있음
         }
         
         // 페이지 로드 시 브라우저 종료 로그아웃 설정
