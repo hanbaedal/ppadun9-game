@@ -159,9 +159,14 @@ async function initializeBettingCollections() {
                     date: today,
                     matchup: '매치업 없음',
                     predictionResult: '-',
+                    '1base': 0,
+                    '2base': 0,
+                    '3base': 0,
+                    'homerun': 0,
+                    'strikeout': 0,
+                    'out': 0,
                     totalBettors: 0,
-                    totalPoints: 0, // 고정 배팅 포인트 100
-                    winners: 0,
+                    winPoints: 0,
                     winRate: 0,
                     createdAt: new Date(),
                     updatedAt: new Date()

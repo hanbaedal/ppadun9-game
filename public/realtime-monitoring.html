@@ -640,15 +640,15 @@
                                 <td>${game.gameNumber}경기</td>
                                 <td>${game.matchup}</td>
                                 <td>
-                                    <span class="badge bg-${game.predictionResult !== '-' ? 'success' : 'warning'}">
-                                        ${game.predictionResult !== '-' ? '종료' : '경기중'}
+                                    <span class="badge bg-${game.progressStatus === '경기끝' ? 'success' : 
+                                        game.progressStatus === '경기중' ? 'warning' : 'secondary'}">
+                                        ${game.progressStatus || '경기전'}
                                     </span>
                                 </td>
                                 <td>${game.predictionResult}</td>
                                 <td>${game.totalBettors}</td>
-                                <td>₩${game.totalPoints ? game.totalPoints.toLocaleString() : (game.totalBettors * 100).toLocaleString()}</td>
-                                <td>${game.winners}</td>
-                                <td>₩${game.winners > 0 ? (game.totalPoints ? (game.totalPoints / game.winners).toFixed(0) : (game.totalBettors * 100 / game.winners).toFixed(0)) : 0}</td>
+                                <td>₩${game.totalBettors * 100}</td>
+                                <td>${game.winPoints}</td>
                                 <td>${game.winRate}%</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" 

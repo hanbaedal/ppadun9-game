@@ -1280,14 +1280,20 @@ router.post('/save-game-stats', async (req, res) => {
             date: date
         });
 
+        // 분배 포인트 계산
+        const distributedPoints = (winners || 0) > 0 ? 
+            Math.floor(((totalBettors || 0) * 100) / (winners || 0)) : 0;
+            
         const statsData = {
             gameNumber: parseInt(gameNumber),
             date: date,
             matchup: matchup,
             predictionResult: predictionResult || '-',
+            progressStatus: predictionResult && predictionResult !== '-' ? '경기끝' : '경기중',
             totalBettors: totalBettors || 0,
             totalPoints: (totalBettors || 0) * 100, // 고정 배팅 포인트 100
             winners: winners || 0,
+            distributedPoints: distributedPoints, // 승리자당 분배 포인트
             winRate: winRate || 0,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -1399,6 +1405,205 @@ router.get('/all-games-stats/:date', async (req, res) => {
     }
 });
 
+// 실제 통계 데이터 확인 API (디버그용)
+router.get('/debug/stats/:gameNumber/:date', async (req, res) => {
+    try {
+        const { gameNumber, date } = req.params;
+        const db = req.app.locals.db;
+        const statsCollection = db.collection(getGameStatsCollection(gameNumber));
+
+        const stats = await statsCollection.findOne({ date: date });
+
+        if (!stats) {
+            return res.json({
+                success: false,
+                message: '해당 날짜의 경기 통계를 찾을 수 없습니다.',
+                gameNumber: gameNumber,
+                date: date,
+                collectionName: getGameStatsCollection(gameNumber)
+            });
+        }
+
+        res.json({
+            success: true,
+            message: '실제 통계 데이터입니다.',
+            data: stats,
+            collectionName: getGameStatsCollection(gameNumber)
+        });
+
+    } catch (error) {
+        console.error('통계 데이터 확인 오류:', error);
+        res.json({ 
+            success: false, 
+            message: '통계 데이터 확인 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
+// 배팅 후 통계 업데이트 API
+router.post('/update-game-stats', async (req, res) => {
+    try {
+        const { gameNumber, date } = req.body;
+        
+        if (!gameNumber || !date) {
+            return res.json({ 
+                success: false, 
+                message: '필수 정보가 누락되었습니다.' 
+            });
+        }
+
+        const db = req.app.locals.db;
+        const gameCollection = db.collection(getGameCollection(gameNumber));
+        const statsCollection = db.collection(getGameStatsCollection(gameNumber));
+        const teamGamesCollection = db.collection('team-games');
+
+        // 해당 경기의 모든 배팅 조회
+        const predictions = await gameCollection.find({ date: date }).toArray();
+        
+        // 경기 정보 조회
+        const gameInfo = await teamGamesCollection.findOne({ 
+            gameNumber: parseInt(gameNumber),
+            date: date 
+        });
+
+        // 통계 계산
+        const totalBettors = predictions.length;
+        const totalPoints = totalBettors * 100; // 고정 배팅 포인트 100
+        
+        // 현재 진행상태 확인
+        const progressStatus = gameInfo ? gameInfo.progressStatus : '경기전';
+        
+        // 예측별 배팅자 수 계산
+        const predictionCounts = {
+            '1base': 0,
+            '2base': 0,
+            '3base': 0,
+            'homerun': 0,
+            'strikeout': 0,
+            'out': 0
+        };
+        
+        predictions.forEach(pred => {
+            if (predictionCounts.hasOwnProperty(pred.prediction)) {
+                predictionCounts[pred.prediction]++;
+            }
+        });
+        
+        // 승리 포인트 계산
+        const actualResult = gameInfo ? gameInfo.predictionResult : null;
+        let winners = 0;
+        let winPoints = 0;
+        let winRate = 0;
+        
+        if (actualResult && actualResult !== '-' && actualResult !== '') {
+            // 실제 결과가 있을 때만 승리자 계산
+            winners = predictionCounts[actualResult] || 0;
+            const losers = totalBettors - winners;
+            
+            if (winners > 0) {
+                winPoints = Math.floor((losers * 100) / winners);
+                winRate = Math.floor((winners / totalBettors) * 100);
+            }
+        }
+        
+        // 통계 데이터 생성
+        const statsData = {
+            gameNumber: parseInt(gameNumber),
+            date: date,
+            matchup: gameInfo ? gameInfo.matchup : '매치업 없음',
+            predictionResult: gameInfo ? gameInfo.predictionResult : '-',
+            '1base': predictionCounts['1base'],
+            '2base': predictionCounts['2base'],
+            '3base': predictionCounts['3base'],
+            'homerun': predictionCounts['homerun'],
+            'strikeout': predictionCounts['strikeout'],
+            'out': predictionCounts['out'],
+            totalBettors: totalBettors,
+            winPoints: winPoints,
+            winRate: winRate,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        // 기존 통계 데이터 확인 및 업데이트
+        const existingStats = await statsCollection.findOne({ date: date });
+        
+        if (existingStats) {
+            await statsCollection.updateOne(
+                { date: date },
+                { 
+                    $set: {
+                        ...statsData,
+                        updatedAt: new Date()
+                    }
+                }
+            );
+            console.log(`경기${gameNumber} 통계 업데이트: 배팅자 ${totalBettors}명, 총 포인트 ${totalPoints}`);
+        } else {
+            await statsCollection.insertOne(statsData);
+            console.log(`경기${gameNumber} 통계 생성: 배팅자 ${totalBettors}명, 총 포인트 ${totalPoints}`);
+        }
+
+        res.json({
+            success: true,
+            message: '통계가 업데이트되었습니다.',
+            data: statsData
+        });
+
+    } catch (error) {
+        console.error('통계 업데이트 오류:', error);
+        res.json({ 
+            success: false, 
+            message: '통계 업데이트 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
+// 모든 경기 통계 데이터 확인 API (디버그용)
+router.get('/debug/all-stats/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        const db = req.app.locals.db;
+        
+        const allStats = [];
+        
+        // 각 경기별 통계 조회
+        for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
+            const statsCollection = db.collection(getGameStatsCollection(gameNumber));
+            const stats = await statsCollection.findOne({ date: date });
+            
+            if (stats) {
+                allStats.push({
+                    gameNumber: gameNumber,
+                    collectionName: getGameStatsCollection(gameNumber),
+                    data: stats
+                });
+            } else {
+                allStats.push({
+                    gameNumber: gameNumber,
+                    collectionName: getGameStatsCollection(gameNumber),
+                    data: null,
+                    message: '데이터 없음'
+                });
+            }
+        }
+
+        res.json({
+            success: true,
+            message: '모든 경기 통계 데이터입니다.',
+            date: date,
+            data: allStats
+        });
+
+    } catch (error) {
+        console.error('모든 통계 데이터 확인 오류:', error);
+        res.json({ 
+            success: false, 
+            message: '통계 데이터 확인 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
 // 경기별 승리자 계산 후 통계 자동 저장
 router.post('/calculate-and-save-game-stats', async (req, res) => {
     try {
@@ -1435,15 +1640,20 @@ router.post('/calculate-and-save-game-stats', async (req, res) => {
         const winners = predictions.filter(pred => pred.prediction === actualResult).length;
         const winRate = totalBettors > 0 ? ((winners / totalBettors) * 100).toFixed(1) : 0;
 
+        // 분배 포인트 계산
+        const distributedPoints = winners > 0 ? Math.floor((totalBettors * 100) / winners) : 0;
+        
         // 통계 데이터 생성
         const statsData = {
             gameNumber: parseInt(gameNumber),
             date: date,
             matchup: gameInfo.matchup || '매치업 없음',
             predictionResult: actualResult,
+            progressStatus: '경기끝', // 결과가 입력되면 경기끝으로 설정
             totalBettors: totalBettors,
             totalPoints: totalBettors * 100, // 고정 배팅 포인트 100
             winners: winners,
+            distributedPoints: distributedPoints, // 승리자당 분배 포인트
             winRate: parseFloat(winRate),
             createdAt: new Date(),
             updatedAt: new Date()
@@ -1503,9 +1713,14 @@ router.post('/initialize-game-stats-collections', async (req, res) => {
                 date: today,
                 matchup: '매치업 없음',
                 predictionResult: '-',
+                '1base': 0,
+                '2base': 0,
+                '3base': 0,
+                'homerun': 0,
+                'strikeout': 0,
+                'out': 0,
                 totalBettors: 0,
-                totalPoints: 0, // 고정 배팅 포인트 100
-                winners: 0,
+                winPoints: 0,
                 winRate: 0,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -1534,6 +1749,62 @@ router.post('/initialize-game-stats-collections', async (req, res) => {
         res.json({ 
             success: false, 
             message: '통계 컬렉션 초기화 중 오류가 발생했습니다.' 
+        });
+    }
+});
+
+// 기존 통계 컬렉션을 새로운 구조로 재생성 API
+router.post('/recreate-stats-collections', async (req, res) => {
+    try {
+        const db = req.app.locals.db;
+        const today = new Date().toISOString().split('T')[0];
+        
+        console.log('기존 통계 컬렉션 재생성 시작...');
+        
+        // 각 경기별 통계 컬렉션 재생성
+        for (let gameNumber = 1; gameNumber <= 5; gameNumber++) {
+            const statsCollection = db.collection(getGameStatsCollection(gameNumber));
+            
+            // 기존 데이터 삭제
+            await statsCollection.deleteMany({});
+            console.log(`${getGameStatsCollection(gameNumber)} 기존 데이터 삭제 완료`);
+            
+            // 새로운 구조로 더미 데이터 생성
+            const newDummyStats = {
+                gameNumber: gameNumber,
+                date: today,
+                matchup: '매치업 없음',
+                predictionResult: '-',
+                '1base': 0,
+                '2base': 0,
+                '3base': 0,
+                'homerun': 0,
+                'strikeout': 0,
+                'out': 0,
+                totalBettors: 0,
+                winPoints: 0,
+                winRate: 0,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+            
+            await statsCollection.insertOne(newDummyStats);
+            console.log(`${getGameStatsCollection(gameNumber)} 새로운 구조로 재생성 완료`);
+        }
+        
+        console.log('모든 통계 컬렉션이 새로운 구조로 재생성되었습니다.');
+        
+        res.json({ 
+            success: true, 
+            message: '통계 컬렉션이 새로운 구조로 재생성되었습니다.',
+            date: today
+        });
+
+    } catch (error) {
+        console.error('통계 컬렉션 재생성 오류:', error);
+        res.json({ 
+            success: false, 
+            message: '통계 컬렉션 재생성 중 오류가 발생했습니다.' 
         });
     }
 });

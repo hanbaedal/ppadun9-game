@@ -130,7 +130,7 @@ router.post('/import-from-daily/:date', async (req, res) => {
                 if (!startTime) return '경기전';
                 
                 const now = new Date();
-                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const koreanTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
                 const currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
                 
                 let startTimeInMinutes = null;
@@ -529,9 +529,9 @@ router.put('/:date/progress/update-all', async (req, res) => {
                     return '경기취소';
                 }
                 
-                // 한국 시간으로 현재 시간 계산
+                // 한국 시간으로 현재 시간 계산 (더 정확한 방법)
                 const now = new Date();
-                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+                const koreanTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
                 const currentTime = koreanTime.getHours() * 60 + koreanTime.getMinutes();
                 
                 console.log(`[CalculateStatus] 시간 정보:`, {
@@ -635,10 +635,18 @@ router.put('/:date/progress/update-all', async (req, res) => {
                         return '경기중';
                     }
                 }
-                // 종료시간이 없는 경우: 시작시간 이후면 '경기중'
+                // 종료시간이 없는 경우: 시작시간 이후면 '경기중' (3시간 후 자동 종료)
                 else {
-                    console.log(`[CalculateStatus] 종료시간 없음, 시작시간 이후 → 경기중`);
-                    return '경기중';
+                    const gameDuration = 3 * 60; // 3시간 (180분)
+                    const estimatedEndTime = startTimeInMinutes + gameDuration;
+                    
+                    if (currentTime >= estimatedEndTime) {
+                        console.log(`[CalculateStatus] 종료시간 없음, 예상 종료시간 이후 → 경기끝`);
+                        return '경기끝';
+                    } else {
+                        console.log(`[CalculateStatus] 종료시간 없음, 예상 종료시간 이전 → 경기중`);
+                        return '경기중';
+                    }
                 }
             } catch (error) {
                 console.error('[CalculateStatus] 진행상태 계산 오류:', error);
