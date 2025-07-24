@@ -320,7 +320,7 @@ app.use(session(sessionConfig));
 
 // 세션 만료 시간 자동 갱신 미들웨어
 app.use((req, res, next) => {
-    if (req.session && req.session.isLoggedIn) {
+    if (req.session && (req.session.isLoggedIn || req.session.user)) {
         // 세션 쿠키 만료 시간을 자정으로 갱신
         req.session.cookie.maxAge = getSessionExpiryTime();
     }
@@ -1018,6 +1018,8 @@ app.get('/api/debug/session', (req, res) => {
         const sessionInfo = {
             sessionID: req.sessionID,
             session: req.session,
+            hasUser: !!(req.session && req.session.user),
+            hasLoginFlag: !!(req.session && req.session.isLoggedIn),
             cookies: req.headers.cookie,
             userAgent: req.headers['user-agent']
         };

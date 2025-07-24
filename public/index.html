@@ -642,7 +642,7 @@
                     console.error('세션 디버깅 API 호출 오류:', debugError);
                 }
                 
-                // 현재 사용자 정보 API 호출
+                // 현재 사용자 정보 API 호출 (직원용)
                 try {
                     const response = await fetch('/api/employee/current-user', {
                         method: 'GET',
