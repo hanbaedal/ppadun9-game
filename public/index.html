@@ -637,6 +637,10 @@
                     if (debugResponse.ok) {
                         const debugData = await debugResponse.json();
                         console.log('세션 디버깅 정보:', debugData);
+                        console.log('세션에 사용자 있음:', debugData.data.hasUser);
+                        console.log('세션에 로그인 플래그 있음:', debugData.data.hasLoginFlag);
+                        console.log('세션 ID:', debugData.data.sessionID);
+                        console.log('세션 내용:', debugData.data.session);
                     }
                 } catch (debugError) {
                     console.error('세션 디버깅 API 호출 오류:', debugError);
