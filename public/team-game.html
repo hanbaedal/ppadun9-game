@@ -1618,8 +1618,9 @@
                                         'Content-Type': 'application/json',
                                     },
                                     body: JSON.stringify({
-                                        bettingStart: '중지',
-                                        bettingStop: '중지',
+                                        gameType: '타자',
+                                        bettingStart: '대기',
+                                        bettingStop: '대기',
                                         predictionResult: radio.value
                                     })
                                 });
@@ -1718,6 +1719,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
+                        gameType: 'attack',
                         bettingStart: '대기',
                         bettingStop: '대기',
                         predictionResult: ''
