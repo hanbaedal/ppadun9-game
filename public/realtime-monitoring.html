@@ -438,7 +438,16 @@
             </div>
         </div>
 
-
+        <!-- 경기별 배팅 집계 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div id="bettingAggregationContainer">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin me-2"></i>배팅 집계를 불러오는 중...
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- 경기별 사용자 분석 -->
         <div class="row">
@@ -1196,6 +1205,108 @@
 
 
 
+        // 경기별 배팅 집계 데이터 로드
+        async function loadBettingAggregation() {
+            try {
+                const response = await fetch('/api/admin/betting-aggregation');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    updateBettingAggregationTable(result.data.games);
+                }
+            } catch (error) {
+                console.error('배팅 집계 데이터 로드 오류:', error);
+            }
+        }
+
+        // 배팅 집계 테이블 업데이트
+        function updateBettingAggregationTable(games) {
+            const container = document.getElementById('bettingAggregationContainer');
+            if (!container) return;
+
+            let html = `
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> 경기별 배팅 집계</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>경기</th>
+                                                <th>매치업</th>
+                                                <th>총 배팅</th>
+                                                <th>1루</th>
+                                                <th>2루</th>
+                                                <th>3루</th>
+                                                <th>홈런</th>
+                                                <th>삼진</th>
+                                                <th>아웃</th>
+                                                <th>결과</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+            `;
+
+            games.forEach(game => {
+                const betCounts = game.betCounts || {};
+                const successRates = game.successRates || {};
+                
+                html += `
+                    <tr>
+                        <td><strong>${game.gameNumber}경기</strong></td>
+                        <td>${game.matchup || '-'}</td>
+                        <td><span class="badge bg-primary">${game.totalBets}</span></td>
+                        <td>
+                            <span class="badge bg-secondary">${betCounts['1루'] || 0}</span>
+                            ${game.predictionResult ? `<br><small class="text-muted">${successRates['1루'] || 0}%</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">${betCounts['2루'] || 0}</span>
+                            ${game.predictionResult ? `<br><small class="text-muted">${successRates['2루'] || 0}%</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">${betCounts['3루'] || 0}</span>
+                            ${game.predictionResult ? `<br><small class="text-muted">${successRates['3루'] || 0}%</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">${betCounts['홈런'] || 0}</span>
+                            ${game.predictionResult ? `<br><small class="text-muted">${successRates['홈런'] || 0}%</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">${betCounts['삼진'] || 0}</span>
+                            ${game.predictionResult ? `<br><small class="text-muted">${successRates['삼진'] || 0}%</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">${betCounts['아웃'] || 0}</span>
+                            ${game.predictionResult ? `<br><small class="text-muted">${successRates['아웃'] || 0}%</small>` : ''}
+                        </td>
+                        <td>
+                            ${game.predictionResult ? 
+                                `<span class="badge bg-success">${game.predictionResult}</span>` : 
+                                '<span class="badge bg-warning">대기중</span>'
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
         // 페이지 로드 시 초기화
         window.onload = function() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -1211,6 +1322,7 @@
             loadBettingData();
             loadGameBettingStats();
             updateGameAnalysisTable();
+            loadBettingAggregation();
             
             // 실시간 업데이트 설정
             updateInterval = setInterval(() => {
@@ -1220,6 +1332,7 @@
                 loadBettingData();
                 loadGameBettingStats();
                 updateGameAnalysisTable();
+                loadBettingAggregation();
             }, 2000); // 2초마다 업데이트
             
             document.getElementById('logoutBtn').addEventListener('click', function(e) {
