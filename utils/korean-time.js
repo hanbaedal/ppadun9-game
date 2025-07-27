@@ -146,18 +146,39 @@ function getKoreanMinutesAgo(minutes) {
     return new Date(koreanTime.getTime() - (minutes * 60 * 1000));
 }
 
-module.exports = {
-    getKoreanTime,
-    toKoreanTime,
-    toUTCTime,
-    formatKoreanTime,
+// 예측결과 영어를 한글로 변환하는 함수
+function convertPredictionToKorean(englishPrediction) {
+    const predictionMap = {
+        '1base': '1루',
+        '2base': '2루', 
+        '3base': '3루',
+        'homerun': '홈런',
+        'strikeout': '삼진',
+        'out': '아웃'
+    };
+    
+    return predictionMap[englishPrediction] || englishPrediction;
+}
+
+// 예측결과 한글을 영어로 변환하는 함수
+function convertPredictionToEnglish(koreanPrediction) {
+    const reverseMap = {
+        '1루': '1base',
+        '2루': '2base',
+        '3루': '3base',
+        '홈런': 'homerun',
+        '삼진': 'strikeout',
+        '아웃': 'out'
+    };
+    
+    return reverseMap[koreanPrediction] || koreanPrediction;
+}
+
+module.exports = { 
+    getKoreanTime, 
+    toKoreanTime, 
+    formatKoreanTime, 
     getKoreanDateString,
-    getKoreanDateStart,
-    getKoreanDateEnd,
-    getKoreanWeekStart,
-    getKoreanMonthStart,
-    getKoreanYearStart,
-    getKoreanDaysAgo,
-    getKoreanHoursAgo,
-    getKoreanMinutesAgo
+    convertPredictionToKorean,
+    convertPredictionToEnglish
 }; 

@@ -1,61 +1,80 @@
-const { getDb } = require('./config/db');
+const { MongoClient } = require('mongodb');
+require('dotenv').config();
 
-async function testDailyGames() {
+async function testDatabase() {
     try {
-        const db = getDb();
-        const collection = db.collection('daily-games');
+        console.log('=== 데이터베이스 연결 테스트 ===');
+        console.log('MONGODB_URI:', process.env.MONGODB_URI ? '설정됨' : '설정되지 않음');
+        console.log('DB_NAME:', process.env.DB_NAME);
         
-        // 오늘 날짜
-        const today = new Date();
-        const date = today.getFullYear().toString() +
-                    (today.getMonth() + 1).toString().padStart(2, '0') +
-                    today.getDate().toString().padStart(2, '0');
-        
-        console.log('=== Daily-Games 데이터베이스 테스트 ===');
-        console.log('조회 날짜:', date);
-        
-        // 특정 날짜 데이터 조회
-        const games = await collection.findOne({ date });
-        
-        if (games) {
-            console.log('\n✅ 데이터 발견');
-            console.log('전체 데이터:', JSON.stringify(games, null, 2));
-            
-            console.log('\n📊 경기별 상세 정보:');
-            games.games.forEach((game, index) => {
-                console.log(`\n경기 ${index + 1}:`);
-                console.log(`  - 번호: ${game.number}`);
-                console.log(`  - 홈팀: ${game.homeTeam}`);
-                console.log(`  - 원정팀: ${game.awayTeam}`);
-                console.log(`  - 시작시간: ${game.startTime}`);
-                console.log(`  - 종료시간: ${game.endTime}`);
-                console.log(`  - 경기상황: ${game.noGame}`);
-                console.log(`  - 활성상태: ${game.isActive}`);
-            });
-        } else {
-            console.log('\n❌ 해당 날짜의 데이터가 없습니다.');
-        }
-        
-        // 전체 콜렉션 데이터 확인
-        console.log('\n=== 전체 콜렉션 데이터 ===');
-        const allData = await collection.find({}).toArray();
-        console.log(`총 ${allData.length}개의 날짜 데이터가 있습니다.`);
-        
-        allData.forEach((data, index) => {
-            console.log(`\n날짜 ${index + 1}: ${data.date}`);
-            console.log(`경기 수: ${data.games ? data.games.length : 0}`);
-            if (data.games) {
-                data.games.forEach(game => {
-                    console.log(`  - 경기 ${game.number}: ${game.homeTeam} vs ${game.awayTeam} (${game.noGame})`);
-                });
-            }
+        const client = new MongoClient(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 10000
         });
         
+        await client.connect();
+        console.log('✅ MongoDB 연결 성공');
+        
+        const db = client.db(process.env.DB_NAME);
+        console.log('✅ 데이터베이스 접근 성공:', db.databaseName);
+        
+        // 컬렉션 목록 확인
+        const collections = await db.listCollections().toArray();
+        console.log('📋 기존 컬렉션:', collections.map(c => c.name));
+        
+        // team-games 컬렉션 확인
+        const teamGamesCollection = db.collection('team-games');
+        
+        // 오늘 날짜로 테스트 데이터 생성
+        const today = new Date().toISOString().split('T')[0];
+        console.log('📅 테스트 날짜:', today);
+        
+        // 기존 데이터 확인
+        const existingData = await teamGamesCollection.find({ date: today }).toArray();
+        console.log('📊 기존 데이터 수:', existingData.length);
+        
+        if (existingData.length > 0) {
+            console.log('📋 첫 번째 데이터:', existingData[0]);
+        }
+        
+        // 테스트 데이터 삽입
+        const testData = {
+            date: today,
+            gameNumber: 1,
+            matchup: '테스트팀 vs 테스트팀',
+            startTime: '18:00',
+            endTime: '21:00',
+            gameStatus: '정상게임',
+            progressStatus: '경기전',
+            gameType: '타자',
+            bettingStart: '대기',
+            bettingStop: '대기',
+            predictionResult: '2루', // 한글로 저장
+            isSelected: false,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+        
+        console.log('➕ 테스트 데이터 삽입 시도...');
+        const insertResult = await teamGamesCollection.insertOne(testData);
+        console.log('✅ 테스트 데이터 삽입 성공:', insertResult.insertedId);
+        
+        // 삽입된 데이터 확인
+        const insertedData = await teamGamesCollection.findOne({ _id: insertResult.insertedId });
+        console.log('📋 삽입된 데이터:', insertedData);
+        
+        // 테스트 데이터 삭제
+        await teamGamesCollection.deleteOne({ _id: insertResult.insertedId });
+        console.log('🗑️ 테스트 데이터 삭제 완료');
+        
+        await client.close();
+        console.log('✅ 데이터베이스 연결 종료');
+        
     } catch (error) {
-        console.error('테스트 오류:', error);
-    } finally {
-        process.exit(0);
+        console.error('❌ 오류 발생:', error.message);
+        console.error('상세 오류:', error);
     }
 }
 
-testDailyGames(); 
+testDatabase(); 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
-const { getKoreanTime } = require('../utils/korean-time');
+const { getKoreanTime, convertPredictionToKorean } = require('../utils/korean-time');
 const { getGameStatsCollection } = require('../models/game-stats');
 
 // team-games 콜렉션에서 데이터 조회
@@ -323,6 +323,12 @@ router.put('/:date/:gameNumber', async (req, res) => {
         const { date, gameNumber } = req.params;
         const updateData = req.body;
         
+        // 예측결과가 있으면 영어를 한글로 변환
+        if (updateData.predictionResult && updateData.predictionResult !== '') {
+            updateData.predictionResult = convertPredictionToKorean(updateData.predictionResult);
+            console.log('[TeamGames] 예측결과 변환:', updateData.predictionResult);
+        }
+        
         // updatedAt 필드 추가
         updateData.updatedAt = getKoreanTime();
         
@@ -411,11 +417,16 @@ router.put('/:date/:gameNumber/prediction', async (req, res) => {
         const gameStatsCollection = getGameStatsCollection();
         const { date, gameNumber } = req.params;
         const { predictionResult } = req.body;
+        
+        // 예측결과를 영어에서 한글로 변환
+        const koreanPrediction = convertPredictionToKorean(predictionResult);
+        console.log('[TeamGames] 예측결과 변환:', predictionResult, '→', koreanPrediction);
+        
         const result = await collection.findOneAndUpdate(
             { date, gameNumber: parseInt(gameNumber) },
             { 
                 $set: { 
-                    predictionResult,
+                    predictionResult: koreanPrediction,
                     updatedAt: getKoreanTime()
                 }
             },
