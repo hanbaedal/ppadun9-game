@@ -334,13 +334,20 @@ router.get('/login-stats', async (req, res) => {
         console.log('[Members] 현재 로그인한 회원 수:', onlineMembers);
         
         // 로그인한 회원들 (현재 온라인) - 실제 데이터 조회
-        // 최근 30분 내에 활동이 있는 회원들도 포함
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        // 최근 1시간 내에 활동이 있는 회원들도 포함 (더 넓은 범위)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const onlineMembersList = await db.collection('game-member').find(
             { 
                 $or: [
                     { isLoggedIn: true },
-                    { lastLoginAt: { $gte: thirtyMinutesAgo } }
+                    { 
+                        lastLoginAt: { $gte: oneHourAgo },
+                        $or: [
+                            { lastLogoutAt: { $exists: false } },
+                            { lastLogoutAt: null },
+                            { lastLogoutAt: { $lt: lastLoginAt } }
+                        ]
+                    }
                 ]
             },
             { 
@@ -357,6 +364,14 @@ router.get('/login-stats', async (req, res) => {
         
         console.log('[Members] 온라인 회원 목록 조회 결과:', onlineMembersList.length, '명');
         console.log('[Members] 온라인 회원 상세:', onlineMembersList);
+        
+        // 추가 디버깅: 쿼리 조건 확인
+        console.log('[Members] 쿼리 조건:', {
+            oneHourAgo: oneHourAgo,
+            isLoggedInTrue: await db.collection('game-member').countDocuments({ isLoggedIn: true }),
+            recentLogin: await db.collection('game-member').countDocuments({ lastLoginAt: { $gte: oneHourAgo } }),
+            totalMembers: await db.collection('game-member').countDocuments({})
+        });
         
         // 최근 로그인한 회원들 (24시간 이내)
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

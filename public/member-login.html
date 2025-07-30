@@ -525,15 +525,21 @@
                 
                 // 디버깅 정보 추가
                 console.log('온라인 회원 상세 정보:', stats.onlineMembersList);
+                console.log('API 응답 전체 데이터:', stats);
+                
                 if (stats.onlineMembersList && stats.onlineMembersList.length > 0) {
                     stats.onlineMembersList.forEach((member, index) => {
                         console.log(`회원 ${index + 1}:`, {
                             name: member.name,
                             userId: member.userId,
                             isLoggedIn: member.isLoggedIn,
-                            lastLoginAt: member.lastLoginAt
+                            lastLoginAt: member.lastLoginAt,
+                            lastLogoutAt: member.lastLogoutAt
                         });
                     });
+                } else {
+                    console.log('온라인 회원이 없습니다. 전체 회원 수:', stats.totalMembers);
+                    console.log('API에서 반환된 온라인 회원 수:', stats.onlineMembers);
                 }
                 
                 // 회원 명단 테이블
