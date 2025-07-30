@@ -279,9 +279,19 @@ function setupAutoLogoutCron() {
         timezone: 'Asia/Seoul' // 한국 시간대 설정
     });
     
+    // 5분마다 비활동 직원 자동 강제 로그아웃 (한국 시간)
+    // cron 표현식: '*/5 * * * *' (5분마다)
+    cron.schedule('*/5 * * * *', async () => {
+        console.log('비활동 직원 자동 강제 로그아웃 cron job 실행 중...');
+        await autoForceLogoutInactiveEmployees();
+    }, {
+        timezone: 'Asia/Seoul' // 한국 시간대 설정
+    });
+    
     console.log('자동 로그아웃 cron job이 설정되었습니다.');
     console.log('- 직원 자동 로그아웃: 매일 자정 (00:00)');
     console.log('- 회원 자동 로그아웃: 매일 자정 (00:00)');
+    console.log('- 비활동 직원 자동 강제 로그아웃: 5분마다 (30분 비활동 기준)');
 }
 
 // 로깅 미들웨어
@@ -3462,6 +3472,139 @@ app.get('/api/external/betting-data', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '외부 배팅 데이터 가져오기 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 자동 강제 로그아웃 함수 (30분 비활동 직원 자동 로그아웃)
+async function autoForceLogoutInactiveEmployees() {
+    try {
+        if (!db) {
+            console.log('데이터베이스 연결이 없어 자동 강제 로그아웃을 건너뜁니다.');
+            return;
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 30분 전 시간 계산
+        const thirtyMinutesAgo = new Date();
+        thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
+        
+        // 30분간 활동이 없는 로그인된 직원들을 찾아서 강제 로그아웃
+        const result = await collection.updateMany(
+            { 
+                isLoggedIn: true,
+                lastActivityAt: { $lt: thirtyMinutesAgo }
+            },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: getKoreanTime(),
+                    currentSessionId: null, // 세션 ID 초기화
+                    updatedAt: getKoreanTime()
+                } 
+            }
+        );
+        
+        if (result.modifiedCount > 0) {
+            const koreanTime = formatKoreanTime(getKoreanTime(), 'datetime');
+            console.log(`[${koreanTime}] 자동 강제 로그아웃 완료: ${result.modifiedCount}명의 비활동 직원이 로그아웃되었습니다.`);
+            
+            // 강제 로그아웃된 직원들의 정보 조회
+            const loggedOutEmployees = await collection.find(
+                { 
+                    lastLogoutAt: { $gte: new Date(Date.now() - 60000) } // 최근 1분 내 로그아웃
+                },
+                { username: 1, name: 1, lastActivityAt: 1, lastLogoutAt: 1 }
+            ).toArray();
+            
+            if (loggedOutEmployees.length > 0) {
+                console.log('강제 로그아웃된 직원 목록:');
+                loggedOutEmployees.forEach(emp => {
+                    console.log(`- ${emp.name}(${emp.username}): 마지막 활동 ${emp.lastActivityAt ? new Date(emp.lastActivityAt).toLocaleString('ko-KR') : '없음'}`);
+                });
+            }
+        }
+        
+    } catch (error) {
+        console.error('자동 강제 로그아웃 오류:', error);
+    }
+}
+
+// 자동 강제 로그아웃 상태 확인 API
+app.get('/api/employee/auto-force-logout-status', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(503).json({ 
+                success: false, 
+                message: '데이터베이스 연결이 준비되지 않았습니다.' 
+            });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 현재 시간
+        const now = new Date();
+        const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+        
+        // 현재 비활동 직원들 조회
+        const inactiveEmployees = await collection.find(
+            { 
+                isLoggedIn: true,
+                lastActivityAt: { $lt: thirtyMinutesAgo }
+            },
+            { username: 1, name: 1, lastActivityAt: 1 }
+        ).toArray();
+        
+        // 최근 강제 로그아웃 기록 조회 (최근 1시간)
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        const recentLogouts = await collection.find(
+            { 
+                lastLogoutAt: { $gte: oneHourAgo },
+                lastActivityAt: { $lt: new Date(now.getTime() - 25 * 60 * 1000) } // 25분 이상 비활동이었던 경우
+            },
+            { username: 1, name: 1, lastActivityAt: 1, lastLogoutAt: 1 }
+        ).toArray();
+        
+        // 비활동 시간 계산
+        const inactiveEmployeesWithTime = inactiveEmployees.map(emp => {
+            const lastActivity = emp.lastActivityAt ? new Date(emp.lastActivityAt) : null;
+            const inactiveMinutes = lastActivity ? Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60)) : 0;
+            return {
+                ...emp,
+                inactiveMinutes,
+                lastActivity: lastActivity ? lastActivity.toLocaleString('ko-KR') : '없음'
+            };
+        });
+        
+        // 강제 로그아웃 기록 포맷팅
+        const formattedRecentLogouts = recentLogouts.map(logout => ({
+            username: logout.username,
+            name: logout.name,
+            logoutTime: new Date(logout.lastLogoutAt).toLocaleString('ko-KR'),
+            lastActivity: logout.lastActivityAt ? new Date(logout.lastActivityAt).toLocaleString('ko-KR') : '없음'
+        }));
+        
+        // 다음 실행 시간 계산 (5분마다 실행되므로)
+        const nextRun = new Date(now.getTime() + (5 - (now.getMinutes() % 5)) * 60 * 1000);
+        nextRun.setSeconds(0, 0);
+        
+        res.json({
+            success: true,
+            status: {
+                isActive: true,
+                lastRun: new Date(now.getTime() - (now.getMinutes() % 5) * 60 * 1000).toLocaleString('ko-KR'),
+                nextRun: nextRun.toLocaleString('ko-KR'),
+                inactiveEmployees: inactiveEmployeesWithTime,
+                recentLogouts: formattedRecentLogouts
+            }
+        });
+        
+    } catch (error) {
+        console.error('자동 강제 로그아웃 상태 확인 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '자동 강제 로그아웃 상태 확인 중 오류가 발생했습니다.'
         });
     }
 });
