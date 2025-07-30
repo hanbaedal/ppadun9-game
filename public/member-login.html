@@ -287,14 +287,17 @@
                 <div class="col-12">
                     <div class="stats-card">
                         <h5><i class="fas fa-cog me-2"></i>관리자 기능</h5>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-warning" onclick="manualMemberAutoLogout()">
-                                <i class="fas fa-sign-out-alt me-2"></i>모든 회원 자동 로그아웃
-                            </button>
-                            <small class="text-muted align-self-center">
-                                (매일 새벽 1시에 자동 실행됩니다)
-                            </small>
-                        </div>
+                                                 <div class="d-flex gap-2 flex-wrap">
+                             <button class="btn btn-warning me-2" onclick="manualMemberAutoLogout()">
+                                 <i class="fas fa-sign-out-alt me-2"></i>모든 회원 자동 로그아웃
+                             </button>
+                             <button class="btn btn-info me-2" onclick="debugLoginStatus()">
+                                 <i class="fas fa-bug me-2"></i>로그인 상태 디버깅
+                             </button>
+                             <small class="text-muted align-self-center">
+                                 (매일 새벽 1시에 자동 실행됩니다)
+                             </small>
+                         </div>
                     </div>
                 </div>
             </div>
@@ -324,32 +327,39 @@
                     </div>
                 </div>
                 
-                <!-- 온라인 회원 명단 -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="stats-card">
-                            <h4><i class="fas fa-users me-2"></i>현재 온라인 회원 명단</h4>
-                            <p class="text-muted mb-3">실시간 로그인 상태를 반영합니다</p>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>순위</th>
-                                            <th>이름</th>
-                                            <th>아이디</th>
-                                            <th>로그인 시간</th>
-                                            <th>총 로그인 시간</th>
-                                            <th>상태</th>
-                                            <th>관리</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="onlineMembersTable">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                 <!-- 통계 요약 -->
+                 <div class="row mb-4">
+                     <div class="col-12">
+                         <div id="statsSummary"></div>
+                     </div>
+                 </div>
+                 
+                 <!-- 온라인 회원 명단 -->
+                 <div class="row">
+                     <div class="col-12">
+                         <div class="stats-card">
+                             <h4><i class="fas fa-users me-2"></i>현재 온라인 회원 명단</h4>
+                             <p class="text-muted mb-3">실시간 로그인 상태를 반영합니다</p>
+                             <div class="table-responsive">
+                                 <table class="table table-hover">
+                                     <thead>
+                                         <tr>
+                                             <th>순위</th>
+                                             <th>이름</th>
+                                             <th>아이디</th>
+                                             <th>로그인 시간</th>
+                                             <th>총 로그인 시간</th>
+                                             <th>상태</th>
+                                             <th>관리</th>
+                                         </tr>
+                                     </thead>
+                                     <tbody id="onlineMembersTable">
+                                     </tbody>
+                                 </table>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
             </div>
         </div>
     </div>
@@ -490,15 +500,28 @@
         // 회원 통계 표시
         function displayMemberStats(stats) {
             try {
+                console.log('표시할 통계 데이터:', stats);
+                
                 // 로딩 메시지 숨기기
                 document.getElementById('loadingMessage').style.display = 'none';
                 
                 // 통계 내용 표시
                 document.getElementById('statsContent').style.display = 'block';
                 
-                // 전체 회원 수와 온라인 회원 수
-                document.getElementById('totalMembers').textContent = stats.totalMembers || 0;
-                document.getElementById('onlineMembers').textContent = stats.onlineMembers || 0;
+                // 전체 회원 수와 온라인 회원 수 (실제 데이터로 업데이트)
+                const totalMembers = stats.totalMembers || 0;
+                const onlineMembers = stats.onlineMembers || 0;
+                const actualOnlineMembers = stats.onlineMembersList ? stats.onlineMembersList.length : 0;
+                
+                console.log('통계 정보:', {
+                    totalMembers: totalMembers,
+                    onlineMembers: onlineMembers,
+                    actualOnlineMembers: actualOnlineMembers,
+                    onlineMembersList: stats.onlineMembersList
+                });
+                
+                document.getElementById('totalMembers').textContent = totalMembers;
+                document.getElementById('onlineMembers').textContent = actualOnlineMembers; // 실제 온라인 회원 수로 표시
                 
                 // 회원 명단 테이블
                 const onlineTable = document.getElementById('onlineMembersTable');
@@ -506,6 +529,8 @@
                 
                 // 현재 온라인인 회원들을 우선 표시
                 if (stats.onlineMembersList && stats.onlineMembersList.length > 0) {
+                    console.log('온라인 회원 목록:', stats.onlineMembersList);
+                    
                     stats.onlineMembersList.forEach((member, index) => {
                         const row = document.createElement('tr');
                         const loginStatus = member.isLoggedIn ? '로그인' : '로그아웃';
@@ -533,6 +558,19 @@
                         <td colspan="7" class="text-center text-muted">현재 온라인인 회원이 없습니다.</td>
                     `;
                     onlineTable.appendChild(row);
+                }
+                
+                // 통계 요약 표시
+                const summaryElement = document.getElementById('statsSummary');
+                if (summaryElement) {
+                    summaryElement.innerHTML = `
+                        <div class="alert alert-info">
+                            <strong>통계 요약:</strong><br>
+                            - 전체 회원: ${totalMembers}명<br>
+                            - 현재 온라인: ${actualOnlineMembers}명<br>
+                            - 접속률: ${totalMembers > 0 ? ((actualOnlineMembers / totalMembers) * 100).toFixed(1) : 0}%
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('통계 표시 오류:', error);
@@ -641,8 +679,60 @@
             }
         }
         
-        // 회원 강제 로그아웃
-        async function forceLogoutMember(id, name) {
+                 // 로그인 상태 디버깅
+         async function debugLoginStatus() {
+             try {
+                 console.log('로그인 상태 디버깅 시작');
+                 
+                 const response = await fetch('/api/members/debug-login-status', {
+                     credentials: 'include',
+                     headers: {
+                         'Accept': 'application/json',
+                         'Content-Type': 'application/json'
+                     }
+                 });
+                 
+                 if (response.ok) {
+                     const data = await response.json();
+                     console.log('디버깅 데이터:', data);
+                     
+                     if (data.success) {
+                         const debug = data.debug;
+                         const message = `
+                             === 회원 로그인 상태 디버깅 ===
+                             
+                             전체 회원 수: ${debug.totalMembers}명
+                             로그인된 회원 수: ${debug.loggedInMembers}명
+                             
+                             === 로그인된 회원 목록 ===
+                             ${debug.loggedInMembersList.map((member, index) => 
+                                 `${index + 1}. ${member.name || '이름 없음'} (${member.userId})
+                                  - 로그인 상태: ${member.isLoggedIn}
+                                  - 마지막 로그인: ${member.lastLoginAt ? new Date(member.lastLoginAt).toLocaleString('ko-KR') : '없음'}
+                                  - 마지막 로그아웃: ${member.lastLogoutAt ? new Date(member.lastLogoutAt).toLocaleString('ko-KR') : '없음'}`
+                             ).join('\n\n')}
+                             
+                             === 전체 회원 상태 ===
+                             ${debug.allMembers.map((member, index) => 
+                                 `${index + 1}. ${member.name || '이름 없음'} (${member.userId}) - 로그인: ${member.isLoggedIn}`
+                             ).join('\n')}
+                         `;
+                         
+                         alert(message);
+                     } else {
+                         alert('디버깅 데이터를 가져올 수 없습니다: ' + (data.message || '알 수 없는 오류'));
+                     }
+                 } else {
+                     alert('서버 오류가 발생했습니다. (상태: ' + response.status + ')');
+                 }
+             } catch (error) {
+                 console.error('디버깅 오류:', error);
+                 alert('네트워크 오류가 발생했습니다: ' + error.message);
+             }
+         }
+         
+         // 회원 강제 로그아웃
+         async function forceLogoutMember(id, name) {
             if (!confirm(`정말로 ${name} 회원을 강제 로그아웃시키시겠습니까?\n\n이 작업은 즉시 적용되며, 해당 회원의 세션이 종료됩니다.`)) {
                 return;
             }

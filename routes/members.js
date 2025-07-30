@@ -322,19 +322,22 @@ router.get('/check-login', async (req, res) => {
 // 회원 로그인 통계 API
 router.get('/login-stats', async (req, res) => {
     try {
+        console.log('[Members] 회원 로그인 통계 요청');
         const db = getDb();
         
         // 전체 회원 수
         const totalMembers = await db.collection('game-member').countDocuments();
+        console.log('[Members] 전체 회원 수:', totalMembers);
         
-        // 현재 로그인한 회원 수
+        // 현재 로그인한 회원 수 (실제 isLoggedIn: true인 회원들)
         const onlineMembers = await db.collection('game-member').countDocuments({ isLoggedIn: true });
+        console.log('[Members] 현재 로그인한 회원 수:', onlineMembers);
         
-        // 최근 로그인한 회원들 (24시간 이내) - 더 많은 정보 포함
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const recentLoginMembers = await db.collection('game-member').find(
-            { lastLoginAt: { $gte: oneDayAgo } },
+        // 로그인한 회원들 (현재 온라인) - 실제 데이터 조회
+        const onlineMembersList = await db.collection('game-member').find(
+            { isLoggedIn: true },
             { 
+                _id: 1,
                 userId: 1, 
                 name: 1, 
                 lastLoginAt: 1, 
@@ -345,9 +348,13 @@ router.get('/login-stats', async (req, res) => {
             }
         ).sort({ lastLoginAt: -1 }).toArray();
         
-        // 로그인한 회원들 (현재 온라인)
-        const onlineMembersList = await db.collection('game-member').find(
-            { isLoggedIn: true },
+        console.log('[Members] 온라인 회원 목록 조회 결과:', onlineMembersList.length, '명');
+        console.log('[Members] 온라인 회원 상세:', onlineMembersList);
+        
+        // 최근 로그인한 회원들 (24시간 이내)
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const recentLoginMembers = await db.collection('game-member').find(
+            { lastLoginAt: { $gte: oneDayAgo } },
             { 
                 userId: 1, 
                 name: 1, 
@@ -397,17 +404,71 @@ router.get('/login-stats', async (req, res) => {
             member.totalLoginTime = calculateTotalLoginTime(member);
         });
         
+        // 실제 온라인 회원 수 (목록 길이 기반)
+        const actualOnlineMembers = onlineMembersList.length;
+        
+        console.log('[Members] 통계 요약:', {
+            totalMembers,
+            onlineMembers,
+            actualOnlineMembers,
+            onlineMembersListCount: onlineMembersList.length
+        });
+        
         res.json({
             success: true,
             stats: {
                 totalMembers: totalMembers,
-                onlineMembers: onlineMembers,
+                onlineMembers: actualOnlineMembers, // 실제 온라인 회원 수로 반환
                 recentLoginMembers: recentLoginMembers,
                 onlineMembersList: onlineMembersList
             }
         });
     } catch (error) {
-        console.error('회원 로그인 통계 오류:', error);
+        console.error('[Members] 회원 로그인 통계 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '서버 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 회원 로그인 상태 디버깅 API
+router.get('/debug-login-status', async (req, res) => {
+    try {
+        console.log('[Members] 회원 로그인 상태 디버깅 요청');
+        const db = getDb();
+        
+        // 모든 회원의 로그인 상태 조회
+        const allMembers = await db.collection('game-member').find({}, { 
+            _id: 1,
+            userId: 1, 
+            name: 1, 
+            isLoggedIn: 1, 
+            lastLoginAt: 1,
+            lastLogoutAt: 1
+        }).toArray();
+        
+        // 로그인된 사용자들만 필터링
+        const loggedInMembers = allMembers.filter(member => member.isLoggedIn === true);
+        
+        console.log('[Members] 디버깅 정보:', {
+            totalMembers: allMembers.length,
+            loggedInMembers: loggedInMembers.length,
+            allMembers: allMembers,
+            loggedInMembersList: loggedInMembers
+        });
+        
+        res.json({
+            success: true,
+            debug: {
+                totalMembers: allMembers.length,
+                loggedInMembers: loggedInMembers.length,
+                allMembers: allMembers,
+                loggedInMembersList: loggedInMembers
+            }
+        });
+    } catch (error) {
+        console.error('[Members] 회원 로그인 상태 디버깅 오류:', error);
         res.status(500).json({
             success: false,
             message: '서버 오류가 발생했습니다.'
