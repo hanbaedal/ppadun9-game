@@ -523,6 +523,19 @@
                 document.getElementById('totalMembers').textContent = totalMembers;
                 document.getElementById('onlineMembers').textContent = actualOnlineMembers; // 실제 온라인 회원 수로 표시
                 
+                // 디버깅 정보 추가
+                console.log('온라인 회원 상세 정보:', stats.onlineMembersList);
+                if (stats.onlineMembersList && stats.onlineMembersList.length > 0) {
+                    stats.onlineMembersList.forEach((member, index) => {
+                        console.log(`회원 ${index + 1}:`, {
+                            name: member.name,
+                            userId: member.userId,
+                            isLoggedIn: member.isLoggedIn,
+                            lastLoginAt: member.lastLoginAt
+                        });
+                    });
+                }
+                
                 // 회원 명단 테이블
                 const onlineTable = document.getElementById('onlineMembersTable');
                 onlineTable.innerHTML = '';

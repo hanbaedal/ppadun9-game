@@ -334,8 +334,15 @@ router.get('/login-stats', async (req, res) => {
         console.log('[Members] 현재 로그인한 회원 수:', onlineMembers);
         
         // 로그인한 회원들 (현재 온라인) - 실제 데이터 조회
+        // 최근 30분 내에 활동이 있는 회원들도 포함
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
         const onlineMembersList = await db.collection('game-member').find(
-            { isLoggedIn: true },
+            { 
+                $or: [
+                    { isLoggedIn: true },
+                    { lastLoginAt: { $gte: thirtyMinutesAgo } }
+                ]
+            },
             { 
                 _id: 1,
                 userId: 1, 
@@ -407,11 +414,27 @@ router.get('/login-stats', async (req, res) => {
         // 실제 온라인 회원 수 (목록 길이 기반)
         const actualOnlineMembers = onlineMembersList.length;
         
+        // 추가 디버깅: 모든 회원 조회
+        const allMembers = await db.collection('game-member').find({}, { 
+            userId: 1, 
+            name: 1, 
+            isLoggedIn: 1, 
+            lastLoginAt: 1 
+        }).toArray();
+        
+        console.log('[Members] 전체 회원 상태:', allMembers.map(m => ({
+            name: m.name,
+            userId: m.userId,
+            isLoggedIn: m.isLoggedIn,
+            lastLoginAt: m.lastLoginAt
+        })));
+        
         console.log('[Members] 통계 요약:', {
             totalMembers,
             onlineMembers,
             actualOnlineMembers,
-            onlineMembersListCount: onlineMembersList.length
+            onlineMembersListCount: onlineMembersList.length,
+            allMembersCount: allMembers.length
         });
         
         res.json({
