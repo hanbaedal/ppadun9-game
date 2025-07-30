@@ -315,6 +315,66 @@
         // 로그인 페이지 JavaScript
         console.log('직원 로그인 페이지가 로드되었습니다.');
         
+        // 이중 로그인 체크 및 세션 관리
+        let loginCheckInterval;
+        let isAlreadyLoggedIn = false;
+        
+        // 페이지 로드 시 로그인 상태 확인
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/employee/check-login-status', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('로그인 상태 확인 결과:', data);
+                    
+                    if (data.success && data.isLoggedIn) {
+                        // 이미 로그인된 상태
+                        isAlreadyLoggedIn = true;
+                        showAlert('이미 로그인된 상태입니다. 메인 페이지로 이동합니다.', 'info');
+                        
+                        // 3초 후 메인 페이지로 이동
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 3000);
+                        
+                        return true;
+                    } else if (data.success && !data.isLoggedIn && data.message === '다른 세션에서 로그인되었습니다.') {
+                        // 다른 세션에서 로그인됨
+                        showAlert('다른 기기에서 로그인되어 세션이 종료되었습니다.', 'warning');
+                        return false;
+                    }
+                }
+            } catch (error) {
+                console.error('로그인 상태 확인 오류:', error);
+            }
+            return false;
+        }
+        
+        // 주기적으로 로그인 상태 확인 (30초마다)
+        function startLoginStatusCheck() {
+            loginCheckInterval = setInterval(async () => {
+                if (!isAlreadyLoggedIn) {
+                    await checkLoginStatus();
+                }
+            }, 30000); // 30초마다 확인
+        }
+        
+        // 로그인 상태 확인 중지
+        function stopLoginStatusCheck() {
+            if (loginCheckInterval) {
+                clearInterval(loginCheckInterval);
+                loginCheckInterval = null;
+            }
+        }
+        
         // URL 파라미터에서 메시지 확인
         const urlParams = new URLSearchParams(window.location.search);
         const message = urlParams.get('message');
@@ -363,6 +423,8 @@
                 
                 if (response.ok) {
                     showAlert('로그인이 성공했습니다!', 'success');
+                    isAlreadyLoggedIn = true;
+                    stopLoginStatusCheck(); // 로그인 상태 확인 중지
                     
                     // 로그인 성공 시 사용자 정보를 로컬 스토리지에 저장
                     if (data.user) {
@@ -420,8 +482,19 @@
         }
         
         // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('로그인 페이지가 로드되었습니다.');
+            
+            // 초기 로그인 상태 확인
+            await checkLoginStatus();
+            
+            // 주기적 로그인 상태 확인 시작
+            startLoginStatusCheck();
+            
+            // 페이지 언로드 시 정리
+            window.addEventListener('beforeunload', function() {
+                stopLoginStatusCheck();
+            });
         });
     </script>
 </body>
