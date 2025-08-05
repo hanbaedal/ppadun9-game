@@ -438,9 +438,9 @@
                         <tr>
                             <th>번호</th>
                             <th>제목</th>
-                            <th>사용자명</th>
-                            <th>사용자ID</th>
-                            <th>카테고리</th>
+                                                         <th>작성자</th>
+                             <th>사용자ID</th>
+                             <th>카테고리</th>
                             <th>상태</th>
                             <th>등록일</th>
                             <th>관리</th>
@@ -726,16 +726,16 @@
                         <td>${dailyNumber}</td>
                         <td>
                             <a href="#" onclick="showInquiryDetail('${inquiry._id}')" class="text-primary">
-                                ${inquiry.title}
+                                ${inquiry.title || '제목 없음'}
                             </a>
                         </td>
-                        <td>${inquiry.userName}</td>
-                        <td>${inquiry.userId}</td>
-                        <td>
-                            <span class="category-badge category-${inquiry.category}">
-                                ${getCategoryText(inquiry.category)}
-                            </span>
-                        </td>
+                                                 <td>${inquiry.userName || '작성자 없음'}</td>
+                         <td>${inquiry.userId || '사용자ID 없음'}</td>
+                         <td>
+                             <span class="category-badge category-${inquiry.category || 'general'}">
+                                 ${getCategoryText(inquiry.category)}
+                             </span>
+                         </td>
                         <td>
                             <span class="status-badge status-${inquiry.status}">
                                 ${getStatusText(inquiry.status)}
@@ -806,21 +806,21 @@
                     modalTitle.textContent = data.inquiry.title;
                     
                     modalBody.innerHTML = `
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>사용자명:</strong> ${data.inquiry.userName}
-                            </div>
-                            <div class="col-md-6">
-                                <strong>사용자 ID:</strong> ${data.inquiry.userId}
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-md-6">
-                                <strong>카테고리:</strong> 
-                                <span class="category-badge category-${data.inquiry.category}">
-                                    ${getCategoryText(data.inquiry.category)}
-                                </span>
-                            </div>
+                                                 <div class="row">
+                             <div class="col-md-6">
+                                 <strong>작성자:</strong> ${data.inquiry.userName || '작성자 없음'}
+                             </div>
+                             <div class="col-md-6">
+                                 <strong>사용자ID:</strong> ${data.inquiry.userId || '사용자ID 없음'}
+                             </div>
+                         </div>
+                         <div class="row mt-2">
+                             <div class="col-md-6">
+                                 <strong>카테고리:</strong> 
+                                 <span class="category-badge category-${data.inquiry.category || 'general'}">
+                                     ${getCategoryText(data.inquiry.category)}
+                                 </span>
+                             </div>
                             <div class="col-md-6">
                                 <strong>상태:</strong> 
                                 <span class="status-badge status-${data.inquiry.status}">
@@ -838,15 +838,15 @@
                         </div>
                         <div class="mt-3">
                             <strong>문의 내용:</strong>
-                            <div class="inquiry-content">${data.inquiry.content}</div>
+                            <div class="inquiry-content">${data.inquiry.content || '내용 없음'}</div>
                         </div>
-                        ${data.inquiry.answer ? `
-                        <div class="mt-3">
-                            <strong>답변:</strong>
-                            <div class="reply-content">${data.inquiry.answer}</div>
-                            <small class="text-muted">답변자: ${data.inquiry.answeredBy}</small>
-                        </div>
-                        ` : ''}
+                                                 ${data.inquiry.answer ? `
+                         <div class="mt-3">
+                             <strong>답변:</strong>
+                             <div class="reply-content">${data.inquiry.answer}</div>
+                             <small class="text-muted">답변일: ${formatDate(data.inquiry.answeredAt)}</small>
+                         </div>
+                         ` : ''}
                     `;
                     
                     // 버튼 상태 설정

@@ -62,9 +62,10 @@ router.post('/', async (req, res) => {
         const db = getDb();
         const collection = db.collection('customer-inquiries');
         
-        const { name, email, phone, subject, message, category = 'general' } = req.body;
+        // 클라이언트에서 보내는 데이터 구조에 맞춰 수정
+        const { title, content, name, email, priority } = req.body;
         
-        if (!name || !email || !subject || !message) {
+        if (!name || !email || !title || !content) {
             return res.status(400).json({ 
                 success: false, 
                 message: '필수 정보가 누락되었습니다.' 
@@ -72,12 +73,11 @@ router.post('/', async (req, res) => {
         }
         
         const newInquiry = {
-            name: name,
-            email: email,
-            phone: phone || '',
-            subject: subject,
-            message: message,
-            category: category,
+            title: title,
+            content: content,
+            userId: email,        // email을 userId로 사용
+            userName: name,       // name을 userName으로 사용
+            category: priority,   // priority를 category로 사용
             status: 'pending',
             createdAt: new Date(),
             updatedAt: getKoreanTime()
@@ -149,6 +149,121 @@ router.put('/:id/status', async (req, res) => {
             success: false, 
             message: '고객 문의 상태 업데이트에 실패했습니다.',
             error: error.message 
+        });
+    }
+});
+
+// 답변 등록
+router.put('/:id/reply', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('customer-inquiries');
+        
+        const { reply } = req.body;
+        
+        if (!reply) {
+            return res.status(400).json({ 
+                success: false, 
+                message: '답변 내용이 필요합니다.' 
+            });
+        }
+        
+        const result = await collection.updateOne(
+            { _id: new ObjectId(req.params.id) },
+            { 
+                $set: { 
+                    answer: reply,           // reply를 answer로 변경
+                    status: 'answered',
+                    answeredAt: new Date(),  // repliedAt을 answeredAt으로 변경
+                    updatedAt: getKoreanTime()
+                } 
+            }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: '고객 문의를 찾을 수 없습니다.' 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: '답변이 등록되었습니다.' 
+        });
+    } catch (error) {
+        console.error('답변 등록 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '답변 등록에 실패했습니다.',
+            error: error.message 
+        });
+    }
+});
+
+// 문의 처리 완료
+router.put('/:id/close', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('customer-inquiries');
+        
+        const result = await collection.updateOne(
+            { _id: new ObjectId(req.params.id) },
+            { 
+                $set: { 
+                    status: 'closed',
+                    updatedAt: getKoreanTime()
+                } 
+            }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: '고객 문의를 찾을 수 없습니다.' 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: '문의가 처리 완료 상태로 변경되었습니다.' 
+        });
+    } catch (error) {
+        console.error('문의 처리 완료 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '문의 처리 완료에 실패했습니다.',
+            error: error.message 
+        });
+    }
+});
+
+// 통계 조회
+router.get('/stats', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('customer-inquiries');
+        
+        const total = await collection.countDocuments({});
+        const pending = await collection.countDocuments({ status: 'pending' });
+        const answered = await collection.countDocuments({ status: 'answered' });
+        const closed = await collection.countDocuments({ status: 'closed' });
+        
+        res.json({
+            success: true,
+            stats: {
+                total,
+                pending,
+                answered,
+                closed
+            }
+        });
+    } catch (error) {
+        console.error('통계 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '통계 조회에 실패했습니다.',
+            error: error.message
         });
     }
 });
