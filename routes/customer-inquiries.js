@@ -10,12 +10,28 @@ router.get('/', async (req, res) => {
         const db = getDb();
         const collection = db.collection('customer-inquiries');
         
-        // 모든 고객 문의 조회 (최신순으로 정렬)
-        const inquiries = await collection.find({}).sort({ createdAt: -1 }).toArray();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        
+        // 전체 개수 조회
+        const total = await collection.countDocuments({});
+        
+        // 페이지네이션된 고객 문의 조회 (최신순으로 정렬)
+        const inquiries = await collection.find({})
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .toArray();
+        
+        const totalPages = Math.ceil(total / limit);
         
         res.json({ 
             success: true, 
-            inquiries: inquiries 
+            inquiries: inquiries,
+            page: page,
+            totalPages: totalPages,
+            total: total
         });
     } catch (error) {
         console.error('고객 문의 목록 조회 오류:', error);
