@@ -2,7 +2,7 @@ services:
   - type: web
     name: ppadun9-game-operation
     env: node
-    buildCommand: cd . && npm install
+    buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -18,14 +18,3 @@ services:
     healthCheckPath: /
     autoDeploy: true
     plan: free
-    buildFilter:
-      paths:
-        - "**/*"
-      ignore:
-        - "node_modules/**"
-        - ".git/**"
-        - "*.log"
-        - "test-*.js"
-        - "*.png"
-        - "*.mp4"
-        - "*.zip"
