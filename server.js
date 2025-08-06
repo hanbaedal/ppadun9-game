@@ -350,6 +350,7 @@ const pointChargingRoutes = require('./routes/point-charging');
 const friendInviteRoutes = require('./routes/friend-invite');
 const customerInquiriesRoutes = require('./routes/customer-inquiries');
 const videoWatchRoutes = require('./routes/video-watch');
+const attendanceRoutes = require('./routes/attendance');
 const bettingRoutes = require('./routes/betting');
 const monitoringRoutes = require('./routes/monitoring');
 const gameStatsRoutes = require('./routes/game-stats');
@@ -366,6 +367,7 @@ app.use('/api/point-charging', pointChargingRoutes);
 app.use('/api/friend-invite', friendInviteRoutes);
 app.use('/api/customer-inquiries', customerInquiriesRoutes);
 app.use('/api/video-watch', videoWatchRoutes);
+app.use('/api/attendance', attendanceRoutes);
 app.use('/api/betting', bettingRoutes);
 app.use('/api/monitoring', monitoringRoutes);
 app.use('/api/game-stats', gameStatsRoutes);
@@ -655,6 +657,9 @@ app.post('/api/employee/register', async (req, res) => {
             lastLoginAt: null, // 마지막 로그인 시간 필드 추가
             lastActivityAt: null, // 마지막 활동 시간 필드 추가
             lastLogoutAt: null, // 마지막 로그아웃 시간 필드 추가
+            isApproved: false, // 관리자 승인 상태 (기본값: false)
+            approvedAt: null, // 승인 시간
+            approvedBy: null, // 승인한 관리자
             createdAt: getKoreanTime(),
             updatedAt: getKoreanTime()
         };
@@ -663,7 +668,7 @@ app.post('/api/employee/register', async (req, res) => {
         
         res.json({ 
             success: true, 
-            message: '직원이 성공적으로 등록되었습니다.',
+            message: '운영자 등록이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.',
             employeeId: result.insertedId 
         });
     } catch (error) {
@@ -966,33 +971,22 @@ app.post('/api/employee/login', async (req, res) => {
             return res.status(401).json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         }
 
+        // 승인 상태 확인
+        if (!employee.isApproved) {
+            return res.status(403).json({ error: '관리자 승인이 필요합니다. 승인 후 로그인이 가능합니다.' });
+        }
+
+        // 이미 로그인된 상태인지 확인 (중복 로그인 방지)
+        if (employee.isLoggedIn && employee.currentSessionId) {
+            console.log('중복 로그인 감지:', employee.username);
+            return res.status(409).json({ error: '이미 다른 기기에서 로그인되어 있습니다. 다른 기기에서 로그아웃 후 다시 시도해주세요.' });
+        }
+
         // 이중 로그인 체크 및 처리
         console.log('로그인 시도 사용자:', employee.username);
         
         const sessionId = req.sessionID;
         console.log('현재 세션 ID:', sessionId);
-        
-        // 이미 로그인된 상태인지 확인
-        if (employee.isLoggedIn && employee.currentSessionId && employee.currentSessionId !== sessionId) {
-            console.log('이중 로그인 감지:', employee.username);
-            console.log('기존 세션 ID:', employee.currentSessionId);
-            console.log('새 세션 ID:', sessionId);
-            
-            // 기존 세션을 무효화하고 새 세션으로 교체
-            await collection.updateOne(
-                { username },
-                { 
-                    $set: { 
-                        currentSessionId: sessionId,
-                        lastLoginAt: getKoreanTime(),
-                        lastActivityAt: getKoreanTime(),
-                        updatedAt: getKoreanTime()
-                    } 
-                }
-            );
-            
-            console.log('기존 세션 무효화 완료, 새 세션으로 교체됨');
-        }
         
         // 로그인 카운트 증가
         const newLoginCount = (employee.loginCount || 0) + 1;
@@ -3606,6 +3600,86 @@ app.get('/api/employee/auto-force-logout-status', async (req, res) => {
             success: false,
             message: '자동 강제 로그아웃 상태 확인 중 오류가 발생했습니다.'
         });
+    }
+});
+
+// 관리자 승인 API
+app.post('/api/employee/approve', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const { username, approvedBy } = req.body;
+        
+        if (!username || !approvedBy) {
+            return res.status(400).json({ error: '사용자명과 승인자 정보가 필요합니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 해당 사용자 찾기
+        const employee = await collection.findOne({ username });
+        if (!employee) {
+            return res.status(404).json({ error: '해당 사용자를 찾을 수 없습니다.' });
+        }
+
+        // 이미 승인된 사용자인지 확인
+        if (employee.isApproved) {
+            return res.status(400).json({ error: '이미 승인된 사용자입니다.' });
+        }
+
+        // 승인 처리
+        const result = await collection.updateOne(
+            { username: username },
+            { 
+                $set: { 
+                    isApproved: true,
+                    approvedAt: getKoreanTime(),
+                    approvedBy: approvedBy,
+                    updatedAt: getKoreanTime()
+                } 
+            }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: '해당 사용자를 찾을 수 없습니다.' });
+        }
+
+        res.json({ 
+            success: true, 
+            message: '운영자 승인이 완료되었습니다.' 
+        });
+    } catch (error) {
+        console.error('운영자 승인 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
+// 승인 대기 중인 운영자 목록 조회 API
+app.get('/api/employee/pending-approval', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('MongoDB 연결이 설정되지 않았습니다.');
+            return res.status(503).json({ error: '데이터베이스 연결이 준비되지 않았습니다.' });
+        }
+
+        const collection = db.collection(COLLECTION_NAME);
+        
+        // 승인되지 않은 운영자들 조회
+        const pendingEmployees = await collection.find({ isApproved: false }).toArray();
+        
+        // 비밀번호는 제외하고 반환
+        const safeEmployees = pendingEmployees.map(emp => {
+            const { password, ...safeEmp } = emp;
+            return safeEmp;
+        });
+        
+        res.json(safeEmployees);
+    } catch (error) {
+        console.error('승인 대기 운영자 목록 조회 오류:', error);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
 

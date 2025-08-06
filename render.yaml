@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: ppadun9-project-management
+    name: ppadun9-game-operation
     env: node
-    buildCommand: npm install && npm audit fix --force
+    buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -10,7 +10,7 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: DB_NAME
-        value: member-management
+        value: ppadun9-game
       - key: SESSION_SECRET
         generateValue: true
       - key: PORT
@@ -25,3 +25,7 @@ services:
         - "node_modules/**"
         - ".git/**"
         - "*.log"
+        - "test-*.js"
+        - "*.png"
+        - "*.mp4"
+        - "*.zip"
