@@ -16,28 +16,30 @@
 ```bash
 NODE_ENV=production
 MONGODB_URI=your_mongodb_connection_string
-DB_NAME=ppadun9-game
+DB_NAME=member-management
 SESSION_SECRET=your_session_secret
 PORT=10000
+JWT_SECRET=member-management-secret-key-2024
 ```
 
 ## 📁 프로젝트 구조
 
 ```
 ppadun9-game/
-├── public/                 # 정적 파일
-│   ├── index.html         # 메인 게임 운영 페이지
-│   ├── operator-login.html    # 운영자 로그인
-│   ├── operator-register.html # 운영자 등록
-│   ├── css/               # 스타일시트
-│   └── js/                # 클라이언트 스크립트
-├── routes/                # API 라우트
-├── models/                # 데이터 모델
-├── config/                # 설정 파일
-├── utils/                 # 유틸리티
-├── server.js              # 메인 서버 파일
-├── package.json           # 프로젝트 설정
-└── render.yaml            # Render 배포 설정
+├── src/                   # 소스 코드
+│   ├── public/           # 정적 파일
+│   │   ├── index.html    # 메인 게임 운영 페이지
+│   │   ├── operator-login.html    # 운영자 로그인
+│   │   ├── operator-register.html # 운영자 등록
+│   │   ├── css/          # 스타일시트
+│   │   └── js/           # 클라이언트 스크립트
+│   ├── routes/           # API 라우트
+│   ├── models/           # 데이터 모델
+│   ├── config/           # 설정 파일
+│   ├── utils/            # 유틸리티
+│   └── server.js         # 메인 서버 파일
+├── package.json          # 프로젝트 설정
+└── render.yaml           # Render 배포 설정
 ```
 
 ## 🔧 주요 기능
@@ -78,10 +80,11 @@ ppadun9-game/
 
 ### 환경 변수 설정 (Render)
 - `MONGODB_URI`: MongoDB 연결 문자열
-- `DB_NAME`: 데이터베이스 이름 (ppadun9-game)
+- `DB_NAME`: 데이터베이스 이름 (member-management)
 - `SESSION_SECRET`: 세션 시크릿 (자동 생성)
 - `NODE_ENV`: production
 - `PORT`: 10000
+- `JWT_SECRET`: JWT 시크릿 키
 
 ## 📝 API 문서
 
@@ -108,4 +111,4 @@ ppadun9-game/
 
 ## 📞 지원
 
-문제가 발생하면 관리자에게 문의하세요. 
+문제가 발생하면 관리자에게 문의하세요.
