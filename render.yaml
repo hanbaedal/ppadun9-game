@@ -10,11 +10,13 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: DB_NAME
-        value: ppadun9-game
+        value: member-management
       - key: SESSION_SECRET
         generateValue: true
       - key: PORT
         value: 10000
+      - key: JWT_SECRET
+        value: member-management-secret-key-2024
     healthCheckPath: /
     autoDeploy: true
     plan: free

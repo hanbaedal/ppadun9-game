@@ -7,11 +7,11 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "cd src && npm start",
-    "dev": "cd src && npm run dev",
+    "start": "cd src && node server.js",
+    "dev": "cd src && nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "audit": "cd src && npm audit fix",
-    "build": "cd src && npm install",
+    "build": "npm install",
     "postinstall": "echo '빠던나인 게임 운영 시스템 설치 완료'"
   },
   "dependencies": {
@@ -44,6 +44,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hanbaedal/ppadun9-game.git"
+    "url": "https://github.com/hanbaedal/ppadun9.git"
   }
 }
