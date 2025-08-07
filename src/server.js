@@ -240,6 +240,56 @@ async function initializeBettingCollections() {
     }
 }
 
+// 운영자 컬렉션 초기화 함수
+async function initializeOperateMemberCollection() {
+    try {
+        if (!db) {
+            console.log('데이터베이스 연결이 없어 운영자 컬렉션 초기화를 건너뜁니다.');
+            return;
+        }
+
+        console.log('운영자 컬렉션 초기화 시작...');
+
+        // OPERATE-MEMBER 컬렉션
+        const operateMemberCollection = db.collection('OPERATE-MEMBER');
+        
+        // 컬렉션이 존재하는지 확인
+        const collections = await db.listCollections({ name: 'OPERATE-MEMBER' }).toArray();
+        
+        if (collections.length === 0) {
+            // 컬렉션이 없으면 빈 문서를 삽입하여 컬렉션 생성
+            await operateMemberCollection.insertOne({
+                _id: 'initial',
+                name: '시스템',
+                username: 'system',
+                createdAt: getKoreanTime(),
+                updatedAt: getKoreanTime()
+            });
+            console.log('OPERATE-MEMBER 컬렉션이 생성되었습니다.');
+        } else {
+            console.log('OPERATE-MEMBER 컬렉션이 이미 존재합니다.');
+        }
+
+        // 인덱스 생성
+        const usernameIndexExists = await operateMemberCollection.indexExists('username_1');
+        if (!usernameIndexExists) {
+            await operateMemberCollection.createIndex({ username: 1 }, { unique: true });
+            console.log('운영자 username 인덱스가 생성되었습니다.');
+        }
+
+        const emailIndexExists = await operateMemberCollection.indexExists('email_1');
+        if (!emailIndexExists) {
+            await operateMemberCollection.createIndex({ email: 1 }, { sparse: true });
+            console.log('운영자 email 인덱스가 생성되었습니다.');
+        }
+
+        console.log('운영자 컬렉션이 성공적으로 초기화되었습니다.');
+
+    } catch (error) {
+        console.error('운영자 컬렉션 초기화 오류:', error);
+    }
+}
+
 // MongoDB 연결
 async function connectToMongoDB() {
     try {
@@ -251,7 +301,10 @@ async function connectToMongoDB() {
         setupAutoLogoutCron();
         
         // 배팅 컬렉션 자동 초기화
-        await initializeBettingCollections();
+await initializeBettingCollections();
+
+// 운영자 컬렉션 자동 초기화
+await initializeOperateMemberCollection();
         
     } catch (error) {
         console.error('MongoDB 연결 오류:', error);
