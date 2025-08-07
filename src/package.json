@@ -4,8 +4,7 @@
   "description": "빠던나인 게임 운영 시스템",
   "main": "server.js",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "start": "node server.js",
