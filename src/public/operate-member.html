@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운영자관리 - 빠던나인 게임 운영 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .operator-card {
+            transition: transform 0.2s;
+        }
+        .operator-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.75rem;
+        }
+        .search-filters {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .btn-action {
+            margin: 2px;
+        }
+        .pagination-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .role-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- 헤더 -->
+        <div class="row bg-success text-white p-3">
+            <div class="col">
+                <h1><i class="fas fa-user-cog me-2"></i>운영자관리</h1>
+                <p class="mb-0">게임 운영 시스템 운영자 정보를 관리합니다.</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-light" onclick="location.href='index.html'">
+                    <i class="fas fa-home me-1"></i>홈으로
+                </button>
+            </div>
+        </div>
+
+        <!-- 통계 카드 -->
+        <div class="row mt-3" id="statsRow">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 id="totalOperators">0</h3>
+                            <p class="mb-0">전체 운영자</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-cog fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 id="approvedOperators">0</h3>
+                            <p class="mb-0">승인된 운영자</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 id="pendingOperators">0</h3>
+                            <p class="mb-0">승인 대기</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 id="loggedInOperators">0</h3>
+                            <p class="mb-0">현재 접속</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 검색 및 필터 -->
+        <div class="search-filters">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="searchInput" class="form-label">검색</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="이름, 아이디, 이메일, 전화번호">
+                </div>
+                <div class="col-md-2">
+                    <label for="departmentFilter" class="form-label">부서</label>
+                    <select class="form-select" id="departmentFilter">
+                        <option value="">전체</option>
+                        <option value="게임운영">게임운영</option>
+                        <option value="시스템관리">시스템관리</option>
+                        <option value="고객지원">고객지원</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="positionFilter" class="form-label">직책</label>
+                    <select class="form-select" id="positionFilter">
+                        <option value="">전체</option>
+                        <option value="관리자">관리자</option>
+                        <option value="운영자">운영자</option>
+                        <option value="직원">직원</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="approvalFilter" class="form-label">승인상태</label>
+                    <select class="form-select" id="approvalFilter">
+                        <option value="">전체</option>
+                        <option value="true">승인됨</option>
+                        <option value="false">승인대기</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="loginFilter" class="form-label">접속상태</label>
+                    <select class="form-select" id="loginFilter">
+                        <option value="">전체</option>
+                        <option value="true">접속중</option>
+                        <option value="false">미접속</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-success w-100" onclick="loadOperators()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <div class="row mb-3">
+            <div class="col">
+                <button class="btn btn-success" onclick="showAddOperatorModal()">
+                    <i class="fas fa-plus me-1"></i>새 운영자 등록
+                </button>
+                <button class="btn btn-warning" onclick="showBulkApprovalModal()">
+                    <i class="fas fa-check-double me-1"></i>대량 승인
+                </button>
+                <button class="btn btn-info" onclick="exportOperators()">
+                    <i class="fas fa-download me-1"></i>내보내기
+                </button>
+            </div>
+        </div>
+
+        <!-- 운영자 목록 테이블 -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
+                        <th>이름</th>
+                        <th>아이디</th>
+                        <th>이메일</th>
+                        <th>부서</th>
+                        <th>직책</th>
+                        <th>역할</th>
+                        <th>전화번호</th>
+                        <th>승인상태</th>
+                        <th>접속상태</th>
+                        <th>활성상태</th>
+                        <th>등록일</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody id="operatorTableBody">
+                    <!-- 운영자 데이터가 여기에 로드됩니다 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="pagination-info" id="paginationInfo">
+                    총 0명의 운영자 중 0-0명 표시
+                </div>
+            </div>
+            <div class="col-md-6">
+                <nav aria-label="운영자 목록 페이지네이션">
+                    <ul class="pagination justify-content-end" id="pagination">
+                        <!-- 페이지네이션이 여기에 생성됩니다 -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- 운영자 등록/수정 모달 -->
+    <div class="modal fade" id="operatorModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="operatorModalTitle">새 운영자 등록</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="operatorForm">
+                        <input type="hidden" id="operatorId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="operatorName" class="form-label">이름 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="operatorName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="operatorUsername" class="form-label">아이디 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="operatorUsername" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="operatorPassword" class="form-label">비밀번호 <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="operatorPassword" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="operatorEmail" class="form-label">이메일</label>
+                                    <input type="email" class="form-control" id="operatorEmail">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="operatorDepartment" class="form-label">부서</label>
+                                    <select class="form-select" id="operatorDepartment">
+                                        <option value="">부서 선택</option>
+                                        <option value="게임운영">게임운영</option>
+                                        <option value="시스템관리">시스템관리</option>
+                                        <option value="고객지원">고객지원</option>
+                                        <option value="기타">기타</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="operatorPosition" class="form-label">직책</label>
+                                    <select class="form-select" id="operatorPosition">
+                                        <option value="">직책 선택</option>
+                                        <option value="관리자">관리자</option>
+                                        <option value="운영자">운영자</option>
+                                        <option value="직원">직원</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="operatorRole" class="form-label">역할</label>
+                                    <select class="form-select" id="operatorRole">
+                                        <option value="operator">운영자</option>
+                                        <option value="admin">관리자</option>
+                                        <option value="supervisor">감독자</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="operatorPhone" class="form-label">전화번호</label>
+                            <input type="tel" class="form-control" id="operatorPhone">
+                        </div>
+                        <div class="mb-3" id="approvalSection" style="display: none;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="operatorApproved">
+                                <label class="form-check-label" for="operatorApproved">
+                                    승인됨
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="operatorActive" checked>
+                                <label class="form-check-label" for="operatorActive">
+                                    활성 상태
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-success" onclick="saveOperator()">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 대량 승인 모달 -->
+    <div class="modal fade" id="bulkApprovalModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">대량 승인/반려</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>선택된 <span id="selectedCount">0</span>명의 운영자를 처리하시겠습니까?</p>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="bulkApproval" id="bulkApprove" value="true" checked>
+                        <label class="form-check-label" for="bulkApprove">
+                            승인
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="bulkApproval" id="bulkReject" value="false">
+                        <label class="form-check-label" for="bulkReject">
+                            반려
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-success" onclick="processBulkApproval()">처리</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let selectedOperators = new Set();
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadOperators();
+        });
+
+        // 통계 로드
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/operate-member/stats/overview');
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('totalOperators').textContent = result.data.totalOperators;
+                    document.getElementById('approvedOperators').textContent = result.data.approvedOperators;
+                    document.getElementById('pendingOperators').textContent = result.data.pendingOperators;
+                    document.getElementById('loggedInOperators').textContent = result.data.loggedInOperators;
+                }
+            } catch (error) {
+                console.error('통계 로드 오류:', error);
+            }
+        }
+
+        // 운영자 목록 로드
+        async function loadOperators(page = 1) {
+            try {
+                const search = document.getElementById('searchInput').value;
+                const department = document.getElementById('departmentFilter').value;
+                const position = document.getElementById('positionFilter').value;
+                const isApproved = document.getElementById('approvalFilter').value;
+                const isLoggedIn = document.getElementById('loginFilter').value;
+
+                const params = new URLSearchParams({
+                    page: page,
+                    limit: 10,
+                    search: search,
+                    department: department,
+                    position: position,
+                    isApproved: isApproved,
+                    isLoggedIn: isLoggedIn
+                });
+
+                const response = await fetch(`/api/operate-member?${params}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayOperators(result.data);
+                    displayPagination(result.pagination);
+                    currentPage = result.pagination.currentPage;
+                    totalPages = result.pagination.totalPages;
+                } else {
+                    alert('운영자 목록을 불러오는데 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('운영자 목록 로드 오류:', error);
+                alert('운영자 목록을 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 운영자 목록 표시
+        function displayOperators(operators) {
+            const tbody = document.getElementById('operatorTableBody');
+            tbody.innerHTML = '';
+
+            operators.forEach(operator => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="operator-checkbox" value="${operator._id}" onchange="toggleOperatorSelection('${operator._id}')">
+                    </td>
+                    <td>${operator.name}</td>
+                    <td>${operator.username}</td>
+                    <td>${operator.email || '-'}</td>
+                    <td>${operator.department || '-'}</td>
+                    <td>${operator.position || '-'}</td>
+                    <td>
+                        <span class="badge ${getRoleBadgeClass(operator.role)} role-badge">
+                            ${getRoleDisplayName(operator.role)}
+                        </span>
+                    </td>
+                    <td>${operator.phone || '-'}</td>
+                    <td>
+                        <span class="badge ${operator.isApproved ? 'bg-success' : 'bg-warning'} status-badge">
+                            ${operator.isApproved ? '승인됨' : '승인대기'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${operator.isLoggedIn ? 'bg-primary' : 'bg-secondary'} status-badge">
+                            ${operator.isLoggedIn ? '접속중' : '미접속'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${operator.isActive ? 'bg-success' : 'bg-danger'} status-badge">
+                            ${operator.isActive ? '활성' : '비활성'}
+                        </span>
+                    </td>
+                    <td>${formatDate(operator.createdAt)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary btn-action" onclick="editOperator('${operator._id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success btn-action" onclick="approveOperator('${operator._id}', ${!operator.isApproved})">
+                            <i class="fas fa-${operator.isApproved ? 'times' : 'check'}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteOperator('${operator._id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 역할 배지 클래스 반환
+        function getRoleBadgeClass(role) {
+            switch(role) {
+                case 'admin': return 'bg-danger';
+                case 'supervisor': return 'bg-warning';
+                default: return 'bg-primary';
+            }
+        }
+
+        // 역할 표시명 반환
+        function getRoleDisplayName(role) {
+            switch(role) {
+                case 'admin': return '관리자';
+                case 'supervisor': return '감독자';
+                default: return '운영자';
+            }
+        }
+
+        // 페이지네이션 표시
+        function displayPagination(pagination) {
+            const paginationElement = document.getElementById('pagination');
+            const infoElement = document.getElementById('paginationInfo');
+            
+            // 정보 업데이트
+            const start = (pagination.currentPage - 1) * pagination.limit + 1;
+            const end = Math.min(pagination.currentPage * pagination.limit, pagination.totalCount);
+            infoElement.textContent = `총 ${pagination.totalCount}명의 운영자 중 ${start}-${end}명 표시`;
+
+            // 페이지네이션 버튼 생성
+            paginationElement.innerHTML = '';
+            
+            // 이전 페이지 버튼
+            if (pagination.currentPage > 1) {
+                const prevLi = document.createElement('li');
+                prevLi.className = 'page-item';
+                prevLi.innerHTML = `<a class="page-link" href="#" onclick="loadOperators(${pagination.currentPage - 1})">이전</a>`;
+                paginationElement.appendChild(prevLi);
+            }
+
+            // 페이지 번호 버튼들
+            const startPage = Math.max(1, pagination.currentPage - 2);
+            const endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === pagination.currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="loadOperators(${i})">${i}</a>`;
+                paginationElement.appendChild(li);
+            }
+
+            // 다음 페이지 버튼
+            if (pagination.currentPage < pagination.totalPages) {
+                const nextLi = document.createElement('li');
+                nextLi.className = 'page-item';
+                nextLi.innerHTML = `<a class="page-link" href="#" onclick="loadOperators(${pagination.currentPage + 1})">다음</a>`;
+                paginationElement.appendChild(nextLi);
+            }
+        }
+
+        // 운영자 선택 토글
+        function toggleOperatorSelection(operatorId) {
+            if (selectedOperators.has(operatorId)) {
+                selectedOperators.delete(operatorId);
+            } else {
+                selectedOperators.add(operatorId);
+            }
+            updateSelectAllCheckbox();
+        }
+
+        // 전체 선택 토글
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.operator-checkbox');
+            const selectAllCheckbox = document.getElementById('selectAll');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                if (selectAllCheckbox.checked) {
+                    selectedOperators.add(checkbox.value);
+                } else {
+                    selectedOperators.delete(checkbox.value);
+                }
+            });
+        }
+
+        // 전체 선택 체크박스 업데이트
+        function updateSelectAllCheckbox() {
+            const checkboxes = document.querySelectorAll('.operator-checkbox');
+            const selectAllCheckbox = document.getElementById('selectAll');
+            
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            selectAllCheckbox.checked = checkedCount === checkboxes.length && checkboxes.length > 0;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+        }
+
+        // 새 운영자 등록 모달 표시
+        function showAddOperatorModal() {
+            document.getElementById('operatorModalTitle').textContent = '새 운영자 등록';
+            document.getElementById('operatorForm').reset();
+            document.getElementById('operatorId').value = '';
+            document.getElementById('approvalSection').style.display = 'none';
+            document.getElementById('operatorPassword').required = true;
+            
+            const modal = new bootstrap.Modal(document.getElementById('operatorModal'));
+            modal.show();
+        }
+
+        // 운영자 수정 모달 표시
+        async function editOperator(operatorId) {
+            try {
+                const response = await fetch(`/api/operate-member/${operatorId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const operator = result.data;
+                    
+                    document.getElementById('operatorModalTitle').textContent = '운영자 정보 수정';
+                    document.getElementById('operatorId').value = operator._id;
+                    document.getElementById('operatorName').value = operator.name;
+                    document.getElementById('operatorUsername').value = operator.username;
+                    document.getElementById('operatorEmail').value = operator.email || '';
+                    document.getElementById('operatorDepartment').value = operator.department || '';
+                    document.getElementById('operatorPosition').value = operator.position || '';
+                    document.getElementById('operatorRole').value = operator.role || 'operator';
+                    document.getElementById('operatorPhone').value = operator.phone || '';
+                    document.getElementById('operatorApproved').checked = operator.isApproved;
+                    document.getElementById('operatorActive').checked = operator.isActive;
+                    document.getElementById('operatorPassword').required = false;
+                    document.getElementById('approvalSection').style.display = 'block';
+
+                    const modal = new bootstrap.Modal(document.getElementById('operatorModal'));
+                    modal.show();
+                } else {
+                    alert('운영자 정보를 불러오는데 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('운영자 정보 로드 오류:', error);
+                alert('운영자 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 운영자 저장
+        async function saveOperator() {
+            try {
+                const operatorId = document.getElementById('operatorId').value;
+                const operatorData = {
+                    name: document.getElementById('operatorName').value,
+                    username: document.getElementById('operatorUsername').value,
+                    password: document.getElementById('operatorPassword').value,
+                    email: document.getElementById('operatorEmail').value,
+                    department: document.getElementById('operatorDepartment').value,
+                    position: document.getElementById('operatorPosition').value,
+                    role: document.getElementById('operatorRole').value,
+                    phone: document.getElementById('operatorPhone').value
+                };
+
+                if (operatorId) {
+                    // 수정
+                    if (document.getElementById('operatorApproved').checked !== undefined) {
+                        operatorData.isApproved = document.getElementById('operatorApproved').checked;
+                    }
+                    if (document.getElementById('operatorActive').checked !== undefined) {
+                        operatorData.isActive = document.getElementById('operatorActive').checked;
+                    }
+                    
+                    const response = await fetch(`/api/operate-member/${operatorId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(operatorData)
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('운영자 정보가 수정되었습니다.');
+                        bootstrap.Modal.getInstance(document.getElementById('operatorModal')).hide();
+                        loadOperators(currentPage);
+                        loadStats();
+                    } else {
+                        alert(result.message || '운영자 정보 수정에 실패했습니다.');
+                    }
+                } else {
+                    // 등록
+                    const response = await fetch('/api/operate-member', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(operatorData)
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('운영자가 등록되었습니다.');
+                        bootstrap.Modal.getInstance(document.getElementById('operatorModal')).hide();
+                        loadOperators(currentPage);
+                        loadStats();
+                    } else {
+                        alert(result.message || '운영자 등록에 실패했습니다.');
+                    }
+                }
+            } catch (error) {
+                console.error('운영자 저장 오류:', error);
+                alert('운영자 저장에 실패했습니다.');
+            }
+        }
+
+        // 운영자 승인/반려
+        async function approveOperator(operatorId, isApproved) {
+            try {
+                const response = await fetch(`/api/operate-member/${operatorId}/approval`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isApproved })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    loadOperators(currentPage);
+                    loadStats();
+                } else {
+                    alert(result.message || '승인/반려 처리에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('승인/반려 오류:', error);
+                alert('승인/반려 처리에 실패했습니다.');
+            }
+        }
+
+        // 운영자 삭제
+        async function deleteOperator(operatorId) {
+            if (!confirm('정말로 이 운영자를 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/operate-member/${operatorId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('운영자가 삭제되었습니다.');
+                    loadOperators(currentPage);
+                    loadStats();
+                } else {
+                    alert(result.message || '운영자 삭제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('운영자 삭제 오류:', error);
+                alert('운영자 삭제에 실패했습니다.');
+            }
+        }
+
+        // 대량 승인 모달 표시
+        function showBulkApprovalModal() {
+            if (selectedOperators.size === 0) {
+                alert('선택된 운영자가 없습니다.');
+                return;
+            }
+            
+            document.getElementById('selectedCount').textContent = selectedOperators.size;
+            const modal = new bootstrap.Modal(document.getElementById('bulkApprovalModal'));
+            modal.show();
+        }
+
+        // 대량 승인/반려 처리
+        async function processBulkApproval() {
+            try {
+                const isApproved = document.querySelector('input[name="bulkApproval"]:checked').value === 'true';
+                
+                const response = await fetch('/api/operate-member/bulk/approval', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        operatorIds: Array.from(selectedOperators),
+                        isApproved: isApproved
+                    })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    selectedOperators.clear();
+                    loadOperators(currentPage);
+                    loadStats();
+                    bootstrap.Modal.getInstance(document.getElementById('bulkApprovalModal')).hide();
+                } else {
+                    alert(result.message || '대량 처리에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('대량 처리 오류:', error);
+                alert('대량 처리에 실패했습니다.');
+            }
+        }
+
+        // 운영자 목록 내보내기
+        function exportOperators() {
+            // CSV 형식으로 내보내기 기능 구현
+            alert('내보내기 기능은 추후 구현 예정입니다.');
+        }
+
+        // 날짜 포맷팅
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR');
+        }
+    </script>
+</body>
+</html>
