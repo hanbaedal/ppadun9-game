@@ -2,16 +2,16 @@
   "name": "ppadun9-game-operation",
   "version": "1.0.0",
   "description": "빠던나인 게임 운영 시스템",
-  "main": "server.js",
+  "main": "src/server.js",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "cd src && npm start",
+    "dev": "cd src && npm run dev",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "audit": "npm audit fix",
-    "build": "npm install",
+    "audit": "cd src && npm audit fix",
+    "build": "cd src && npm install",
     "postinstall": "echo '빠던나인 게임 운영 시스템 설치 완료'"
   },
   "dependencies": {

@@ -2,8 +2,8 @@ services:
   - type: web
     name: ppadun9-game-operation
     env: node
-    buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: chmod +x start.sh && ./start.sh
+    buildCommand: npm run build
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
