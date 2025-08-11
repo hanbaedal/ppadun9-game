@@ -250,11 +250,11 @@ async function initializeOperateMemberCollection() {
 
         console.log('운영자 컬렉션 초기화 시작...');
 
-        // OPERATE-MEMBER 컬렉션
-        const operateMemberCollection = db.collection('OPERATE-MEMBER');
+        // operate-member 컬렉션
+        const operateMemberCollection = db.collection('operate-member');
         
         // 컬렉션이 존재하는지 확인
-        const collections = await db.listCollections({ name: 'OPERATE-MEMBER' }).toArray();
+        const collections = await db.listCollections({ name: 'operate-member' }).toArray();
         
         if (collections.length === 0) {
             // 컬렉션이 없으면 빈 문서를 삽입하여 컬렉션 생성
@@ -265,9 +265,9 @@ async function initializeOperateMemberCollection() {
                 createdAt: getKoreanTime(),
                 updatedAt: getKoreanTime()
             });
-            console.log('OPERATE-MEMBER 컬렉션이 생성되었습니다.');
+            console.log('operate-member 컬렉션이 생성되었습니다.');
         } else {
-            console.log('OPERATE-MEMBER 컬렉션이 이미 존재합니다.');
+            console.log('operate-member 컬렉션이 이미 존재합니다.');
         }
 
         // 인덱스 생성

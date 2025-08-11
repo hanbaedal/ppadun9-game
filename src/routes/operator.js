@@ -17,7 +17,7 @@ router.post('/register', async (req, res) => {
         }
 
         const db = getDb();
-        const collection = db.collection('OPERATE-MEMBER');
+        const collection = db.collection('operate-member');
 
         // 아이디 중복 확인
         const existingOperator = await collection.findOne({ username });
@@ -80,7 +80,7 @@ router.post('/login', async (req, res) => {
         }
 
         const db = getDb();
-        const collection = db.collection('OPERATE-MEMBER');
+        const collection = db.collection('operate-member');
 
         // 운영자 정보 조회
         const operator = await collection.findOne({ username });
@@ -160,7 +160,7 @@ router.get('/check-username', async (req, res) => {
         }
 
         const db = getDb();
-        const collection = db.collection('OPERATE-MEMBER');
+        const collection = db.collection('operate-member');
 
         // 아이디 중복 확인
         const existingOperator = await collection.findOne({ username });
@@ -226,7 +226,7 @@ router.get('/profile/:username', async (req, res) => {
         const { username } = req.params;
         
         const db = getDb();
-        const collection = db.collection('OPERATE-MEMBER');
+        const collection = db.collection('operate-member');
 
         const operator = await collection.findOne(
             { username },
@@ -260,7 +260,7 @@ router.get('/profile/:username', async (req, res) => {
 router.get('/pending', async (req, res) => {
     try {
         const db = getDb();
-        const collection = db.collection('OPERATE-MEMBER');
+        const collection = db.collection('operate-member');
         
         const pendingOperators = await collection.find(
             { isApproved: false, isActive: true },
@@ -287,7 +287,7 @@ router.put('/approve/:id', async (req, res) => {
         const { isApproved, reason } = req.body;
         
         const db = getDb();
-        const collection = db.collection('OPERATE-MEMBER');
+        const collection = db.collection('operate-member');
         
         const result = await collection.updateOne(
             { _id: new ObjectId(id) },
@@ -325,7 +325,7 @@ router.put('/approve/:id', async (req, res) => {
 router.get('/all', async (req, res) => {
     try {
         const db = getDb();
-        const collection = db.collection('OPERATE-MEMBER');
+        const collection = db.collection('operate-member');
         
         const allOperators = await collection.find(
             {},
