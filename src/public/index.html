@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>빠던나인 게임 운영 시스템</title>
+    <title>빠던나인 게임 운영 - 빠던나인 게임</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="/js/korean-time.js"></script>
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -298,45 +297,99 @@
             top: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0,0,0,0.3);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
         }
 
         .modal-content {
-            background: #fff;
-            border-radius: 8px;
-            padding: 32px 24px;
-            min-width: 300px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
             text-align: center;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .modal-message {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
         }
 
         .modal-buttons {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             justify-content: center;
-            margin-top: 20px;
         }
 
         .modal-btn {
-            padding: 8px 24px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 6px;
-            font-size: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            min-width: 100px;
         }
 
         .modal-btn-primary {
-            background: #007bff;
-            color: #fff;
+            background-color: #28a745;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
         }
 
         .modal-btn-secondary {
-            background: #6c757d;
-            color: #fff;
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .modal-btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        /* 상태 표시 */
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-waiting {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-stopped {
+            background-color: #f8d7da;
+            color: #721c24;
         }
 
         /* 반응형 디자인 */
@@ -345,15 +398,21 @@
                 padding: 15px;
                 margin: 10px;
             }
-
+            
             .betting-item {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: stretch;
                 gap: 10px;
             }
-
+            
+            .betting-title,
+            .betting-time,
+            .betting-btn {
+                width: 100%;
+            }
+            
             .radio-group {
-                justify-content: flex-start;
+                justify-content: center;
             }
         }
     </style>
@@ -361,142 +420,137 @@
 <body>
     <!-- 네비게이션 바 -->
     <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid px-3">
-            <div class="d-flex align-items-center">
-                <a href="/" class="navbar-brand">
-                    <i class="fas fa-cogs me-2"></i>
-                    빠던나인 게임 운영 시스템
-                </a>
-            </div>
-            
-            <div class="navbar-nav mx-auto">
-                <span class="navbar-text" id="userName">
-                    <i class="fas fa-user-circle me-2"></i> 운영자
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-gamepad me-2"></i>빠던나인 게임 운영
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" id="userName">
+                    <i class="fas fa-user-circle me-2"></i>운영자
                 </span>
-            </div>
-            
-            <div class="navbar-nav">
-                <div class="nav-item me-3">
-                    <a class="nav-link" href="employee-management.html">
-                        <i class="fas fa-users me-1"></i> 직원관리
-                    </a>
-                </div>
-                <div class="nav-item me-3">
-                    <a class="nav-link" href="operate-member.html">
-                        <i class="fas fa-user-cog me-1"></i> 운영자관리
-                    </a>
-                </div>
-                <span class="navbar-text me-2" id="currentDate">
-                    <i class="fas fa-calendar me-1"></i> <span id="dateDisplay"></span>
-                </span>
-                <div class="nav-item" id="logoutItem" style="display: none;">
-                    <a class="nav-link" href="#" id="logoutBtn">
-                        <i class="fas fa-sign-out-alt"></i> 로그아웃
-                    </a>
-                </div>
+                <button class="btn btn-outline-danger btn-sm" onclick="handleLogout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>로그아웃
+                </button>
             </div>
         </div>
     </nav>
 
     <div class="container">
-        <!-- 게임 운영 섹션 -->
-        <div class="game-section" id="gameSection">
-            <h2 class="page-title">게임 운영 시스템</h2>
-            <div class="date-display" id="dateDisplay"></div>
+        <h1 class="page-title">빠던나인 게임 운영 시스템</h1>
+        <div class="date-display" id="dateDisplay">날짜 로딩 중...</div>
 
-            <!-- 경기 선택 테이블 -->
+        <!-- 게임 선택 섹션 -->
+        <div class="game-section">
             <div class="game-selection-container">
-                <h4 class="mb-3">경기 선택</h4>
-                <table class="game-selection-table" id="gameSelectionTable">
+                <h4 class="mb-3"><i class="fas fa-list me-2"></i>오늘의 경기</h4>
+                <table class="game-selection-table">
                     <thead>
                         <tr>
-                            <th>경기번호</th>
+                            <th>경기</th>
                             <th>매치업</th>
-                            <th>경기시간</th>
-                            <th>경기상황</th>
+                            <th>시간</th>
+                            <th>게임상태</th>
                             <th>진행상태</th>
                             <th>선택</th>
                         </tr>
                     </thead>
                     <tbody id="gameSelectionTableBody">
-                        <!-- 경기 선택 행들이 동적으로 생성됩니다 -->
+                        <!-- 게임 데이터가 여기에 로드됩니다 -->
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <!-- 배팅 섹션 -->
-            <div class="betting-section">
-                <h4 class="mb-3">게임 운영</h4>
-                
-                <div class="betting-item">
-                    <div class="betting-title">게임형태</div>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="gameType" value="attack" checked>
-                            <span>타자</span>
-                        </label>
-                        <label class="radio-label" style="opacity: 0.5; pointer-events: none;">
-                            <input type="radio" name="gameType" value="defense" disabled>
-                            <span>수비</span>
-                        </label>
-                        <label class="radio-label" style="opacity: 0.5; pointer-events: none;">
-                            <input type="radio" name="gameType" value="pitcher" disabled>
-                            <span>투수</span>
-                        </label>
-                    </div>
-                </div>
+        <!-- 배팅 운영 섹션 -->
+        <div class="betting-section" id="bettingSection" style="display: none;">
+            <h4 class="mb-3"><i class="fas fa-play-circle me-2"></i>게임 운영</h4>
+            
+            <!-- 선택된 게임 정보 -->
+            <div class="betting-item">
+                <div class="betting-title">선택된 게임</div>
+                <div class="betting-time" id="selectedGameInfo">게임을 선택해주세요</div>
+            </div>
 
-                <div class="betting-item">
-                    <button id="startBetting" class="betting-btn">배팅시작</button>
-                    <div class="betting-time" id="bettingTime"></div>
+            <!-- 게임 형태 선택 -->
+            <div class="betting-item">
+                <div class="betting-title">게임 형태</div>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="gameType" value="attack" disabled>
+                        <span>타자</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="gameType" value="defense" disabled>
+                        <span>공격</span>
+                    </label>
                 </div>
+            </div>
 
-                <div class="betting-item">
-                    <button id="stopBetting" class="betting-btn stop" disabled>배팅중지</button>
-                    <div class="betting-time" id="stopTime"></div>
-                </div>
+            <!-- 배팅 시작/중지 -->
+            <div class="betting-item">
+                <div class="betting-title">배팅 제어</div>
+                <button class="betting-btn" id="startBetting" disabled>
+                    <i class="fas fa-play me-2"></i>배팅 시작
+                </button>
+                <button class="betting-btn stop" id="stopBetting" disabled>
+                    <i class="fas fa-stop me-2"></i>배팅 중지
+                </button>
+            </div>
 
-                <div class="betting-item">
-                    <div class="betting-title">예측결과</div>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="1base" disabled>
-                            <span>1루</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="2base" disabled>
-                            <span>2루</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="3base" disabled>
-                            <span>3루</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="homerun" disabled>
-                            <span>홈런</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="strikeout" disabled>
-                            <span>삼진</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="prediction" value="out" disabled>
-                            <span>아웃</span>
-                        </label>
-                    </div>
-                </div>
+            <!-- 배팅 시간 표시 -->
+            <div class="betting-item">
+                <div class="betting-title">배팅 시간</div>
+                <div class="betting-time" id="bettingTime">-</div>
+            </div>
 
-                <div class="betting-item">
-                    <button id="nextBatterBtn" class="betting-btn" style="background-color: #007bff;" disabled>다음타자</button>
+            <!-- 중지 시간 표시 -->
+            <div class="betting-item">
+                <div class="betting-title">중지 시간</div>
+                <div class="betting-time" id="stopTime">-</div>
+            </div>
+
+            <!-- 예측 결과 선택 -->
+            <div class="betting-item">
+                <div class="betting-title">예측 결과</div>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="1base" disabled>
+                        <span>1루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="2base" disabled>
+                        <span>2루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="3base" disabled>
+                        <span>3루</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="homerun" disabled>
+                        <span>홈런</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="prediction" value="out" disabled>
+                        <span>아웃</span>
+                    </label>
                 </div>
+            </div>
+
+            <!-- 다음 타자 준비 -->
+            <div class="betting-item">
+                <div class="betting-title">다음 단계</div>
+                <button class="betting-btn" id="nextBatterBtn" disabled>
+                    <i class="fas fa-forward me-2"></i>다음 타자
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- 모달 -->
+    <!-- 커스텀 모달 -->
     <div id="customModal" class="modal">
         <div class="modal-content">
-            <div id="customModalMsg"></div>
+            <h3 class="modal-title" id="customModalTitle">알림</h3>
+            <p class="modal-message" id="customModalMessage">메시지</p>
             <div class="modal-buttons" id="customModalButtons">
                 <button class="modal-btn modal-btn-primary" onclick="closeCustomModal()">확인</button>
             </div>
@@ -504,66 +558,58 @@
     </div>
 
     <script>
-        let currentDate = new Date();
         let selectedGame = null;
-        let bettingTimer = null;
         let currentUser = null;
+        let bettingStartTime = null;
+        let bettingStopTime = null;
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            updateDate();
+            loadGames();
+            setupEventListeners();
+        });
 
         // 로그인 상태 확인
         function checkLoginStatus() {
             const storedUser = localStorage.getItem('currentUser');
             if (!storedUser) {
                 // 로그인되지 않은 경우 로그인 페이지로 이동
-                window.location.href = 'operator-login.html';
+                window.location.href = 'operator-management.html';
                 return;
             }
             
             try {
                 currentUser = JSON.parse(storedUser);
                 document.getElementById('userName').innerHTML = `<i class="fas fa-user-circle me-2"></i> ${currentUser.name || currentUser.username}`;
-                document.getElementById('logoutItem').style.display = 'block';
             } catch (error) {
                 console.error('사용자 정보 파싱 오류:', error);
                 localStorage.removeItem('currentUser');
-                window.location.href = 'operator-login.html';
+                window.location.href = 'operator-management.html';
             }
         }
 
         // 로그아웃 처리
         async function handleLogout() {
             try {
-                const response = await fetch('/api/employee/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include'
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    localStorage.removeItem('currentUser');
-                    currentUser = null;
-                    showCustomModal('로그아웃되었습니다.');
-                    setTimeout(() => {
-                        window.location.href = 'operator-login.html';
-                    }, 1500);
-                } else {
-                    showCustomModal('로그아웃 중 오류가 발생했습니다.');
-                }
+                // 로컬 스토리지 정리
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                
+                showCustomModal('로그아웃되었습니다.');
+                setTimeout(() => {
+                    window.location.href = 'operator-management.html';
+                }, 1500);
             } catch (error) {
                 console.error('로그아웃 오류:', error);
-                localStorage.removeItem('currentUser');
-                window.location.href = 'operator-login.html';
+                window.location.href = 'operator-management.html';
             }
         }
 
         // 날짜 표시 업데이트
         function updateDate() {
-            const today = (typeof KoreanTime !== 'undefined' && KoreanTime.getKoreanTime)
-                ? KoreanTime.getKoreanTime()
-                : new Date();
+            const today = new Date();
             const year = today.getFullYear();
             const month = today.getMonth() + 1;
             const day = today.getDate();
@@ -575,34 +621,14 @@
         async function loadGames() {
             try {
                 const now = new Date();
-                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                const today = koreanTime.toISOString().split('T')[0];
+                const today = now.toISOString().split('T')[0];
                 
-                let response = await fetch(`/api/team-games/${today}`);
+                const response = await fetch(`/api/team-games/${today}`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.data && data.data.length > 0) {
                         displayGames(data.data);
                         return;
-                    }
-                }
-                
-                // team-games에 데이터가 없으면 daily-games에서 변환
-                const copyResponse = await fetch(`/api/team-games/import-from-daily/${today}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (copyResponse.ok) {
-                    response = await fetch(`/api/team-games/${today}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.success && data.data && data.data.length > 0) {
-                            displayGames(data.data);
-                            return;
-                        }
                     }
                 }
                 
@@ -661,189 +687,93 @@
                 const selectBtn = gameRow.querySelector('.select-game-btn');
                 selectBtn.addEventListener('click', async function() {
                     if (this.disabled) return;
-
-                    const progressElement = gameRow.querySelector('.game-progress');
-                    const progressText = progressElement.textContent;
-                    const statusElement = gameRow.querySelector('.game-status');
-                    const statusText = statusElement.textContent;
-                    
-                    if (statusText === '정상게임' && progressText === '경기중') {
-                        try {
-                            const now = new Date();
-                            const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                            const date = koreanTime.toISOString().split('T')[0];
-                            
-                            const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${i}`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    isSelected: true,
-                                    bettingStart: '대기',
-                                    bettingStop: '대기',
-                                    predictionResult: ''
-                                })
-                            });
-                            
-                            if (teamGameUpdateResponse.ok) {
-                                if (selectedGame && selectedGame !== i.toString()) {
-                                    await fetch(`/api/team-games/${date}/${selectedGame}`, {
-                                        method: 'PUT',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify({
-                                            isSelected: false,
-                                            bettingStart: '대기',
-                                            bettingStop: '대기',
-                                            predictionResult: ''
-                                        })
-                                    });
-                                }
-                                
-                                document.querySelectorAll('.game-row').forEach(row => {
-                                    row.classList.remove('selected');
-                                });
-                                document.querySelectorAll('.select-game-btn').forEach(btn => {
-                                    btn.classList.remove('selected');
-                                    const gameNumber = btn.dataset.game;
-                                    const canSelect = statusText === '정상게임' && progressText === '경기중';
-                                    btn.textContent = canSelect ? '선택' : '선택불가';
-                                });
-                                
-                                gameRow.classList.add('selected');
-                                selectBtn.classList.add('selected');
-                                selectBtn.textContent = '선택됨';
-                                selectedGame = gameRow.dataset.game;
-                                document.getElementById('startBetting').disabled = false;
-                                showCustomModal(`선택한 경기번호: ${selectedGame}경기가 선택되었습니다!`);
-                            }
-                        } catch (error) {
-                            console.error('경기 선택 업데이트 오류:', error);
-                        }
-                    } else {
-                        let message = '';
-                        if (statusText !== '정상게임') {
-                            message = `정상게임인 경기만 선택할 수 있습니다. 현재 경기상황: ${statusText}`;
-                        } else if (progressText !== '경기중') {
-                            message = `경기중인 경기만 선택할 수 있습니다. 현재 진행상태: ${progressText}`;
-                        } else {
-                            message = `정상게임이고 경기중인 경기만 선택할 수 있습니다.`;
-                        }
-                        showCustomModal(message);
-                    }
+                    selectGame(i);
                 });
             }
         }
 
-        // 경기상황에 따른 스타일 클래스 반환
-        function getStatusClass(status) {
-            switch(status) {
-                case '정상게임':
-                    return 'status-normal';
-                case '미세먼지/초미세먼지/황사':
-                case '안개':
-                case '천재지변':
-                case '우천':
-                case '폭염':
-                case '번개/천둥':
-                case '태풍/강풍':
-                case '그라운드 상태':
-                    return 'status-delayed';
-                default:
-                    return 'status-delayed';
-            }
-        }
-
-        // 배팅 시간 업데이트
-        function updateBettingTime() {
-            let now;
-            if (typeof KoreanTime !== 'undefined' && KoreanTime.getKoreanTime) {
-                now = KoreanTime.getKoreanTime();
-            } else {
-                now = new Date();
-            }
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('bettingTime').textContent = `${hours}:${minutes}:${seconds}`;
-        }
-
-        // 배팅 중지 시간 업데이트
-        function updateStopTime() {
-            let now;
-            if (typeof KoreanTime !== 'undefined' && KoreanTime.getKoreanTime) {
-                now = KoreanTime.getKoreanTime();
-            } else {
-                now = new Date();
-            }
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('stopTime').textContent = `${hours}:${minutes}:${seconds}`;
-        }
-
-        // 모달 표시
-        function showCustomModal(msg) {
-            document.getElementById('customModalMsg').textContent = msg;
-            const modalButtons = document.querySelector('#customModalButtons');
-            modalButtons.innerHTML = '<button class="modal-btn modal-btn-primary" onclick="closeCustomModal()">확인</button>';
-            document.getElementById('customModal').style.display = 'flex';
-        }
-
-        // 모달 닫기
-        function closeCustomModal() {
-            document.getElementById('customModal').style.display = 'none';
-        }
-
-        // 페이지 로드 시 실행
-        window.onload = function() {
-            // 로그인 상태 확인
-            checkLoginStatus();
-            
-            updateDate();
-            loadGames();
-
-            // 로그아웃 버튼 이벤트
-            document.getElementById('logoutBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                if (confirm('로그아웃하시겠습니까?')) {
-                    handleLogout();
+        // 게임 선택
+        async function selectGame(gameNumber) {
+            try {
+                // 이전 선택 해제
+                if (selectedGame && selectedGame !== gameNumber.toString()) {
+                    document.querySelectorAll('.game-row').forEach(row => {
+                        row.classList.remove('selected');
+                    });
+                    document.querySelectorAll('.select-game-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
                 }
-            });
 
+                // 새 게임 선택
+                selectedGame = gameNumber.toString();
+                const gameRow = document.querySelector(`[data-game="${gameNumber}"]`);
+                gameRow.classList.add('selected');
+                const selectBtn = gameRow.querySelector('.select-game-btn');
+                selectBtn.classList.add('selected');
+
+                // 배팅 섹션 표시
+                document.getElementById('bettingSection').style.display = 'block';
+                document.getElementById('selectedGameInfo').textContent = `${gameNumber}경기`;
+
+                // 게임 형태 선택 활성화
+                document.querySelectorAll('input[name="gameType"]').forEach(radio => {
+                    radio.disabled = false;
+                });
+
+                // 배팅 시작 버튼 활성화
+                document.getElementById('startBetting').disabled = false;
+
+                showCustomModal(`${gameNumber}경기가 선택되었습니다. 게임 형태를 선택하고 배팅을 시작해주세요.`);
+
+            } catch (error) {
+                console.error('게임 선택 오류:', error);
+                showCustomModal('게임 선택 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 상태 클래스 반환
+        function getStatusClass(status) {
+            switch (status) {
+                case '정상게임': return 'status-normal';
+                case '미세먼지/초미세먼지/황사': return 'status-delayed';
+                case '안개': return 'status-delayed';
+                case '천재지변': return 'status-delayed';
+                case '우천': return 'status-delayed';
+                case '폭염': return 'status-delayed';
+                case '번개/천둥': return 'status-delayed';
+                case '태풍/강풍': return 'status-delayed';
+                case '그라운드 상태': return 'status-delayed';
+                case '지연게임': return 'status-delayed';
+                case '경기전': return 'status-before';
+                case '경기중': return 'status-ongoing';
+                case '경기종료': return 'status-ended';
+                default: return 'status-normal';
+            }
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
             // 배팅시작 버튼 이벤트
             document.getElementById('startBetting').addEventListener('click', async function() {
                 const selectedGameType = document.querySelector('input[name="gameType"]:checked');
                 
                 if (selectedGame && selectedGameType && selectedGameType.value === 'attack') {
                     try {
-                        const now = new Date();
-                        const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                        const date = koreanTime.toISOString().split('T')[0];
+                        // 배팅 시작 시간 기록
+                        bettingStartTime = new Date();
+                        document.getElementById('bettingTime').textContent = bettingStartTime.toLocaleTimeString('ko-KR');
                         
-                        const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                bettingStart: '시작',
-                                bettingStop: '진행',
-                                predictionResult: '',
-                                gameType: selectedGameType.value
-                            })
+                        // UI 상태 변경
+                        this.disabled = true;
+                        document.getElementById('stopBetting').disabled = false;
+                        
+                        // 예측 결과 선택 활성화
+                        document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                            radio.disabled = false;
                         });
                         
-                        if (teamGameUpdateResponse.ok) {
-                            updateBettingTime();
-                            this.disabled = true;
-                            document.getElementById('stopBetting').disabled = false;
-                            showCustomModal('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
-                        } else {
-                            showCustomModal('배팅 시작 실패');
-                        }
+                        showCustomModal('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
                     } catch (error) {
                         console.error('배팅 시작 오류:', error);
                         showCustomModal('배팅 시작 중 오류가 발생했습니다.');
@@ -857,33 +787,18 @@
             document.getElementById('stopBetting').addEventListener('click', async function() {
                 if (selectedGame) {
                     try {
-                        const now = new Date();
-                        const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                        const date = koreanTime.toISOString().split('T')[0];
+                        // 배팅 중지 시간 기록
+                        bettingStopTime = new Date();
+                        document.getElementById('stopTime').textContent = bettingStopTime.toLocaleTimeString('ko-KR');
                         
-                        const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                bettingStart: '대기',
-                                bettingStop: '중지',
-                                predictionResult: ''
-                            })
+                        // UI 상태 변경
+                        this.disabled = true;
+                        document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                            radio.disabled = false;
                         });
+                        document.getElementById('nextBatterBtn').disabled = true;
                         
-                        if (teamGameUpdateResponse.ok) {
-                            updateStopTime();
-                            this.disabled = true;
-                            document.querySelectorAll('input[name="prediction"]').forEach(radio => {
-                                radio.disabled = false;
-                            });
-                            document.getElementById('nextBatterBtn').disabled = true;
-                            showCustomModal('배팅이 중지되었습니다. 예측결과를 선택해주세요.');
-                        } else {
-                            showCustomModal('배팅 중지 실패');
-                        }
+                        showCustomModal('배팅이 중지되었습니다. 예측결과를 선택해주세요.');
                     } catch (error) {
                         console.error('배팅 중지 오류:', error);
                         showCustomModal('배팅 중지 중 오류가 발생했습니다.');
@@ -896,49 +811,10 @@
                 radio.addEventListener('change', function() {
                     if (this.checked) {
                         const predictionText = this.nextElementSibling.textContent;
-                        showCustomModal(`${predictionText} 예측 결과가 입력되었습니다. 확실합니까?`);
+                        showCustomModal(`${predictionText} 예측 결과가 입력되었습니다.`);
                         
-                        const modalButtons = document.querySelector('#customModalButtons');
-                        modalButtons.innerHTML = `
-                            <button class="modal-btn modal-btn-primary" id="confirmBtn">확인</button>
-                            <button class="modal-btn modal-btn-secondary" id="cancelBtn">다시선택</button>
-                        `;
-                        
-                        document.getElementById('confirmBtn').onclick = async function() {
-                            closeCustomModal();
-                            
-                            try {
-                                const now = new Date();
-                                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                                const date = koreanTime.toISOString().split('T')[0];
-                                
-                                const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        gameType: '타자',
-                                        bettingStart: '대기',
-                                        bettingStop: '대기',
-                                        predictionResult: radio.value
-                                    })
-                                });
-                                
-                                if (teamGameUpdateResponse.ok) {
-                                    document.getElementById('nextBatterBtn').disabled = false;
-                                } else {
-                                    console.error('예측결과 업데이트 실패');
-                                }
-                            } catch (error) {
-                                console.error('예측 결과 전송 오류:', error);
-                            }
-                        };
-                        
-                        document.getElementById('cancelBtn').onclick = function() {
-                            closeCustomModal();
-                            radio.checked = false;
-                        };
+                        // 다음 타자 버튼 활성화
+                        document.getElementById('nextBatterBtn').disabled = false;
                     }
                 });
             });
@@ -946,40 +822,51 @@
             // 다음타자 버튼 이벤트
             document.getElementById('nextBatterBtn').addEventListener('click', async function() {
                 try {
-                    const now = new Date();
-                    const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-                    const date = koreanTime.toISOString().split('T')[0];
+                    // UI 초기화
+                    document.getElementById('startBetting').disabled = false;
+                    document.getElementById('stopBetting').disabled = true;
+                    document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                        radio.checked = false;
+                        radio.disabled = true;
+                    });
+                    this.disabled = true;
                     
-                    const teamGameUpdateResponse = await fetch(`/api/team-games/${date}/${selectedGame}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            gameType: 'attack',
-                            bettingStart: '대기',
-                            bettingStop: '대기',
-                            predictionResult: ''
-                        })
+                    // 시간 초기화
+                    document.getElementById('bettingTime').textContent = '-';
+                    document.getElementById('stopTime').textContent = '-';
+                    
+                    // 게임 형태 초기화
+                    document.querySelectorAll('input[name="gameType"]').forEach(radio => {
+                        radio.checked = false;
+                        radio.disabled = false;
                     });
                     
-                    if (teamGameUpdateResponse.ok) {
-                        document.getElementById('startBetting').disabled = false;
-                        document.getElementById('stopBetting').disabled = true;
-                        document.querySelectorAll('input[name="prediction"]').forEach(radio => {
-                            radio.checked = false;
-                            radio.disabled = true;
-                        });
-                        this.disabled = true;
-                        document.getElementById('bettingTime').textContent = '';
-                        document.getElementById('stopTime').textContent = '';
-                        showCustomModal('다음 타자 배팅을 준비합니다. 배팅을 시작해주세요.');
-                    }
+                    showCustomModal('다음 타자 배팅을 준비합니다. 배팅을 시작해주세요.');
                 } catch (error) {
                     console.error('다음타자 초기화 오류:', error);
                 }
             });
-        };
+        }
+
+        // 커스텀 모달 표시
+        function showCustomModal(message, title = '알림') {
+            document.getElementById('customModalTitle').textContent = title;
+            document.getElementById('customModalMessage').textContent = message;
+            document.getElementById('customModal').style.display = 'block';
+        }
+
+        // 커스텀 모달 닫기
+        function closeCustomModal() {
+            document.getElementById('customModal').style.display = 'none';
+        }
+
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('customModal');
+            if (event.target === modal) {
+                closeCustomModal();
+            }
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
