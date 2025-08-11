@@ -254,4 +254,95 @@ router.get('/profile/:username', async (req, res) => {
     }
 });
 
+// ===== 관리자용 승인 관리 API =====
+
+// 승인 대기 중인 운영자 목록 조회
+router.get('/pending', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('OPERATE-MEMBER');
+        
+        const pendingOperators = await collection.find(
+            { isApproved: false, isActive: true },
+            { projection: { password: 0 } }
+        ).toArray();
+        
+        res.json({
+            success: true,
+            data: pendingOperators
+        });
+    } catch (error) {
+        console.error('승인 대기 운영자 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '승인 대기 운영자 조회 실패'
+        });
+    }
+});
+
+// 운영자 승인/거부
+router.put('/approve/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isApproved, reason } = req.body;
+        
+        const db = getDb();
+        const collection = db.collection('OPERATE-MEMBER');
+        
+        const result = await collection.updateOne(
+            { _id: new ObjectId(id) },
+            { 
+                $set: { 
+                    isApproved,
+                    approvedAt: new Date(),
+                    approvalReason: reason || '',
+                    updatedAt: new Date()
+                }
+            }
+        );
+        
+        if (result.modifiedCount > 0) {
+            res.json({
+                success: true,
+                message: isApproved ? '운영자가 승인되었습니다.' : '운영자 승인이 거부되었습니다.'
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: '운영자를 찾을 수 없습니다.'
+            });
+        }
+    } catch (error) {
+        console.error('운영자 승인 처리 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '승인 처리 실패'
+        });
+    }
+});
+
+// 전체 운영자 목록 조회 (관리자용)
+router.get('/all', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('OPERATE-MEMBER');
+        
+        const allOperators = await collection.find(
+            {},
+            { projection: { password: 0 } }
+        ).toArray();
+        
+        res.json({
+            success: true,
+            data: allOperators
+        });
+    } catch (error) {
+        console.error('전체 운영자 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '전체 운영자 조회 실패'
+        });
+    }
+});
+
 module.exports = router;

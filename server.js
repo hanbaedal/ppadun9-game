@@ -61,6 +61,10 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/public/operator-management.html'));
 });
 
+app.get('/api-test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/public/api-test.html'));
+});
+
 // 404 처리
 app.use((req, res) => {
     res.status(404).json({ error: '페이지를 찾을 수 없습니다.' });
