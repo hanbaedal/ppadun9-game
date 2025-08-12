@@ -621,91 +621,204 @@
             }
         }
 
-        /* 삼성 스마트폰 최적화 (작은 화면) */
+        /* 스마트폰 최적화 (작은 화면) - 한 페이지에 모든 내용 표시 */
         @media (max-width: 480px) {
             .container {
-                padding: 8px;
-                margin: 3px;
+                padding: 5px;
+                margin: 2px;
             }
             
             .page-title {
-                font-size: 1.3rem;
-                margin-bottom: 8px;
+                font-size: 1.1rem;
+                margin-bottom: 5px;
+                line-height: 1.2;
             }
             
             .date-display {
-                font-size: 13px;
-                margin-bottom: 8px;
+                font-size: 12px;
+                margin-bottom: 5px;
             }
             
             .game-selection-container {
-                margin: 8px 0;
-                padding: 8px;
+                margin: 5px 0;
+                padding: 5px;
             }
             
             .game-selection-container h4 {
-                font-size: 1rem;
-                margin-bottom: 12px;
+                font-size: 0.9rem;
+                margin-bottom: 8px;
             }
             
             .game-selection-table {
-                font-size: 11px;
+                font-size: 10px;
             }
             
             .game-selection-table th,
             .game-selection-table td {
-                padding: 4px 2px;
-                font-size: 10px;
+                padding: 3px 1px;
+                font-size: 9px;
             }
             
             .betting-section {
-                margin-top: 12px;
-                padding: 12px;
+                margin-top: 8px;
+                padding: 8px;
             }
             
             .betting-section h4 {
-                font-size: 1rem;
+                font-size: 0.9rem;
+                margin-bottom: 8px;
             }
             
             .betting-item {
-                padding: 10px;
-                margin-bottom: 10px;
-                gap: 8px;
+                padding: 6px;
+                margin-bottom: 6px;
+                gap: 5px;
             }
             
             .betting-title {
-                font-size: 13px;
-                padding: 6px 10px;
-                width: 100px;
+                font-size: 11px;
+                padding: 4px 8px;
+                width: 80px;
             }
             
             .betting-time {
-                font-size: 13px;
-                padding: 8px 12px;
+                font-size: 11px;
+                padding: 6px 10px;
+                width: 100%;
+                max-width: none;
             }
             
             .betting-btn {
-                padding: 10px;
-                font-size: 13px;
+                padding: 8px;
+                font-size: 11px;
             }
             
             .radio-group {
-                gap: 6px;
+                gap: 4px;
+                flex-wrap: wrap;
+                justify-content: center;
             }
             
             .radio-label {
-                padding: 5px 10px;
-                font-size: 11px;
-                min-width: 50px;
+                padding: 4px 8px;
+                font-size: 10px;
+                min-width: 45px;
+                min-height: 36px;
             }
             
             .game-type-display {
-                gap: 3px;
+                gap: 2px;
+                flex-direction: row;
+                align-items: center;
             }
             
             .game-type-label,
             .game-type-value {
-                font-size: 13px;
+                font-size: 11px;
+            }
+            
+            /* 네비게이션 바 최적화 */
+            .navbar-brand {
+                font-size: 0.9rem;
+            }
+            
+            .navbar-text {
+                font-size: 11px;
+            }
+            
+            .btn-sm {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+        }
+
+        /* 극소형 스마트폰 최적화 (매우 작은 화면) */
+        @media (max-width: 360px) {
+            .container {
+                padding: 3px;
+                margin: 1px;
+            }
+            
+            .page-title {
+                font-size: 1rem;
+                margin-bottom: 3px;
+            }
+            
+            .date-display {
+                font-size: 11px;
+                margin-bottom: 3px;
+            }
+            
+            .game-selection-container {
+                margin: 3px 0;
+                padding: 3px;
+            }
+            
+            .game-selection-container h4 {
+                font-size: 0.8rem;
+                margin-bottom: 6px;
+            }
+            
+            .game-selection-table {
+                font-size: 9px;
+            }
+            
+            .game-selection-table th,
+            .game-selection-table td {
+                padding: 2px 1px;
+                font-size: 8px;
+            }
+            
+            .betting-section {
+                margin-top: 6px;
+                padding: 6px;
+            }
+            
+            .betting-section h4 {
+                font-size: 0.8rem;
+                margin-bottom: 6px;
+            }
+            
+            .betting-item {
+                padding: 4px;
+                margin-bottom: 4px;
+                gap: 3px;
+            }
+            
+            .betting-title {
+                font-size: 10px;
+                padding: 3px 6px;
+                width: 70px;
+            }
+            
+            .betting-time {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            
+            .betting-btn {
+                padding: 6px;
+                font-size: 10px;
+            }
+            
+            .radio-group {
+                gap: 3px;
+            }
+            
+            .radio-label {
+                padding: 3px 6px;
+                font-size: 9px;
+                min-width: 40px;
+                min-height: 32px;
+            }
+            
+            .game-type-display {
+                gap: 1px;
+            }
+            
+            .game-type-label,
+            .game-type-value {
+                font-size: 10px;
             }
         }
 
