@@ -686,10 +686,14 @@
             }
             
             .betting-time {
-                font-size: 11px;
+                font-size: 10px;
                 padding: 6px 10px;
                 width: 100%;
                 max-width: none;
+                min-height: 60px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             .betting-btn {
@@ -706,16 +710,16 @@
             
             .radio-label {
                 padding: 2px 3px;
-                font-size: 8px;
-                min-width: 32px;
-                min-height: 28px;
+                font-size: 10px;
+                min-width: 22px;
+                min-height: 20px;
                 flex: 1;
                 text-align: center;
                 margin: 0 1px;
             }
             
             .radio-label span {
-                font-size: 8px;
+                font-size: 10px;
                 white-space: nowrap;
             }
             
@@ -727,7 +731,7 @@
             
             .game-type-label,
             .game-type-value {
-                font-size: 11px;
+                font-size: 10px;
             }
             
             /* 네비게이션 바 최적화 */
@@ -805,7 +809,7 @@
             }
             
             .betting-time {
-                font-size: 10px;
+                font-size: 9px;
                 padding: 6px 8px;
                 min-height: 50px;
                 display: flex;
@@ -827,16 +831,16 @@
             
             .radio-label {
                 padding: 1px 2px;
-                font-size: 7px;
-                min-width: 28px;
-                min-height: 24px;
+                font-size: 9px;
+                min-width: 20px;
+                min-height: 17px;
                 flex: 1;
                 text-align: center;
                 margin: 0 1px;
             }
             
             .radio-label span {
-                font-size: 7px;
+                font-size: 9px;
                 white-space: nowrap;
             }
             
@@ -846,7 +850,7 @@
             
             .game-type-label,
             .game-type-value {
-                font-size: 10px;
+                font-size: 9px;
             }
         }
 
@@ -1061,13 +1065,13 @@
         let bettingStartTime = null;
         let bettingStopTime = null;
 
-        // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', function() {
-            checkLoginStatus();
-            updateDate();
-            loadGames();
-            setupEventListeners();
-        });
+        // 페이지 로드 시 초기화 (중복 방지를 위해 제거)
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     checkLoginStatus();
+        //     updateDate();
+        //     loadGames();
+        //     setupEventListeners();
+        // });
 
         // 로그인 상태 확인
         function checkLoginStatus() {
@@ -1527,6 +1531,10 @@
                 // 게임 데이터 로드
                 loadGameData();
                 
+                // 추가 초기화 작업
+                updateDate();
+                setupEventListeners();
+                
                 // 로그인 상태 확인 완료 플래그 설정
                 loginStatusChecked = true;
                 console.log('로그인 상태 확인 완료');
@@ -1567,18 +1575,18 @@
                             // 기본 데이터 생성
                             games = [];
                             for (let i = 1; i <= 5; i++) {
-                                games.push({
-                                    gameNumber: i,
-                                    matchup: `${i}경기: 삼성 vs 두산`,
-                                    startTime: '18:00',
-                                    endTime: '21:00',
-                                    gameStatus: '정상게임',
-                                    progressStatus: '경기중',
-                                    gameType: '타자',
-                                    bettingStart: '대기',
-                                    bettingStop: '대기',
-                                    predictionResult: ''
-                                });
+                                                            games.push({
+                                gameNumber: i,
+                                matchup: `${i}경기: ${getTeamMatchup(i)}`,
+                                startTime: '18:00',
+                                endTime: '21:00',
+                                gameStatus: '정상게임',
+                                progressStatus: '경기중',
+                                gameType: '타자',
+                                bettingStart: '대기',
+                                bettingStop: '대기',
+                                predictionResult: ''
+                            });
                             }
                             console.log('기본 데이터 생성됨:', games.length, '개');
                         }
@@ -1609,7 +1617,7 @@
                     for (let i = 1; i <= 5; i++) {
                         games.push({
                             gameNumber: i,
-                            matchup: `${i}경기: 원정팀 vs 홈팀`,
+                            matchup: `${i}경기: ${getTeamMatchup(i)}`,
                             startTime: '18:00',
                             endTime: '21:00',
                             gameStatus: '정상게임',
