@@ -75,10 +75,15 @@
                             <label for="loginUsername" class="form-label">아이디</label>
                             <input type="text" class="form-control" id="loginUsername" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="loginPassword" class="form-label">비밀번호</label>
-                            <input type="password" class="form-control" id="loginPassword" required>
-                        </div>
+                                                 <div class="mb-3">
+                             <label for="loginPassword" class="form-label">비밀번호</label>
+                             <div class="input-group">
+                                 <input type="password" class="form-control" id="loginPassword" required>
+                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('loginPassword')">
+                                     <i class="fas fa-eye" id="loginPasswordIcon"></i>
+                                 </button>
+                             </div>
+                         </div>
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-sign-in-alt me-2"></i>로그인
                         </button>
@@ -116,17 +121,27 @@
                             <label for="registerName" class="form-label">이름 <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="registerName" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="registerPassword" class="form-label">비밀번호 <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="registerPassword" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="registerPasswordConfirm" class="form-label">비밀번호 확인 <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="registerPasswordConfirm" required>
-                            <div class="invalid-feedback" id="passwordConfirmFeedback">
-                                비밀번호가 일치하지 않습니다.
-                            </div>
-                        </div>
+                                                 <div class="mb-3">
+                             <label for="registerPassword" class="form-label">비밀번호 <span class="text-danger">*</span></label>
+                             <div class="input-group">
+                                 <input type="password" class="form-control" id="registerPassword" required>
+                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('registerPassword')">
+                                     <i class="fas fa-eye" id="registerPasswordIcon"></i>
+                                 </button>
+                             </div>
+                         </div>
+                                                 <div class="mb-3">
+                             <label for="registerPasswordConfirm" class="form-label">비밀번호 확인 <span class="text-danger">*</span></label>
+                             <div class="input-group">
+                                 <input type="password" class="form-control" id="registerPasswordConfirm" required>
+                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('registerPasswordConfirm')">
+                                     <i class="fas fa-eye" id="registerPasswordConfirmIcon"></i>
+                                 </button>
+                             </div>
+                             <div class="invalid-feedback" id="passwordConfirmFeedback">
+                                 비밀번호가 일치하지 않습니다.
+                             </div>
+                         </div>
                         <div class="mb-3">
                             <label for="registerEmail" class="form-label">이메일</label>
                             <input type="email" class="form-control" id="registerEmail">
@@ -213,8 +228,8 @@
                 
                 if (result.success) {
                     alert('로그인 성공!');
-                            // 로그인 성공 시 index.html으로 이동
-        window.location.href = 'index.html';
+                    // 로그인 성공 시 index.html으로 이동
+                    window.location.href = '/index.html';
                 } else {
                     alert(result.message || '로그인에 실패했습니다.');
                 }
@@ -272,6 +287,22 @@
             } catch (error) {
                 console.error('등록 오류:', error);
                 alert('등록 처리 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 비밀번호 보기/숨기기 토글
+        function togglePasswordVisibility(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const iconElement = document.getElementById(fieldId + 'Icon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                iconElement.className = 'fas fa-eye-slash';
+                iconElement.title = '비밀번호 숨기기';
+            } else {
+                passwordField.type = 'password';
+                iconElement.className = 'fas fa-eye';
+                iconElement.title = '비밀번호 보기';
             }
         }
 
