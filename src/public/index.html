@@ -694,16 +694,25 @@
             }
             
             .radio-group {
-                gap: 4px;
-                flex-wrap: wrap;
-                justify-content: center;
+                gap: 2px;
+                flex-wrap: nowrap;
+                justify-content: space-between;
+                width: 100%;
             }
             
             .radio-label {
-                padding: 4px 8px;
-                font-size: 10px;
-                min-width: 45px;
-                min-height: 36px;
+                padding: 3px 4px;
+                font-size: 9px;
+                min-width: 35px;
+                min-height: 32px;
+                flex: 1;
+                text-align: center;
+                margin: 0 1px;
+            }
+            
+            .radio-label span {
+                font-size: 9px;
+                white-space: nowrap;
             }
             
             .game-type-display {
@@ -802,14 +811,25 @@
             }
             
             .radio-group {
-                gap: 3px;
+                gap: 1px;
+                flex-wrap: nowrap;
+                justify-content: space-between;
+                width: 100%;
             }
             
             .radio-label {
-                padding: 3px 6px;
-                font-size: 9px;
-                min-width: 40px;
-                min-height: 32px;
+                padding: 2px 3px;
+                font-size: 8px;
+                min-width: 30px;
+                min-height: 28px;
+                flex: 1;
+                text-align: center;
+                margin: 0 1px;
+            }
+            
+            .radio-label span {
+                font-size: 8px;
+                white-space: nowrap;
             }
             
             .game-type-display {
@@ -2142,17 +2162,10 @@
 
         // 사용자 정보 표시
         function displayUserInfo(userData) {
-            // 네비게이션 바에 사용자 정보 표시
-            const userInfoElement = document.getElementById('userInfo');
-            if (userInfoElement) {
-                userInfoElement.innerHTML = `
-                    <span class="navbar-text me-3">
-                        <i class="fas fa-user me-1"></i>${userData.name} (${userData.username})
-                    </span>
-                    <button class="btn btn-outline-danger btn-sm" onclick="logout()">
-                        <i class="fas fa-sign-out-alt me-1"></i>로그아웃
-                    </button>
-                `;
+            // 네비게이션 바에 사용자 정보만 표시 (로그아웃 버튼은 별도로 존재)
+            const userNameElement = document.getElementById('userName');
+            if (userNameElement) {
+                userNameElement.innerHTML = `<i class="fas fa-user-circle me-2"></i>운영자 : ${userData.name}(${userData.username})`;
             }
         }
 
