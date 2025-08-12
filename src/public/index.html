@@ -1143,7 +1143,13 @@
                     const selectBtn = gameRow.querySelector('.select-game-btn');
                     selectBtn.addEventListener('click', function() {
                         if (this.disabled) return;
-                        selectGame(i, `${i}경기`, game.matchup, `${game.startTime} ~ ${game.endTime}`);
+                        
+                        // 시간 정보 안전하게 처리
+                        const startTime = game.startTime || '-';
+                        const endTime = game.endTime || '-';
+                        const timeDisplay = `${startTime} ~ ${endTime}`;
+                        
+                        selectGame(i, `${i}경기`, game.matchup, timeDisplay);
                     });
                 }
                 
@@ -1201,6 +1207,9 @@
         async function selectGame(gameId, gameNumber, matchup, time) {
             try {
                 console.log('게임 선택:', gameId, gameNumber, matchup, time);
+                
+                // selectedGame 변수 설정 (전역 변수)
+                selectedGame = gameId;
                 
                 // 오늘 날짜 형식 (YYYY-MM-DD)
                 const today = new Date();
