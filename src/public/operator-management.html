@@ -58,6 +58,49 @@
         .auth-switch a:hover {
             text-decoration: underline;
         }
+        
+        /* 태블릿/노트북 최적화 스타일 */
+        @media (min-width: 768px) {
+            .auth-container {
+                max-width: 800px;
+                margin: 30px auto;
+            }
+            
+            .auth-card {
+                margin-bottom: 20px;
+            }
+            
+            .form-label {
+                font-weight: 500;
+                margin-bottom: 8px;
+            }
+            
+            .form-control, .form-select {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+            
+            .btn {
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+            
+            .input-group .btn {
+                padding: 10px 12px;
+            }
+        }
+        
+        /* 모바일 최적화 */
+        @media (max-width: 767px) {
+            .auth-container {
+                max-width: 100%;
+                margin: 20px 15px;
+            }
+            
+            .row .col-md-6 {
+                margin-bottom: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -102,74 +145,124 @@
                 </div>
                 <div class="auth-body">
                     <form id="registerFormElement">
-                                                 <div class="mb-3">
-                             <label for="registerUsername" class="form-label">아이디 <span class="text-danger">*</span></label>
-                             <div class="input-group">
-                                 <input type="text" class="form-control" id="registerUsername" autocomplete="username" required>
-                                 <button class="btn btn-outline-secondary" type="button" onclick="checkUsernameDuplicate()">
-                                     중복확인
-                                 </button>
-                             </div>
-                             <div class="invalid-feedback" id="usernameFeedback">
-                                 아이디를 입력해주세요.
-                             </div>
-                             <div class="valid-feedback" id="usernameValidFeedback">
-                                 사용 가능한 아이디입니다.
-                             </div>
-                         </div>
-                                                 <div class="mb-3">
-                             <label for="registerName" class="form-label">이름 <span class="text-danger">*</span></label>
-                             <input type="text" class="form-control" id="registerName" autocomplete="name" required>
-                         </div>
-                                                 <div class="mb-3">
-                             <label for="registerPassword" class="form-label">비밀번호 <span class="text-danger">*</span></label>
-                             <div class="input-group">
-                                 <input type="password" class="form-control" id="registerPassword" autocomplete="new-password" required>
-                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('registerPassword')">
-                                     <i class="fas fa-eye" id="registerPasswordIcon"></i>
-                                 </button>
-                             </div>
-                         </div>
-                                                 <div class="mb-3">
-                             <label for="registerPasswordConfirm" class="form-label">비밀번호 확인 <span class="text-danger">*</span></label>
-                             <div class="input-group">
-                                 <input type="password" class="form-control" id="registerPasswordConfirm" autocomplete="new-password" required>
-                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('registerPasswordConfirm')">
-                                     <i class="fas fa-eye" id="registerPasswordConfirmIcon"></i>
-                                 </button>
-                             </div>
-                             <div class="invalid-feedback" id="passwordConfirmFeedback">
-                                 비밀번호가 일치하지 않습니다.
-                             </div>
-                         </div>
-                                                 <div class="mb-3">
-                             <label for="registerEmail" class="form-label">이메일</label>
-                             <input type="email" class="form-control" id="registerEmail" autocomplete="email">
-                         </div>
-                                                 <div class="mb-3">
-                             <label for="registerPhone" class="form-label">전화번호 <span class="text-danger">*</span></label>
-                             <div class="input-group">
-                                 <input type="tel" class="form-control" id="registerPhone" placeholder="010-1234-5678" autocomplete="tel" required>
-                                 <button class="btn btn-outline-primary" type="button" onclick="sendVerificationCode()" id="sendCodeBtn">
-                                     인증번호 발송
-                                 </button>
-                             </div>
-                         </div>
-                         <div class="mb-3" id="verificationSection" style="display: none;">
-                             <label for="verificationCode" class="form-label">인증번호 <span class="text-danger">*</span></label>
-                             <div class="input-group">
-                                 <input type="text" class="form-control" id="verificationCode" placeholder="6자리 숫자" maxlength="6" required>
-                                 <button class="btn btn-outline-success" type="button" onclick="verifyCode()" id="verifyCodeBtn">
-                                     인증확인
-                                 </button>
-                             </div>
-                             <div class="invalid-feedback" id="verificationFeedback">
-                                 인증번호를 입력해주세요.
-                             </div>
-                             <div class="valid-feedback" id="verificationValidFeedback">
-                                 인증이 완료되었습니다.
-                             </div>
-                         </div>
+                        <!-- 첫 번째 줄: 아이디, 이름 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="registerUsername" class="form-label">아이디 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="registerUsername" autocomplete="username" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="checkUsernameDuplicate()">
+                                        중복확인
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="usernameFeedback">
+                                    아이디를 입력해주세요.
+                                </div>
+                                <div class="valid-feedback" id="usernameValidFeedback">
+                                    사용 가능한 아이디입니다.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="registerName" class="form-label">이름 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="registerName" autocomplete="name" required>
+                            </div>
+                        </div>
+
+                        <!-- 두 번째 줄: 비밀번호, 비밀번호 확인 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="registerPassword" class="form-label">비밀번호 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="registerPassword" autocomplete="new-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('registerPassword')">
+                                        <i class="fas fa-eye" id="registerPasswordIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="registerPasswordConfirm" class="form-label">비밀번호 확인 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="registerPasswordConfirm" autocomplete="new-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('registerPasswordConfirm')">
+                                        <i class="fas fa-eye" id="registerPasswordConfirmIcon"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="passwordConfirmFeedback">
+                                    비밀번호가 일치하지 않습니다.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 세 번째 줄: 부서, 직책 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="registerDepartment" class="form-label">부서 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="registerDepartment" required>
+                                    <option value="">부서를 선택하세요</option>
+                                    <option value="운영팀">운영팀</option>
+                                    <option value="기술팀">기술팀</option>
+                                    <option value="마케팅팀">마케팅팀</option>
+                                    <option value="고객지원팀">고객지원팀</option>
+                                    <option value="기타">기타</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="registerPosition" class="form-label">직책 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="registerPosition" required>
+                                    <option value="">직책을 선택하세요</option>
+                                    <option value="팀장">팀장</option>
+                                    <option value="대리">대리</option>
+                                    <option value="주임">주임</option>
+                                    <option value="사원">사원</option>
+                                    <option value="인턴">인턴</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 네 번째 줄: 이메일 -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="registerEmail" class="form-label">이메일</label>
+                                <input type="email" class="form-control" id="registerEmail" autocomplete="email">
+                            </div>
+                        </div>
+
+                        <!-- 다섯 번째 줄: 전화번호, 전화번호 확인 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="registerPhone" class="form-label">전화번호 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="tel" class="form-control" id="registerPhone" placeholder="010-1234-5678" autocomplete="tel" required>
+                                    <button class="btn btn-outline-primary" type="button" onclick="sendVerificationCode()" id="sendCodeBtn">
+                                        인증번호 발송
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="registerPhoneConfirm" class="form-label">전화번호 확인 <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="registerPhoneConfirm" placeholder="010-1234-5678" autocomplete="tel" required readonly>
+                            </div>
+                        </div>
+
+                        <!-- 전화번호 인증 섹션 -->
+                        <div class="row mb-3" id="verificationSection" style="display: none;">
+                            <div class="col-12">
+                                <label for="verificationCode" class="form-label">인증번호 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="verificationCode" placeholder="6자리 숫자" maxlength="6" required>
+                                    <button class="btn btn-outline-success" type="button" onclick="verifyCode()" id="verifyCodeBtn">
+                                        인증확인
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="verificationFeedback">
+                                    인증번호를 입력해주세요.
+                                </div>
+                                <div class="valid-feedback" id="verificationValidFeedback">
+                                    인증이 완료되었습니다.
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-user-plus me-2"></i>등록하기
                         </button>
@@ -278,6 +371,8 @@
             const password = document.getElementById('registerPassword').value;
             const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
             const name = document.getElementById('registerName').value;
+            const department = document.getElementById('registerDepartment').value;
+            const position = document.getElementById('registerPosition').value;
             const email = document.getElementById('registerEmail').value;
             const phone = document.getElementById('registerPhone').value;
 
@@ -291,6 +386,12 @@
             const usernameInput = document.getElementById('registerUsername');
             if (!usernameInput.classList.contains('is-valid')) {
                 alert('아이디 중복 확인을 완료해주세요.');
+                return;
+            }
+
+            // 부서와 직책 선택 여부 확인
+            if (!department || !position) {
+                alert('부서와 직책을 선택해주세요.');
                 return;
             }
 
@@ -308,6 +409,8 @@
                         username,
                         password,
                         name,
+                        department,
+                        position,
                         email,
                         phone
                     })
@@ -331,7 +434,7 @@
         let verificationCode = null;
         let phoneVerified = false;
 
-        // 전화번호 자동 형식 변환
+        // 전화번호 자동 형식 변환 및 확인란 자동 입력
         function formatPhoneNumber(e) {
             let value = e.target.value.replace(/[^0-9]/g, '');
             
@@ -342,6 +445,9 @@
             } else {
                 e.target.value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
             }
+            
+            // 전화번호 확인란에 자동으로 입력
+            document.getElementById('registerPhoneConfirm').value = e.target.value;
         }
 
         // 전화번호 인증번호 발송
