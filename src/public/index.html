@@ -1577,7 +1577,7 @@
                             for (let i = 1; i <= 5; i++) {
                                                             games.push({
                                 gameNumber: i,
-                                matchup: `${i}경기: ${getTeamMatchup(i)}`,
+                                matchup: getTeamMatchup(i),
                                 startTime: '18:00',
                                 endTime: '21:00',
                                 gameStatus: '정상게임',
@@ -1595,18 +1595,18 @@
                         // 기본 데이터 생성
                         games = [];
                         for (let i = 1; i <= 5; i++) {
-                            games.push({
-                                gameNumber: i,
-                                matchup: `${i}경기: ${getTeamMatchup(i)}`,
-                                startTime: '18:00',
-                                endTime: '21:00',
-                                gameStatus: '정상게임',
-                                progressStatus: '경기중',
-                                gameType: '타자',
-                                bettingStart: '대기',
-                                bettingStop: '대기',
-                                predictionResult: ''
-                            });
+                                                    games.push({
+                            gameNumber: i,
+                            matchup: getTeamMatchup(i),
+                            startTime: '18:00',
+                            endTime: '21:00',
+                            gameStatus: '정상게임',
+                            progressStatus: '경기중',
+                            gameType: '타자',
+                            bettingStart: '대기',
+                            bettingStop: '대기',
+                            predictionResult: ''
+                        });
                         }
                         console.log('기본 데이터 생성됨:', games.length, '개');
                     }
@@ -1617,7 +1617,7 @@
                     for (let i = 1; i <= 5; i++) {
                         games.push({
                             gameNumber: i,
-                            matchup: `${i}경기: ${getTeamMatchup(i)}`,
+                            matchup: getTeamMatchup(i),
                             startTime: '18:00',
                             endTime: '21:00',
                             gameStatus: '정상게임',
@@ -1650,7 +1650,7 @@
                     if (!game || !game.matchup || !game.startTime || !game.endTime) {
                         game = {
                             gameNumber: i,
-                            matchup: `${i}경기: ${getTeamMatchup(i)}`,
+                            matchup: getTeamMatchup(i),
                             startTime: '18:00',
                             endTime: '21:00',
                             gameStatus: '정상게임',
@@ -1881,7 +1881,7 @@
                             for (let i = 1; i <= 5; i++) {
                                 games.push({
                                     gameNumber: i,
-                                    matchup: `${i}경기: ${getTeamMatchup(i)}`,
+                                    matchup: getTeamMatchup(i),
                                     startTime: '18:00',
                                     endTime: '21:00',
                                     gameStatus: '정상게임',
@@ -1901,7 +1901,7 @@
                         for (let i = 1; i <= 5; i++) {
                                                     games.push({
                             gameNumber: i,
-                            matchup: `${i}경기: 원정팀 vs 홈팀`,
+                            matchup: getTeamMatchup(i),
                             startTime: '18:00',
                             endTime: '21:00',
                             gameStatus: '정상게임',
@@ -1921,7 +1921,7 @@
                     for (let i = 1; i <= 5; i++) {
                         games.push({
                             gameNumber: i,
-                            matchup: `${i}경기: 원정팀 vs 홈팀`,
+                            matchup: getTeamMatchup(i),
                             startTime: '18:00',
                             endTime: '21:00',
                             gameStatus: '정상게임',
@@ -1954,7 +1954,7 @@
                     if (!game || !game.matchup || !game.startTime || !game.endTime) {
                         game = {
                             gameNumber: i,
-                            matchup: `${i}경기: ${getTeamMatchup(i)}`,
+                            matchup: getTeamMatchup(i),
                             startTime: '18:00',
                             endTime: '21:00',
                             gameStatus: '정상게임',
@@ -2154,9 +2154,8 @@
                 if (window.innerWidth <= 768) {
                     selectedGameInfo.innerHTML = `
                         <div style="text-align: center;">
-                            <div style="font-weight: 600; margin-bottom: 4px;">${safeGameNumber} : ${safeMatchup}</div>
-                            <div style="font-size: 14px; color: #666; margin-bottom: 4px;">${safeTime}, ${actualGameStatus}</div>
-                            <div style="font-size: 14px; color: #666;">${actualProgressStatus}</div>
+                            <div style="font-size: 16px; font-weight: 600; margin-bottom: 6px; color: #333;">${safeMatchup}, ${safeTime}</div>
+                            <div style="font-size: 14px; color: #666;">${actualGameStatus}, ${actualProgressStatus}</div>
                         </div>
                     `;
                 } else {
