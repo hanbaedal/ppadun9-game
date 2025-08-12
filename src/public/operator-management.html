@@ -250,8 +250,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('로그인 성공!');
-                    // 로그인 성공 시 index.html으로 이동
+                    // 로그인 성공 시 바로 index.html으로 이동 (팝업 없음)
                     window.location.href = '/index.html';
                 } else {
                     alert(result.message || '로그인에 실패했습니다.');
