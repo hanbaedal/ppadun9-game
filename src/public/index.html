@@ -463,7 +463,12 @@
 
         <!-- 배팅 운영 섹션 -->
         <div class="betting-section" id="bettingSection" style="display: none;">
-            <h4 class="mb-3"><i class="fas fa-play-circle me-2"></i>게임 운영</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0"><i class="fas fa-play-circle me-2"></i>게임 운영</h4>
+                <button class="btn btn-outline-primary btn-sm" onclick="showGameSelection()">
+                    <i class="fas fa-list me-1"></i>경기 다시 선택
+                </button>
+            </div>
             
             <!-- 선택된 게임 정보 -->
             <div class="betting-item">
@@ -913,12 +918,185 @@
                 console.log('사용자 데이터:', userData);
                 displayUserInfo(userData);
                 
+                // 게임 데이터 로드
+                loadGameData();
+                
+                // 게임 선택 버튼 이벤트 리스너 등록
+                setupGameSelectionListeners();
+                
                 console.log('로그인 상태 확인 완료');
                 
             } catch (error) {
                 console.error('로그인 상태 확인 오류:', error);
                 // 오류 발생 시 로그인 페이지로 리다이렉트
                 window.location.href = '/operator-management.html';
+            }
+        }
+
+        // 게임 데이터 로드
+        async function loadGameData() {
+            try {
+                console.log('게임 데이터 로드 시작...');
+                
+                // 오늘 날짜 표시
+                const today = new Date();
+                const koreanTime = new Date(today.getTime() + (9 * 60 * 60 * 1000)); // 한국 시간 (UTC+9)
+                const dateString = koreanTime.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                });
+                document.getElementById('dateDisplay').textContent = dateString;
+                
+                // 샘플 게임 데이터 (실제로는 API에서 가져와야 함)
+                const sampleGames = [
+                    {
+                        id: 1,
+                        gameNumber: '1경기',
+                        matchup: '팀A vs 팀B',
+                        time: '18:30',
+                        gameStatus: 'normal',
+                        progressStatus: '대기중'
+                    },
+                    {
+                        id: 2,
+                        gameNumber: '2경기',
+                        matchup: '팀C vs 팀D',
+                        time: '20:00',
+                        gameStatus: 'normal',
+                        progressStatus: '대기중'
+                    },
+                    {
+                        id: 3,
+                        gameNumber: '3경기',
+                        matchup: '팀E vs 팀F',
+                        time: '21:30',
+                        gameStatus: 'normal',
+                        progressStatus: '대기중'
+                    }
+                ];
+                
+                // 게임 테이블에 데이터 표시
+                const tableBody = document.getElementById('gameSelectionTableBody');
+                tableBody.innerHTML = '';
+                
+                sampleGames.forEach(game => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="game-number">${game.gameNumber}</td>
+                        <td class="game-matchup">${game.matchup}</td>
+                        <td>${game.time}</td>
+                        <td><span class="game-status status-${game.gameStatus}">${getGameStatusText(game.gameStatus)}</span></td>
+                        <td><span class="status-indicator status-waiting">${game.progressStatus}</span></td>
+                        <td>
+                            <button class="select-game-btn" data-game-id="${game.id}" data-game-number="${game.gameNumber}" data-game-matchup="${game.matchup}" data-game-time="${game.time}">
+                                선택
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                console.log('게임 데이터 로드 완료');
+                
+            } catch (error) {
+                console.error('게임 데이터 로드 오류:', error);
+            }
+        }
+
+        // 게임 상태 텍스트 변환
+        function getGameStatusText(status) {
+            const statusMap = {
+                'normal': '정상',
+                'delayed': '지연',
+                'before': '경기전',
+                'ongoing': '진행중',
+                'ended': '종료'
+            };
+            return statusMap[status] || '정상';
+        }
+
+        // 게임 선택 버튼 이벤트 리스너 설정
+        function setupGameSelectionListeners() {
+            // 게임 선택 버튼들에 이벤트 리스너 추가
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('select-game-btn')) {
+                    const gameId = e.target.getAttribute('data-game-id');
+                    const gameNumber = e.target.getAttribute('data-game-number');
+                    const matchup = e.target.getAttribute('data-game-matchup');
+                    const time = e.target.getAttribute('data-game-time');
+                    
+                    selectGame(gameId, gameNumber, matchup, time);
+                }
+            });
+        }
+
+        // 경기선택 섹션 다시 표시
+        function showGameSelection() {
+            // 경기선택 섹션 표시
+            document.querySelector('.game-section').style.display = 'block';
+            
+            // 배팅 섹션 숨기기
+            document.getElementById('bettingSection').style.display = 'none';
+            
+            // 모든 선택 버튼 초기화
+            document.querySelectorAll('.select-game-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.textContent = '선택';
+            });
+            
+            showCustomModal('경기선택 화면으로 돌아갑니다. 새로운 경기를 선택해주세요.');
+        }
+
+        // 게임 선택
+        function selectGame(gameId, gameNumber, matchup, time) {
+            try {
+                console.log('게임 선택:', gameId, gameNumber, matchup, time);
+                
+                // 모든 선택 버튼 초기화
+                document.querySelectorAll('.select-game-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                    btn.textContent = '선택';
+                });
+                
+                // 선택된 게임 버튼 활성화
+                const selectedBtn = document.querySelector(`[data-game-id="${gameId}"]`);
+                if (selectedBtn) {
+                    selectedBtn.classList.add('selected');
+                    selectedBtn.textContent = '선택됨';
+                }
+                
+                // 선택된 게임 정보 표시
+                document.getElementById('selectedGameInfo').textContent = `${gameNumber} - ${matchup} (${time})`;
+                
+                // 배팅 섹션 표시
+                document.getElementById('bettingSection').style.display = 'block';
+                
+                // 게임 형태 선택 활성화
+                document.querySelectorAll('input[name="gameType"]').forEach(radio => {
+                    radio.disabled = false;
+                });
+                
+                // 배팅 시작 버튼 활성화
+                document.getElementById('startBetting').disabled = false;
+                
+                // 예측 결과 선택 초기화
+                document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                    radio.checked = false;
+                    radio.disabled = true;
+                });
+                
+                // 다음 타자 버튼 비활성화
+                document.getElementById('nextBatterBtn').disabled = true;
+                
+                // 경기선택 섹션 숨기기
+                document.querySelector('.game-section').style.display = 'none';
+                
+                showCustomModal(`${gameNumber}가 선택되었습니다. 게임 형태를 선택하고 배팅을 시작해주세요.`);
+                
+            } catch (error) {
+                console.error('게임 선택 오류:', error);
             }
         }
 
