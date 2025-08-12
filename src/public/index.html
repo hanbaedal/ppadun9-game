@@ -906,7 +906,7 @@
                                 },
                                 body: JSON.stringify({
                                     bettingStart: '시작',
-                                    bettingStop: '대기'
+                                    bettingStop: '진행'
                                 })
                             });
                             
@@ -956,7 +956,7 @@
                                     'Content-Type': 'application/json'
                                 },
                                 body: JSON.stringify({
-                                    bettingStart: '중지',
+                                    bettingStart: '대기',
                                     bettingStop: '중지'
                                 })
                             });
@@ -1002,6 +1002,9 @@
                                     'Content-Type': 'application/json'
                                 },
                                 body: JSON.stringify({
+                                    gameType: '타자',
+                                    bettingStart: '대기',
+                                    bettingStop: '대기',
                                     predictionResult: predictionValue
                                 })
                             });
@@ -1052,6 +1055,7 @@
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
+                                gameType: '타자',
                                 bettingStart: '대기',
                                 bettingStop: '대기',
                                 predictionResult: ''
