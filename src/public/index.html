@@ -254,6 +254,17 @@
             box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
         }
 
+        .select-game-btn.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .select-game-btn.selected:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
         .betting-btn {
             padding: 8px 16px;
             background-color: #28a745;
@@ -1179,7 +1190,8 @@
                             gameType: '타자',
                             bettingStart: '대기',
                             bettingStop: '대기',
-                            predictionResult: ''
+                            predictionResult: '',
+                            isSelected: false
                         };
                         console.log(`${i}경기: 기본 데이터 사용됨`);
                     } else {
@@ -1192,17 +1204,24 @@
                     const progressClass = progressText === '경기전' ? 'status-before' : progressText === '경기중' ? 'status-ongoing' : 'status-ended';
 
                     const canSelect = gameStatus === '정상게임' && progressText === '경기중';
-                    const buttonText = canSelect ? '선택' : '선택불가';
+                    const isCurrentlySelected = game.isSelected === true;
+                    const buttonText = isCurrentlySelected ? '선택됨' : (canSelect ? '선택' : '선택불가');
                     const buttonDisabled = !canSelect;
-                    const buttonClass = canSelect ? 'select-game-btn' : 'select-game-btn disabled';
+                    const buttonClass = isCurrentlySelected ? 'select-game-btn selected' : (canSelect ? 'select-game-btn' : 'select-game-btn disabled');
 
                     const gameRow = document.createElement('tr');
                     gameRow.className = 'game-row';
                     gameRow.dataset.game = i;
+                    
+                    // 시간 정보 안전하게 처리
+                    const startTime = game.startTime || '18:00';
+                    const endTime = game.endTime || '21:00';
+                    const timeDisplay = `${startTime} ~ ${endTime}`;
+                    
                     gameRow.innerHTML = `
                         <td class="game-number">${i}경기</td>
                         <td class="game-matchup">${game.matchup}</td>
-                        <td class="game-time">${game.startTime} ~ ${game.endTime}</td>
+                        <td class="game-time">${timeDisplay}</td>
                         <td class="game-status ${statusClass}">${gameStatus}</td>
                         <td class="game-progress ${progressClass}">${progressText}</td>
                         <td>
@@ -1425,6 +1444,29 @@
                 if (selectedBtn) {
                     selectedBtn.classList.add('selected');
                     selectedBtn.textContent = '선택됨';
+                }
+                
+                // 다른 경기들의 선택 상태를 데이터베이스에서 해제
+                try {
+                    for (let otherGameId = 1; otherGameId <= 5; otherGameId++) {
+                        if (otherGameId !== gameId) {
+                            const otherResponse = await fetch(`/api/team-games/${dateStr}/${otherGameId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    isSelected: false
+                                })
+                            });
+                            
+                            if (otherResponse.ok) {
+                                console.log(`${otherGameId}경기 선택 상태 해제 성공`);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('다른 경기 선택 상태 해제 오류:', error);
                 }
                 
                 // 선택된 게임 정보 표시 (클릭 가능하게)
