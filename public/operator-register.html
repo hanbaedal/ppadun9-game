@@ -236,7 +236,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-user-plus me-2"></i>운영자 등록
                     </button>
-                    <a href="operator-login.html" class="btn btn-secondary">
+                    <a href="operator-management.html" class="btn btn-secondary">
                         <i class="fas fa-sign-in-alt me-2"></i>로그인으로 돌아가기
                     </a>
                 </div>
@@ -295,7 +295,7 @@
                 if (data.success) {
                     showAlert('운영자 등록이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.', 'success');
                     setTimeout(() => {
-                        window.location.href = 'operator-login.html';
+                        window.location.href = 'operator-management.html';
                     }, 3000);
                 } else {
                     showAlert('등록 실패: ' + (data.error || '알 수 없는 오류가 발생했습니다.'), 'danger');

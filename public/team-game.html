@@ -504,7 +504,7 @@
             const storedUser = localStorage.getItem('currentUser');
             if (!storedUser) {
                 // 로그인되지 않은 경우 로그인 페이지로 이동
-                window.location.href = 'operator-login.html';
+                window.location.href = 'operator-management.html';
                 return;
             }
             
@@ -515,7 +515,7 @@
             } catch (error) {
                 console.error('사용자 정보 파싱 오류:', error);
                 localStorage.removeItem('currentUser');
-                window.location.href = 'operator-login.html';
+                window.location.href = 'operator-management.html';
             }
         }
 
@@ -537,7 +537,7 @@
                     currentUser = null;
                     showCustomModal('로그아웃되었습니다.');
                     setTimeout(() => {
-                        window.location.href = 'operator-login.html';
+                        window.location.href = 'operator-management.html';
                     }, 1500);
                 } else {
                     showCustomModal('로그아웃 중 오류가 발생했습니다.');
@@ -545,7 +545,7 @@
             } catch (error) {
                 console.error('로그아웃 오류:', error);
                 localStorage.removeItem('currentUser');
-                window.location.href = 'operator-login.html';
+                window.location.href = 'operator-management.html';
             }
         }
 

@@ -32,7 +32,7 @@ ppadun9-game/
 │   │   ├── employee-management.html  # 직원 관리
 │   │   ├── operate-member.html  # 운영자 관리
 │   │   ├── team-game.html       # 팀 게임 관리
-│   │   ├── operator-login.html  # 운영자 로그인
+│   │   ├── operator-management.html  # 운영자 로그인/등록
 │   │   ├── operator-register.html # 운영자 등록
 │   │   ├── css/          # 스타일시트
 │   │   └── js/           # 클라이언트 스크립트

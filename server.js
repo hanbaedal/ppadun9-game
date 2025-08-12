@@ -39,7 +39,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'ppadun9-game-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { 
+    cookie: {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 24 * 60 * 60 * 1000 // 24시간
     }
@@ -61,9 +61,11 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/public/operator-management.html'));
 });
 
-app.get('/api-test', (req, res) => {
-    res.sendFile(path.join(__dirname, 'src/public/api-test.html'));
+app.get('/operator-management.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/public/operator-management.html'));
 });
+
+
 
 // 404 처리
 app.use((req, res) => {
@@ -110,4 +112,4 @@ process.on('SIGTERM', async () => {
 });
 
 // 서버 시작
-startServer();
+startServer(); 

@@ -868,35 +868,52 @@
             }
         }
 
-        // 페이지 로드 시 로그인 상태 확인
+        // 로그인 상태 확인 플래그 (중복 호출 방지)
+        let loginStatusChecked = false;
+
+        // 페이지 로드 시 로그인 상태 확인 (한 번만)
         document.addEventListener('DOMContentLoaded', function() {
-            checkLoginStatus();
+            if (!loginStatusChecked) {
+                console.log('DOMContentLoaded - 로그인 상태 확인');
+                checkLoginStatus();
+                loginStatusChecked = true;
+            }
+        });
+
+        // 페이지 완전 로드 시 로그인 상태 재확인 (필요시)
+        window.addEventListener('load', function() {
+            if (!loginStatusChecked) {
+                console.log('load - 로그인 상태 확인');
+                checkLoginStatus();
+                loginStatusChecked = true;
+            }
         });
 
         // 로그인 상태 확인
-        async function checkLoginStatus() {
+        function checkLoginStatus() {
             try {
-                // 세션 확인을 위한 API 호출
-                const response = await fetch('/api/operator/profile', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
+                console.log('로그인 상태 확인 시작...');
                 
-                if (!response.ok) {
-                    // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
-                    window.location.href = '/operator-management.html';
-                    return;
-                }
+                // 로컬 스토리지에서 로그인 상태 확인
+                const loginStatus = localStorage.getItem('operatorLoginStatus');
+                const userInfo = localStorage.getItem('operatorUserInfo');
                 
-                const result = await response.json();
-                if (!result.success) {
+                console.log('로그인 상태:', loginStatus);
+                console.log('사용자 정보:', userInfo);
+                
+                if (!loginStatus || loginStatus !== 'loggedIn' || !userInfo) {
+                    console.log('로그인되지 않음 - 로그인 페이지로 이동');
                     // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
                     window.location.href = '/operator-management.html';
                     return;
                 }
                 
                 // 로그인된 경우 사용자 정보 표시
-                displayUserInfo(result.data);
+                const userData = JSON.parse(userInfo);
+                console.log('사용자 데이터:', userData);
+                displayUserInfo(userData);
+                
+                console.log('로그인 상태 확인 완료');
                 
             } catch (error) {
                 console.error('로그인 상태 확인 오류:', error);
@@ -922,22 +939,12 @@
         }
 
         // 로그아웃
-        async function logout() {
-            try {
-                const response = await fetch('/api/operator/logout', {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-                
-                if (response.ok) {
-                    // 로그아웃 후 로그인 페이지로 이동
-                    window.location.href = '/operator-management.html';
-                    return;
-                }
-            } catch (error) {
-                console.error('로그아웃 오류:', error);
-            }
-            // 오류 발생 시에도 로그인 페이지로 이동
+        function logout() {
+            // 로컬 스토리지에서 로그인 정보 제거
+            localStorage.removeItem('operatorLoginStatus');
+            localStorage.removeItem('operatorUserInfo');
+            
+            // 로그인 페이지로 이동
             window.location.href = '/operator-management.html';
         }
     </script>
