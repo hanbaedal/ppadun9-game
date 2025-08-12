@@ -62,7 +62,7 @@ function navigateToEmployeeManagement() {
 }
 
 function navigateToGameManagement() {
-    window.location.href = '/team-game.html';
+            window.location.href = '/index.html';
 }
 
 function navigateToMemberManagement() {

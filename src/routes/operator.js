@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
+// bcryptjs 제거 - 평문 비밀번호 저장으로 변경
 const { getDb } = require('../config/db');
 
 // 운영자 등록
@@ -28,13 +28,10 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // 비밀번호 해시화
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // 운영자 정보 생성
+        // 운영자 정보 생성 (비밀번호 평문 저장)
         const operatorData = {
             username,
-            password: hashedPassword,
+            password: password, // 평문 비밀번호 저장
             name,
             email: email || '',
             phone: phone || '',
@@ -107,9 +104,8 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // 비밀번호 확인
-        const isPasswordValid = await bcrypt.compare(password, operator.password);
-        if (!isPasswordValid) {
+        // 비밀번호 확인 (평문 비교)
+        if (password !== operator.password) {
             return res.status(401).json({
                 success: false,
                 message: '아이디 또는 비밀번호가 올바르지 않습니다.'

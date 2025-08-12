@@ -575,7 +575,7 @@ app.get('/today-game.html', (req, res) => {
 
 // 게임 설정 페이지
 app.get('/team-game.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'team-game.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // 오늘의 경기 시작 페이지
