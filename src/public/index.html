@@ -792,6 +792,32 @@
                             radio.disabled = false;
                         });
                         
+                        // team-games 컬렉션에 배팅 시작 상태 업데이트
+                        try {
+                            const today = new Date();
+                            const koreanTime = new Date(today.getTime() + (9 * 60 * 60 * 1000));
+                            const dateStr = koreanTime.toISOString().split('T')[0];
+                            
+                            const response = await fetch(`/api/team-games/${dateStr}/${selectedGame}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    bettingStart: '시작',
+                                    bettingStop: '대기'
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                console.log('배팅 시작 상태 업데이트 성공');
+                            } else {
+                                console.error('배팅 시작 상태 업데이트 실패');
+                            }
+                        } catch (error) {
+                            console.error('배팅 시작 상태 업데이트 오류:', error);
+                        }
+                        
                         showCustomModal('배팅이 시작되었습니다. 게임에서 배팅이 가능합니다.');
                     } catch (error) {
                         console.error('배팅 시작 오류:', error);
@@ -817,6 +843,32 @@
                         });
                         document.getElementById('nextBatterBtn').disabled = true;
                         
+                        // team-games 컬렉션에 배팅 중지 상태 업데이트
+                        try {
+                            const today = new Date();
+                            const koreanTime = new Date(today.getTime() + (9 * 60 * 60 * 1000));
+                            const dateStr = koreanTime.toISOString().split('T')[0];
+                            
+                            const response = await fetch(`/api/team-games/${dateStr}/${selectedGame}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    bettingStart: '중지',
+                                    bettingStop: '중지'
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                console.log('배팅 중지 상태 업데이트 성공');
+                            } else {
+                                console.error('배팅 중지 상태 업데이트 실패');
+                            }
+                        } catch (error) {
+                            console.error('배팅 중지 상태 업데이트 오류:', error);
+                        }
+                        
                         showCustomModal('배팅이 중지되었습니다. 예측결과를 선택해주세요.');
                     } catch (error) {
                         console.error('배팅 중지 오류:', error);
@@ -827,13 +879,40 @@
 
             // 예측결과 라디오 버튼 이벤트
             document.querySelectorAll('input[name="prediction"]').forEach(radio => {
-                radio.addEventListener('change', function() {
+                radio.addEventListener('change', async function() {
                     if (this.checked) {
                         const predictionText = this.nextElementSibling.textContent;
+                        const predictionValue = this.value;
+                        
                         showCustomModal(`${predictionText} 예측 결과가 입력되었습니다.`);
                         
                         // 다음 타자 버튼 활성화
                         document.getElementById('nextBatterBtn').disabled = false;
+                        
+                        // team-games 컬렉션에 예측 결과 업데이트
+                        try {
+                            const today = new Date();
+                            const koreanTime = new Date(today.getTime() + (9 * 60 * 60 * 1000));
+                            const dateStr = koreanTime.toISOString().split('T')[0];
+                            
+                            const response = await fetch(`/api/team-games/${dateStr}/${selectedGame}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    predictionResult: predictionValue
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                console.log('예측 결과 업데이트 성공');
+                            } else {
+                                console.error('예측 결과 업데이트 실패');
+                            }
+                        } catch (error) {
+                            console.error('예측 결과 업데이트 오류:', error);
+                        }
                     }
                 });
             });
@@ -859,6 +938,33 @@
                         radio.checked = false;
                         radio.disabled = false;
                     });
+                    
+                    // team-games 컬렉션에 다음 타자 준비 상태 업데이트
+                    try {
+                        const today = new Date();
+                        const koreanTime = new Date(today.getTime() + (9 * 60 * 60 * 1000));
+                        const dateStr = koreanTime.toISOString().split('T')[0];
+                        
+                        const response = await fetch(`/api/team-games/${dateStr}/${selectedGame}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                bettingStart: '대기',
+                                bettingStop: '대기',
+                                predictionResult: ''
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            console.log('다음 타자 준비 상태 업데이트 성공');
+                        } else {
+                            console.error('다음 타자 준비 상태 업데이트 실패');
+                        }
+                    } catch (error) {
+                        console.error('다음 타자 준비 상태 업데이트 오류:', error);
+                    }
                     
                     showCustomModal('다음 타자 배팅을 준비합니다. 배팅을 시작해주세요.');
                 } catch (error) {
@@ -900,24 +1006,20 @@
             }
         });
 
-        // 페이지 완전 로드 시 로그인 상태 재확인 (필요시)
+        // 페이지 완전 로드 시 추가 작업 (한 번만)
         window.addEventListener('load', function() {
             console.log('load 이벤트 발생');
-            if (!loginStatusChecked) {
-                console.log('load - 로그인 상태 확인');
-                checkLoginStatus();
-                loginStatusChecked = true;
-            }
-            
-            // 테스트용: 로그인 상태와 관계없이 게임 데이터 로드 테스트
-            console.log('게임 데이터 로드 테스트 시작...');
-            setTimeout(() => {
-                loadGameData();
-            }, 1000);
+            // load 이벤트에서는 추가 작업만 수행 (로그인 상태 확인은 하지 않음)
         });
 
         // 로그인 상태 확인
         function checkLoginStatus() {
+            // 이미 확인된 경우 중복 실행 방지
+            if (loginStatusChecked) {
+                console.log('로그인 상태 이미 확인됨 - 중복 실행 방지');
+                return;
+            }
+            
             try {
                 console.log('로그인 상태 확인 시작...');
                 
@@ -943,6 +1045,8 @@
                 // 게임 데이터 로드
                 loadGameData();
                 
+                // 로그인 상태 확인 완료 플래그 설정
+                loginStatusChecked = true;
                 console.log('로그인 상태 확인 완료');
                 
             } catch (error) {
@@ -952,13 +1056,37 @@
             }
         }
 
-        // 게임 데이터 로드 (관리자 프로그램 방식으로 수정)
+        // 게임 데이터 로드 (team-games 컬렉션에서 실제 데이터 읽어오기)
         async function loadGameData() {
             try {
                 console.log('게임 데이터 로드 시작...');
                 
                 // 오늘 날짜 표시
                 updateDate();
+                
+                // 오늘 날짜 형식 (YYYY-MM-DD)
+                const today = new Date();
+                const koreanTime = new Date(today.getTime() + (9 * 60 * 60 * 1000));
+                const dateStr = koreanTime.toISOString().split('T')[0];
+                
+                // team-games 컬렉션에서 데이터 조회
+                let games = [];
+                try {
+                    const response = await fetch(`/api/team-games/${dateStr}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.data && data.data.length > 0) {
+                            games = data.data;
+                            console.log('team-games에서 데이터 조회 성공:', games.length, '개');
+                        } else {
+                            console.log('team-games에 데이터 없음, 기본 데이터 사용');
+                        }
+                    } else {
+                        console.log('team-games API 호출 실패, 기본 데이터 사용');
+                    }
+                } catch (error) {
+                    console.error('team-games API 호출 오류:', error);
+                }
                 
                 // 5경기까지 표시 (관리자 프로그램과 동일)
                 const tableBody = document.getElementById('gameSelectionTableBody');
@@ -972,7 +1100,8 @@
                 
                 // 5경기까지 표시
                 for (let i = 1; i <= 5; i++) {
-                    const game = {
+                    // team-games에서 해당 경기 데이터 찾기
+                    const game = games.find(g => g.gameNumber === i) || {
                         gameNumber: i,
                         matchup: '- vs -',
                         startTime: '-',
@@ -980,8 +1109,8 @@
                         gameStatus: '정상게임',
                         progressStatus: '경기전',
                         gameType: '타자',
-                        bettingStart: '중지',
-                        bettingStop: '중지',
+                        bettingStart: '대기',
+                        bettingStop: '대기',
                         predictionResult: ''
                     };
 
@@ -1069,9 +1198,38 @@
         }
 
         // 게임 선택
-        function selectGame(gameId, gameNumber, matchup, time) {
+        async function selectGame(gameId, gameNumber, matchup, time) {
             try {
                 console.log('게임 선택:', gameId, gameNumber, matchup, time);
+                
+                // 오늘 날짜 형식 (YYYY-MM-DD)
+                const today = new Date();
+                const koreanTime = new Date(today.getTime() + (9 * 60 * 60 * 1000));
+                const dateStr = koreanTime.toISOString().split('T')[0];
+                
+                // team-games 컬렉션에 게임 선택 상태 업데이트
+                try {
+                    const response = await fetch(`/api/team-games/${dateStr}/${gameId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            isSelected: true,
+                            bettingStart: '대기',
+                            bettingStop: '대기',
+                            predictionResult: ''
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        console.log('게임 선택 상태 업데이트 성공');
+                    } else {
+                        console.error('게임 선택 상태 업데이트 실패');
+                    }
+                } catch (error) {
+                    console.error('게임 선택 상태 업데이트 오류:', error);
+                }
                 
                 // 모든 선택 버튼 초기화
                 document.querySelectorAll('.select-game-btn').forEach(btn => {
@@ -1079,8 +1237,8 @@
                     btn.textContent = '선택';
                 });
                 
-                // 선택된 게임 버튼 활성화
-                const selectedBtn = document.querySelector(`[data-game-id="${gameId}"]`);
+                // 선택된 게임 버튼 활성화 (data-game 속성 사용)
+                const selectedBtn = document.querySelector(`[data-game="${gameId}"]`);
                 if (selectedBtn) {
                     selectedBtn.classList.add('selected');
                     selectedBtn.textContent = '선택됨';

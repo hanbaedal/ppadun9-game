@@ -52,6 +52,10 @@ app.use(express.static(path.join(__dirname, 'src/public')));
 const operatorRoutes = require('./src/routes/operator');
 app.use('/api/operator', operatorRoutes);
 
+// 팀 게임 라우트
+const teamGamesRoutes = require('./src/routes/team-games');
+app.use('/api/team-games', teamGamesRoutes);
+
 // 기본 라우트
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'src/public/index.html'));

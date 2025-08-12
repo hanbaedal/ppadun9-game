@@ -733,4 +733,84 @@ router.put('/:date/progress/update-all', async (req, res) => {
     }
 });
 
+// 특정 경기의 게임 상태 업데이트 (배팅 시작/중지/예측결과 등)
+router.put('/:date/:gameNumber', async (req, res) => {
+    try {
+        console.log('[TeamGames] 게임 상태 업데이트 요청:', req.params, req.body);
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        const { date, gameNumber } = req.params;
+        const updateData = req.body;
+        
+        // 업데이트할 필드들
+        const updateFields = {};
+        
+        if (updateData.isSelected !== undefined) updateFields.isSelected = updateData.isSelected;
+        if (updateData.bettingStart !== undefined) updateFields.bettingStart = updateData.bettingStart;
+        if (updateData.bettingStop !== undefined) updateFields.bettingStop = updateData.bettingStop;
+        if (updateData.predictionResult !== undefined) updateFields.predictionResult = updateData.predictionResult;
+        if (updateData.gameType !== undefined) updateFields.gameType = updateData.gameType;
+        
+        // 업데이트 시간 추가
+        updateFields.updatedAt = getKoreanTime();
+        
+        console.log('[TeamGames] 업데이트할 필드:', updateFields);
+        
+        // 다른 경기의 선택 상태 해제 (isSelected가 true로 설정되는 경우)
+        if (updateData.isSelected === true) {
+            console.log('[TeamGames] 다른 경기 선택 상태 해제');
+            await collection.updateMany(
+                { 
+                    date, 
+                    gameNumber: { $ne: parseInt(gameNumber) },
+                    isSelected: true 
+                },
+                { 
+                    $set: { 
+                        isSelected: false,
+                        updatedAt: getKoreanTime()
+                    }
+                }
+            );
+        }
+        
+        // 현재 경기 업데이트
+        const updateResult = await collection.updateOne(
+            { date, gameNumber: parseInt(gameNumber) },
+            { $set: updateFields }
+        );
+        
+        if (updateResult.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 경기를 찾을 수 없습니다.'
+            });
+        }
+        
+        console.log('[TeamGames] 게임 상태 업데이트 완료:', {
+            gameNumber,
+            matchedCount: updateResult.matchedCount,
+            modifiedCount: updateResult.modifiedCount
+        });
+        
+        // 업데이트된 데이터 조회
+        const updatedGame = await collection.findOne({ date, gameNumber: parseInt(gameNumber) });
+        
+        res.json({
+            success: true,
+            message: '게임 상태가 업데이트되었습니다.',
+            data: updatedGame
+        });
+        
+    } catch (error) {
+        console.error('[TeamGames] 게임 상태 업데이트 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '게임 상태 업데이트에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 
