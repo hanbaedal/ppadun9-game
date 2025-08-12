@@ -69,6 +69,8 @@
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .game-selection-table {
@@ -380,6 +382,32 @@
             text-align: center;
         }
 
+        /* 모바일에서 모달 최적화 */
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 20px;
+                max-width: 95%;
+                width: 95%;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            .game-selection-modal {
+                max-width: 95%;
+                width: 95%;
+            }
+            
+            .modal-header {
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            
+            .modal-title {
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+        }
+
         .game-selection-modal {
             max-width: 900px;
             width: 95%;
@@ -498,24 +526,238 @@
         /* 반응형 디자인 */
         @media (max-width: 768px) {
             .container {
+                padding: 10px;
+                margin: 5px;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }
+            
+            .date-display {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            
+            .game-selection-container {
+                margin: 10px 0;
+                padding: 10px;
+            }
+            
+            .game-selection-container h4 {
+                font-size: 1.1rem;
+                margin-bottom: 15px;
+            }
+            
+            .game-selection-table {
+                font-size: 12px;
+            }
+            
+            .game-selection-table th,
+            .game-selection-table td {
+                padding: 6px 4px;
+                font-size: 11px;
+            }
+            
+            .betting-section {
+                margin-top: 15px;
                 padding: 15px;
-                margin: 10px;
+            }
+            
+            .betting-section h4 {
+                font-size: 1.1rem;
             }
             
             .betting-item {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 10px;
+                padding: 12px;
+                margin-bottom: 12px;
             }
             
-            .betting-title,
-            .betting-time,
+            .betting-title {
+                font-size: 14px;
+                padding: 8px 12px;
+                width: 120px;
+            }
+            
+            .betting-time {
+                font-size: 14px;
+                padding: 10px 15px;
+                width: 100%;
+                max-width: none;
+            }
+            
             .betting-btn {
                 width: 100%;
+                padding: 12px;
+                font-size: 14px;
             }
             
             .radio-group {
                 justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .radio-label {
+                padding: 6px 12px;
+                font-size: 12px;
+                min-width: 60px;
+                text-align: center;
+            }
+            
+            .game-type-display {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .game-type-label,
+            .game-type-value {
+                font-size: 14px;
+            }
+        }
+
+        /* 삼성 스마트폰 최적화 (작은 화면) */
+        @media (max-width: 480px) {
+            .container {
+                padding: 8px;
+                margin: 3px;
+            }
+            
+            .page-title {
+                font-size: 1.3rem;
+                margin-bottom: 8px;
+            }
+            
+            .date-display {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+            
+            .game-selection-container {
+                margin: 8px 0;
+                padding: 8px;
+            }
+            
+            .game-selection-container h4 {
+                font-size: 1rem;
+                margin-bottom: 12px;
+            }
+            
+            .game-selection-table {
+                font-size: 11px;
+            }
+            
+            .game-selection-table th,
+            .game-selection-table td {
+                padding: 4px 2px;
+                font-size: 10px;
+            }
+            
+            .betting-section {
+                margin-top: 12px;
+                padding: 12px;
+            }
+            
+            .betting-section h4 {
+                font-size: 1rem;
+            }
+            
+            .betting-item {
+                padding: 10px;
+                margin-bottom: 10px;
+                gap: 8px;
+            }
+            
+            .betting-title {
+                font-size: 13px;
+                padding: 6px 10px;
+                width: 100px;
+            }
+            
+            .betting-time {
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+            
+            .betting-btn {
+                padding: 10px;
+                font-size: 13px;
+            }
+            
+            .radio-group {
+                gap: 6px;
+            }
+            
+            .radio-label {
+                padding: 5px 10px;
+                font-size: 11px;
+                min-width: 50px;
+            }
+            
+            .game-type-display {
+                gap: 3px;
+            }
+            
+            .game-type-label,
+            .game-type-value {
+                font-size: 13px;
+            }
+        }
+
+        /* 삼성 스마트폰 가로 모드 최적화 */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .container {
+                padding: 8px;
+            }
+            
+            .page-title {
+                font-size: 1.2rem;
+                margin-bottom: 8px;
+            }
+            
+            .game-selection-container {
+                margin: 8px 0;
+                padding: 8px;
+            }
+            
+            .betting-section {
+                margin-top: 10px;
+                padding: 12px;
+            }
+            
+            .betting-item {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            
+            .radio-group {
+                flex-direction: row;
+                justify-content: space-around;
+                gap: 10px;
+            }
+        }
+
+        /* 터치 친화적 요소 크기 조정 */
+        @media (max-width: 768px) {
+            .betting-btn,
+            .select-game-btn,
+            .modal-close {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            .radio-label {
+                min-height: 44px;
+                min-width: 60px;
+            }
+            
+            .clickable-game-info {
+                min-height: 44px;
             }
         }
     </style>
@@ -524,10 +766,7 @@
     <!-- 네비게이션 바 -->
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-gamepad me-2"></i>빠던나인 게임 운영
-            </a>
-            <div class="navbar-nav ms-auto" id="userInfo">
+            <div class="navbar-nav me-auto" id="userInfo">
                 <span class="navbar-text me-3" id="userName">
                     <i class="fas fa-user-circle me-2"></i>운영자
                 </span>
@@ -535,6 +774,9 @@
                     <i class="fas fa-sign-out-alt me-2"></i>로그아웃
                 </button>
             </div>
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-gamepad me-2"></i>
+            </a>
         </div>
     </nav>
 
@@ -703,7 +945,7 @@
             
             try {
                 currentUser = JSON.parse(storedUser);
-                document.getElementById('userName').innerHTML = `<i class="fas fa-user-circle me-2"></i> ${currentUser.name || currentUser.username}`;
+                document.getElementById('userName').innerHTML = `<i class="fas fa-user-circle me-2"></i>운영자 : ${currentUser.name}(${currentUser.username})`;
             } catch (error) {
                 console.error('사용자 정보 파싱 오류:', error);
                 localStorage.removeItem('currentUser');
