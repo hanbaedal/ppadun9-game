@@ -124,6 +124,13 @@ router.post('/login', async (req, res) => {
         // 중복 로그인 체크
         if (operator.isLoggedIn && !forceLogin) {
             console.log(`[Operator] 중복 로그인 감지: ${username}, isLoggedIn: ${operator.isLoggedIn}`);
+            console.log(`[Operator] 운영자 데이터:`, JSON.stringify(operator, null, 2));
+            
+            // 데이터베이스 전체 상태 확인
+            const allOperators = await collection.find({}).toArray();
+            const loggedInOperators = allOperators.filter(op => op.isLoggedIn);
+            console.log(`[Operator] 전체 운영자 수: ${allOperators.length}, 로그인된 운영자 수: ${loggedInOperators.length}`);
+            
             return res.status(409).json({
                 success: false,
                 message: '이미 다른 곳에서 로그인되어 있습니다.',
@@ -562,6 +569,14 @@ router.post('/logout', async (req, res) => {
         const db = getDb();
         const collection = db.collection('operate-member');
 
+        // 로그아웃 전 상태 확인
+        const beforeLogout = await collection.findOne({ username });
+        console.log(`[Operator] 로그아웃 전 상태:`, {
+            username: beforeLogout?.username,
+            isLoggedIn: beforeLogout?.isLoggedIn,
+            lastLoginAt: beforeLogout?.lastLoginAt
+        });
+
         // 로그아웃 상태 업데이트
         const result = await collection.updateOne(
             { username },
@@ -578,7 +593,43 @@ router.post('/logout', async (req, res) => {
             }
         );
 
+        console.log(`[Operator] 로그아웃 업데이트 결과:`, {
+            matchedCount: result.matchedCount,
+            modifiedCount: result.modifiedCount,
+            upsertedCount: result.upsertedCount
+        });
+
+        // 강제로 데이터베이스 상태 확인 및 재시도
+        if (result.modifiedCount === 0 && result.matchedCount > 0) {
+            console.log(`[Operator] 업데이트가 반영되지 않음, 강제 재시도`);
+            
+            // 강제 업데이트 재시도
+            const forceResult = await collection.updateOne(
+                { username },
+                { 
+                    $set: { 
+                        isLoggedIn: false,
+                        lastLogoutAt: new Date()
+                    }
+                },
+                { upsert: false }
+            );
+            
+            console.log(`[Operator] 강제 업데이트 결과:`, {
+                matchedCount: forceResult.matchedCount,
+                modifiedCount: forceResult.modifiedCount
+            });
+        }
+
         if (result.matchedCount > 0) {
+            // 로그아웃 후 상태 확인
+            const afterLogout = await collection.findOne({ username });
+            console.log(`[Operator] 로그아웃 후 상태:`, {
+                username: afterLogout?.username,
+                isLoggedIn: afterLogout?.isLoggedIn,
+                lastLogoutAt: afterLogout?.lastLogoutAt
+            });
+
             console.log(`[Operator] 로그아웃 성공: ${username}`);
             res.json({
                 success: true,
@@ -859,47 +910,129 @@ router.post('/session/clear/:username', async (req, res) => {
     }
 });
 
-// 모든 운영자 세션 초기화 (긴급 상황용)
+// 모든 세션 정리 (긴급 상황용)
 router.post('/session/clear-all', async (req, res) => {
     try {
-        console.log('[Operator] 모든 운영자 세션 초기화 요청');
+        console.log('[Operator] 모든 세션 정리 요청');
         
         const db = getDb();
         const collection = db.collection('operate-member');
-        
-        // 모든 운영자의 세션 정보 초기화
+
+        // 모든 활성 세션 강제 종료
         const result = await collection.updateMany(
             { isLoggedIn: true },
             { 
                 $set: { 
-                    isLoggedIn: false,
-                    currentSessionId: null,
-                    lastLoginAt: null,
-                    loginCount: 0,
-                    sessionStartTime: null,
-                    updatedAt: getKoreanTime()
-                },
-                $unset: {
-                    currentSessionId: "",
-                    lastLoginAt: "",
-                    sessionStartTime: ""
+                    isLoggedIn: false
                 }
             }
         );
-        
-        console.log(`[Operator] 모든 세션 초기화 완료: ${result.modifiedCount}명`);
-        
+
+        console.log(`[Operator] 모든 세션 정리 완료: ${result.modifiedCount}개`);
+
         res.json({
             success: true,
-            message: `${result.modifiedCount}명의 운영자 세션이 초기화되었습니다.`,
-            data: { clearedCount: result.modifiedCount }
+            message: `모든 운영자의 세션이 정리되었습니다. (${result.modifiedCount}개)`
         });
-        
+
     } catch (error) {
-        console.error('[Operator] 모든 세션 초기화 오류:', error);
+        console.error('[Operator] 모든 세션 정리 오류:', error);
         res.status(500).json({
             success: false,
-            message: '세션 초기화 중 오류가 발생했습니다.'
+            message: '세션 정리 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 세션 상태 확인 (디버깅용)
+router.get('/session/status/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        
+        console.log(`[Operator] 세션 상태 확인 요청: ${username}`);
+        
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        const operator = await collection.findOne({ username });
+        
+        if (!operator) {
+            return res.status(404).json({
+                success: false,
+                message: '운영자를 찾을 수 없습니다.'
+            });
+        }
+
+        console.log(`[Operator] 세션 상태:`, {
+            username: operator.username,
+            isLoggedIn: operator.isLoggedIn,
+            lastLoginAt: operator.lastLoginAt,
+            lastLogoutAt: operator.lastLogoutAt,
+            currentSessionId: operator.currentSessionId
+        });
+
+        res.json({
+            success: true,
+            data: {
+                username: operator.username,
+                isLoggedIn: operator.isLoggedIn,
+                lastLoginAt: operator.lastLoginAt,
+                lastLogoutAt: operator.lastLogoutAt,
+                currentSessionId: operator.currentSessionId
+            }
+        });
+
+    } catch (error) {
+        console.error('[Operator] 세션 상태 확인 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '세션 상태 확인 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 데이터베이스 상태 직접 확인 (긴급 상황용)
+router.get('/debug/db-status', async (req, res) => {
+    try {
+        console.log('[Operator] 데이터베이스 상태 확인 요청');
+        
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 전체 운영자 수
+        const totalCount = await collection.countDocuments();
+        
+        // 로그인된 운영자 수
+        const loggedInCount = await collection.countDocuments({ isLoggedIn: true });
+        
+        // 로그인된 운영자 목록
+        const loggedInOperators = await collection.find(
+            { isLoggedIn: true },
+            { projection: { username: 1, name: 1, lastLoginAt: 1, isLoggedIn: 1 } }
+        ).toArray();
+
+        // 컬렉션 정보
+        const collectionInfo = {
+            name: collection.collectionName,
+            database: db.databaseName,
+            totalOperators: totalCount,
+            loggedInOperators: loggedInCount,
+            loggedInList: loggedInOperators
+        };
+
+        console.log('[Operator] 데이터베이스 상태:', collectionInfo);
+
+        res.json({
+            success: true,
+            data: collectionInfo
+        });
+
+    } catch (error) {
+        console.error('[Operator] 데이터베이스 상태 확인 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '데이터베이스 상태 확인 중 오류가 발생했습니다.',
+            error: error.message
         });
     }
 });
