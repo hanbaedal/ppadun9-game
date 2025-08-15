@@ -69,6 +69,8 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password, forceLogin = false } = req.body;
         
+        console.log(`[Operator] 로그인 요청: ${username}, forceLogin: ${forceLogin}`);
+        
         // 필수 필드 검증
         if (!username || !password) {
             return res.status(400).json({
@@ -83,14 +85,18 @@ router.post('/login', async (req, res) => {
         // 운영자 정보 조회
         const operator = await collection.findOne({ username });
         if (!operator) {
+            console.log(`[Operator] 운영자를 찾을 수 없음: ${username}`);
             return res.status(401).json({
                 success: false,
                 message: '아이디 또는 비밀번호가 올바르지 않습니다.'
             });
         }
 
+        console.log(`[Operator] 운영자 정보 조회 성공: ${username}, isLoggedIn: ${operator.isLoggedIn}`);
+
         // 계정 활성화 확인
         if (!operator.isActive) {
+            console.log(`[Operator] 비활성화된 계정: ${username}`);
             return res.status(401).json({
                 success: false,
                 message: '비활성화된 계정입니다.'
@@ -99,6 +105,7 @@ router.post('/login', async (req, res) => {
 
         // 승인 상태 확인
         if (!operator.isApproved) {
+            console.log(`[Operator] 승인 대기 중인 계정: ${username}`);
             return res.status(401).json({
                 success: false,
                 message: '관리자 승인 대기 중입니다.'
@@ -107,6 +114,7 @@ router.post('/login', async (req, res) => {
 
         // 비밀번호 확인 (평문 비교)
         if (password !== operator.password) {
+            console.log(`[Operator] 비밀번호 불일치: ${username}`);
             return res.status(401).json({
                 success: false,
                 message: '아이디 또는 비밀번호가 올바르지 않습니다.'
@@ -115,6 +123,7 @@ router.post('/login', async (req, res) => {
 
         // 중복 로그인 체크
         if (operator.isLoggedIn && !forceLogin) {
+            console.log(`[Operator] 중복 로그인 감지: ${username}, isLoggedIn: ${operator.isLoggedIn}`);
             return res.status(409).json({
                 success: false,
                 message: '이미 다른 곳에서 로그인되어 있습니다.',
@@ -125,6 +134,8 @@ router.post('/login', async (req, res) => {
                 }
             });
         }
+
+        console.log(`[Operator] 로그인 진행: ${username}`);
 
         // 로그인 성공 - 세션 정보 업데이트
         await collection.updateOne(
@@ -139,6 +150,8 @@ router.post('/login', async (req, res) => {
             }
         );
 
+        console.log(`[Operator] 로그인 성공: ${username}`);
+
         res.json({
             success: true,
             message: '로그인 성공',
@@ -152,7 +165,7 @@ router.post('/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('운영자 로그인 오류:', error);
+        console.error('[Operator] 운영자 로그인 오류:', error);
         res.status(500).json({
             success: false,
             message: '로그인 처리 중 오류가 발생했습니다.'
