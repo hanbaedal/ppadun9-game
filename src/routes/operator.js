@@ -124,13 +124,6 @@ router.post('/login', async (req, res) => {
         // 중복 로그인 체크
         if (operator.isLoggedIn && !forceLogin) {
             console.log(`[Operator] 중복 로그인 감지: ${username}, isLoggedIn: ${operator.isLoggedIn}`);
-            console.log(`[Operator] 운영자 데이터:`, JSON.stringify(operator, null, 2));
-            
-            // 데이터베이스 전체 상태 확인
-            const allOperators = await collection.find({}).toArray();
-            const loggedInOperators = allOperators.filter(op => op.isLoggedIn);
-            console.log(`[Operator] 전체 운영자 수: ${allOperators.length}, 로그인된 운영자 수: ${loggedInOperators.length}`);
-            
             return res.status(409).json({
                 success: false,
                 message: '이미 다른 곳에서 로그인되어 있습니다.',
@@ -491,9 +484,12 @@ router.post('/force-logout/:sessionId', async (req, res) => {
             { 
                 $set: { 
                     isLoggedIn: false,
-                    sessionTerminated: true,
-                    terminationReason: reason,
-                    terminatedAt: new Date()
+                    lastLogoutAt: new Date(),
+                    updatedAt: getKoreanTime()
+                },
+                $unset: {
+                    currentSessionId: "",
+                    sessionStartTime: ""
                 }
             }
         );
@@ -1032,6 +1028,57 @@ router.get('/debug/db-status', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '데이터베이스 상태 확인 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 데이터베이스 상태 정리 (긴급 상황용)
+router.post('/debug/fix-db-state', async (req, res) => {
+    try {
+        console.log('[Operator] 데이터베이스 상태 정리 요청');
+        
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 강제 로그아웃된 운영자들의 isLoggedIn을 false로 수정
+        const forceLogoutResult = await collection.updateMany(
+            { isForceLogout: true, isLoggedIn: true },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    updatedAt: getKoreanTime()
+                }
+            }
+        );
+
+        console.log(`[Operator] 강제 로그아웃 상태 정리 완료: ${forceLogoutResult.modifiedCount}개`);
+
+        // 전체 상태 확인
+        const totalCount = await collection.countDocuments();
+        const loggedInCount = await collection.countDocuments({ isLoggedIn: true });
+        const forceLogoutCount = await collection.countDocuments({ isForceLogout: true });
+
+        const fixedState = {
+            totalOperators: totalCount,
+            loggedInOperators: loggedInCount,
+            forceLogoutOperators: forceLogoutCount,
+            fixedCount: forceLogoutResult.modifiedCount
+        };
+
+        console.log('[Operator] 정리된 데이터베이스 상태:', fixedState);
+
+        res.json({
+            success: true,
+            message: '데이터베이스 상태가 정리되었습니다.',
+            data: fixedState
+        });
+
+    } catch (error) {
+        console.error('[Operator] 데이터베이스 상태 정리 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '데이터베이스 상태 정리 중 오류가 발생했습니다.',
             error: error.message
         });
     }
