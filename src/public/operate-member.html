@@ -1671,7 +1671,7 @@
         // 활성 세션 목록 새로고침
         async function refreshActiveSessions() {
             try {
-                const response = await fetch('/api/operate-member/sessions/active');
+                const response = await fetch('/api/operator/sessions/active');
                 const result = await response.json();
 
                 if (result.success) {
@@ -1737,7 +1737,7 @@
             }
 
             try {
-                const response = await fetch(`/api/operate-member/force-logout/${sessionId}`, {
+                const response = await fetch(`/api/operator/force-logout/${sessionId}`, {
                     method: 'POST'
                 });
                 const result = await response.json();
@@ -1767,7 +1767,7 @@
                     return;
                 }
                 
-                const response = await fetch(`/api/operate-member/session/clear/${username}`, {
+                const response = await fetch(`/api/operator/session/clear/${username}`, {
                     method: 'POST'
                 });
                 const result = await response.json();
@@ -1793,7 +1793,7 @@
             }
 
             try {
-                const response = await fetch('/api/operate-member/session/clear-all', {
+                const response = await fetch('/api/operator/session/clear-all', {
                     method: 'POST'
                 });
                 const result = await response.json();
