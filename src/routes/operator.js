@@ -575,7 +575,6 @@ router.post('/logout', async (req, res) => {
         );
 
         if (result.matchedCount > 0) {
-            console.log(`[Operator] 로그아웃 성공: ${username}`);
             res.json({
                 success: true,
                 message: '로그아웃되었습니다.'
