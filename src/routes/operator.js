@@ -165,6 +165,8 @@ router.post('/force-login', async (req, res) => {
     try {
         const { username, password } = req.body;
         
+        console.log(`[Operator] 강제 로그인 요청: ${username}`);
+        
         // 필수 필드 검증
         if (!username || !password) {
             return res.status(400).json({
@@ -193,61 +195,71 @@ router.post('/force-login', async (req, res) => {
             });
         }
 
-        // 승인 상태 확인
-        if (!operator.isApproved) {
-            return res.status(401).json({
-                success: false,
-                message: '관리자 승인 대기 중입니다.'
-            });
-        }
-
-        // 비밀번호 확인 (평문 비교)
-        if (password !== operator.password) {
+        // 비밀번호 확인
+        if (operator.password !== password) {
             return res.status(401).json({
                 success: false,
                 message: '아이디 또는 비밀번호가 올바르지 않습니다.'
             });
         }
 
-        // 기존 세션 정보 저장 (감사 목적)
-        const previousSession = {
-            lastLoginAt: operator.lastLoginAt,
-            sessionId: operator.currentSessionId,
-            terminatedAt: new Date()
-        };
-
-        // 강제 로그인 - 기존 세션 종료 후 새 세션 시작
+        // 기존 세션 정보 초기화
         await collection.updateOne(
-            { _id: operator._id },
+            { username },
             { 
                 $set: { 
-                    lastLoginAt: new Date(),
-                    isLoggedIn: true,
-                    loginCount: (operator.loginCount || 0) + 1,
-                    currentSessionId: generateSessionId(),
-                    previousSession: previousSession
+                    isLoggedIn: false,
+                    currentSessionId: null,
+                    lastLoginAt: null,
+                    loginCount: 0,
+                    sessionStartTime: null,
+                    updatedAt: getKoreanTime()
+                },
+                $unset: {
+                    currentSessionId: "",
+                    lastLoginAt: "",
+                    sessionStartTime: ""
                 }
             }
         );
 
+        // 새로운 세션으로 로그인
+        const sessionId = generateSessionId();
+        const loginTime = getKoreanTime();
+        
+        await collection.updateOne(
+            { username },
+            { 
+                $set: { 
+                    isLoggedIn: true,
+                    currentSessionId: sessionId,
+                    lastLoginAt: loginTime,
+                    sessionStartTime: loginTime,
+                    loginCount: (operator.loginCount || 0) + 1,
+                    updatedAt: loginTime
+                }
+            }
+        );
+
+        console.log(`[Operator] 강제 로그인 성공: ${username}`);
+        
+        // 로그인 성공 응답 (비밀번호 제외)
+        const { password: _, ...operatorData } = operator;
         res.json({
             success: true,
             message: '기존 세션을 종료하고 새로운 로그인이 성공했습니다.',
             data: {
-                _id: operator._id,
-                username: operator.username,
-                name: operator.name,
-                role: operator.role,
-                sessionId: generateSessionId(),
-                previousSession: previousSession
+                ...operatorData,
+                currentSessionId: sessionId,
+                lastLoginAt: loginTime
             }
         });
-
+        
     } catch (error) {
-        console.error('강제 로그인 오류:', error);
+        console.error('[Operator] 강제 로그인 오류:', error);
         res.status(500).json({
             success: false,
-            message: '강제 로그인 처리 중 오류가 발생했습니다.'
+            message: '강제 로그인 중 오류가 발생했습니다.'
         });
     }
 });
