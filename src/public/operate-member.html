@@ -1019,11 +1019,18 @@
                 // 로컬 스토리지에서 로그인 정보 삭제
                 localStorage.removeItem('operatorLoginInfo');
                 
-                // UI 상태 업데이트
+                // UI 상태 업데이트 - 로그인 폼으로 돌아가기
                 document.getElementById('operatorInfo').textContent = '';
                 document.getElementById('loginStatus').style.display = 'none';
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('assignedGamesRow').style.display = 'none';
+                
+                // 로그인 폼 초기화
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                
+                // 성공 메시지 표시
+                alert('로그아웃되었습니다.');
                 
             } catch (error) {
                 console.error('로그아웃 오류:', error);
@@ -1033,6 +1040,12 @@
                 document.getElementById('loginStatus').style.display = 'none';
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('assignedGamesRow').style.display = 'none';
+                
+                // 로그인 폼 초기화
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                
+                alert('로그아웃 처리 중 오류가 발생했습니다.');
             }
         }
 
