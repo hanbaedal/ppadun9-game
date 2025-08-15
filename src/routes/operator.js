@@ -67,6 +67,102 @@ router.post('/register', async (req, res) => {
 // 운영자 로그인
 router.post('/login', async (req, res) => {
     try {
+        const { username, password, forceLogin = false } = req.body;
+        
+        // 필수 필드 검증
+        if (!username || !password) {
+            return res.status(400).json({
+                success: false,
+                message: '아이디와 비밀번호를 입력해주세요.'
+            });
+        }
+
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 운영자 정보 조회
+        const operator = await collection.findOne({ username });
+        if (!operator) {
+            return res.status(401).json({
+                success: false,
+                message: '아이디 또는 비밀번호가 올바르지 않습니다.'
+            });
+        }
+
+        // 계정 활성화 확인
+        if (!operator.isActive) {
+            return res.status(401).json({
+                success: false,
+                message: '비활성화된 계정입니다.'
+            });
+        }
+
+        // 승인 상태 확인
+        if (!operator.isApproved) {
+            return res.status(401).json({
+                success: false,
+                message: '관리자 승인 대기 중입니다.'
+            });
+        }
+
+        // 비밀번호 확인 (평문 비교)
+        if (password !== operator.password) {
+            return res.status(401).json({
+                success: false,
+                message: '아이디 또는 비밀번호가 올바르지 않습니다.'
+            });
+        }
+
+        // 중복 로그인 체크
+        if (operator.isLoggedIn && !forceLogin) {
+            return res.status(409).json({
+                success: false,
+                message: '이미 다른 곳에서 로그인되어 있습니다.',
+                code: 'DUPLICATE_LOGIN',
+                data: {
+                    lastLoginAt: operator.lastLoginAt,
+                    currentSession: true
+                }
+            });
+        }
+
+        // 로그인 성공 - 세션 정보 업데이트
+        await collection.updateOne(
+            { _id: operator._id },
+            { 
+                $set: { 
+                    lastLoginAt: new Date(),
+                    isLoggedIn: true,
+                    loginCount: (operator.loginCount || 0) + 1,
+                    currentSessionId: generateSessionId()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: '로그인 성공',
+            data: {
+                _id: operator._id,
+                username: operator.username,
+                name: operator.name,
+                role: operator.role,
+                sessionId: generateSessionId()
+            }
+        });
+
+    } catch (error) {
+        console.error('운영자 로그인 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '로그인 처리 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 강제 로그인 (기존 세션 종료 후 새 로그인)
+router.post('/force-login', async (req, res) => {
+    try {
         const { username, password } = req.body;
         
         // 필수 필드 검증
@@ -113,33 +209,280 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // 로그인 성공 - 세션 정보 업데이트
+        // 기존 세션 정보 저장 (감사 목적)
+        const previousSession = {
+            lastLoginAt: operator.lastLoginAt,
+            sessionId: operator.currentSessionId,
+            terminatedAt: new Date()
+        };
+
+        // 강제 로그인 - 기존 세션 종료 후 새 세션 시작
         await collection.updateOne(
             { _id: operator._id },
             { 
                 $set: { 
                     lastLoginAt: new Date(),
-                    isLoggedIn: true
+                    isLoggedIn: true,
+                    loginCount: (operator.loginCount || 0) + 1,
+                    currentSessionId: generateSessionId(),
+                    previousSession: previousSession
                 }
             }
         );
 
         res.json({
             success: true,
-            message: '로그인 성공',
+            message: '기존 세션을 종료하고 새로운 로그인이 성공했습니다.',
             data: {
                 _id: operator._id,
                 username: operator.username,
                 name: operator.name,
-                role: operator.role
+                role: operator.role,
+                sessionId: generateSessionId(),
+                previousSession: previousSession
             }
         });
 
     } catch (error) {
-        console.error('운영자 로그인 오류:', error);
+        console.error('강제 로그인 오류:', error);
         res.status(500).json({
             success: false,
-            message: '로그인 처리 중 오류가 발생했습니다.'
+            message: '강제 로그인 처리 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 세션 ID 생성 함수
+function generateSessionId() {
+    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// 세션 유효성 검사
+router.get('/session/validate/:sessionId', async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        
+        if (!sessionId) {
+            return res.status(400).json({
+                success: false,
+                message: '세션 ID가 필요합니다.'
+            });
+        }
+
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 세션 ID로 운영자 조회
+        const operator = await collection.findOne({ 
+            currentSessionId: sessionId,
+            isLoggedIn: true
+        });
+
+        if (!operator) {
+            return res.status(401).json({
+                success: false,
+                message: '유효하지 않은 세션입니다.',
+                code: 'INVALID_SESSION'
+            });
+        }
+
+        // 세션 유효성 확인 (24시간 이내 로그인)
+        const lastLoginTime = new Date(operator.lastLoginAt);
+        const currentTime = new Date();
+        const sessionAge = currentTime - lastLoginTime;
+        const maxSessionAge = 24 * 60 * 60 * 1000; // 24시간
+
+        if (sessionAge > maxSessionAge) {
+            // 세션 만료 - 자동 로그아웃
+            await collection.updateOne(
+                { _id: operator._id },
+                { 
+                    $set: { 
+                        isLoggedIn: false,
+                        sessionExpired: true
+                    }
+                }
+            );
+
+            return res.status(401).json({
+                success: false,
+                message: '세션이 만료되었습니다.',
+                code: 'SESSION_EXPIRED'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: '유효한 세션입니다.',
+            data: {
+                _id: operator._id,
+                username: operator.username,
+                name: operator.name,
+                role: operator.role,
+                sessionId: operator.currentSessionId,
+                lastLoginAt: operator.lastLoginAt,
+                sessionAge: Math.floor(sessionAge / (1000 * 60)) // 분 단위
+            }
+        });
+
+    } catch (error) {
+        console.error('세션 유효성 검사 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '세션 검사 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 현재 로그인된 운영자 목록 조회
+router.get('/sessions/active', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 현재 로그인된 운영자들 조회
+        const activeSessions = await collection.find({ 
+            isLoggedIn: true 
+        }).toArray();
+
+        // 세션 정보 정리
+        const sessions = activeSessions.map(operator => ({
+            _id: operator._id,
+            username: operator.username,
+            name: operator.name,
+            role: operator.role,
+            sessionId: operator.currentSessionId,
+            lastLoginAt: operator.lastLoginAt,
+            loginCount: operator.loginCount || 0,
+            sessionAge: Math.floor((new Date() - new Date(operator.lastLoginAt)) / (1000 * 60)) // 분 단위
+        }));
+
+        res.json({
+            success: true,
+            message: `${sessions.length}개의 활성 세션이 있습니다.`,
+            data: sessions
+        });
+
+    } catch (error) {
+        console.error('활성 세션 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '활성 세션 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 특정 운영자 세션 강제 종료
+router.post('/session/terminate/:operatorId', async (req, res) => {
+    try {
+        const { operatorId } = req.params;
+        const { reason = '관리자에 의한 강제 종료' } = req.body;
+
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 운영자 정보 조회
+        const operator = await collection.findOne({ _id: new ObjectId(operatorId) });
+        if (!operator) {
+            return res.status(404).json({
+                success: false,
+                message: '운영자를 찾을 수 없습니다.'
+            });
+        }
+
+        if (!operator.isLoggedIn) {
+            return res.status(400).json({
+                success: false,
+                message: '이미 로그아웃된 운영자입니다.'
+            });
+        }
+
+        // 세션 강제 종료
+        await collection.updateOne(
+            { _id: new ObjectId(operatorId) },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    sessionTerminated: true,
+                    terminationReason: reason,
+                    terminatedAt: new Date()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: `${operator.name}(${operator.username})의 세션이 강제 종료되었습니다.`,
+            data: {
+                operatorId: operator._id,
+                username: operator.username,
+                name: operator.name,
+                terminationReason: reason,
+                terminatedAt: new Date()
+            }
+        });
+
+    } catch (error) {
+        console.error('세션 강제 종료 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '세션 강제 종료 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 세션 ID로 강제 로그아웃
+router.post('/force-logout/:sessionId', async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const { reason = '관리자에 의한 강제 로그아웃' } = req.body;
+
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 세션 ID로 운영자 조회
+        const operator = await collection.findOne({ 
+            currentSessionId: sessionId,
+            isLoggedIn: true
+        });
+
+        if (!operator) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 세션을 찾을 수 없습니다.'
+            });
+        }
+
+        // 강제 로그아웃
+        await collection.updateOne(
+            { currentSessionId: sessionId },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    sessionTerminated: true,
+                    terminationReason: reason,
+                    terminatedAt: new Date()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: `${operator.name}(${operator.username})의 세션이 강제 로그아웃되었습니다.`,
+            data: {
+                sessionId: sessionId,
+                username: operator.username,
+                name: operator.name,
+                terminationReason: reason,
+                terminatedAt: new Date()
+            }
+        });
+
+    } catch (error) {
+        console.error('강제 로그아웃 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '강제 로그아웃 중 오류가 발생했습니다.'
         });
     }
 });
