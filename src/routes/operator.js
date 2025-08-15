@@ -565,57 +565,16 @@ router.post('/logout', async (req, res) => {
         const db = getDb();
         const collection = db.collection('operate-member');
 
-        // 로그아웃 전 상태 확인
-        const beforeLogout = await collection.findOne({ username });
-        console.log(`[Operator] 로그아웃 전 상태:`, {
-            username: beforeLogout?.username,
-            isLoggedIn: beforeLogout?.isLoggedIn,
-            lastLoginAt: beforeLogout?.lastLoginAt
-        });
-
         // 로그아웃 상태 업데이트
         const result = await collection.updateOne(
             { username },
             { 
                 $set: { 
                     isLoggedIn: false,
-                    lastLogoutAt: new Date(),
-                    updatedAt: getKoreanTime()
-                },
-                $unset: {
-                    currentSessionId: "",
-                    sessionStartTime: ""
+                    lastLogoutAt: new Date()
                 }
             }
         );
-
-        console.log(`[Operator] 로그아웃 업데이트 결과:`, {
-            matchedCount: result.matchedCount,
-            modifiedCount: result.modifiedCount,
-            upsertedCount: result.upsertedCount
-        });
-
-        // 강제로 데이터베이스 상태 확인 및 재시도
-        if (result.modifiedCount === 0 && result.matchedCount > 0) {
-            console.log(`[Operator] 업데이트가 반영되지 않음, 강제 재시도`);
-            
-            // 강제 업데이트 재시도
-            const forceResult = await collection.updateOne(
-                { username },
-                { 
-                    $set: { 
-                        isLoggedIn: false,
-                        lastLogoutAt: new Date()
-                    }
-                },
-                { upsert: false }
-            );
-            
-            console.log(`[Operator] 강제 업데이트 결과:`, {
-                matchedCount: forceResult.matchedCount,
-                modifiedCount: forceResult.modifiedCount
-            });
-        }
 
         if (result.matchedCount > 0) {
             // 로그아웃 후 상태 확인
@@ -1079,6 +1038,144 @@ router.post('/debug/fix-db-state', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '데이터베이스 상태 정리 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 현재 데이터베이스 상태 즉시 정리 (긴급 상황용)
+router.post('/debug/cleanup-now', async (req, res) => {
+    try {
+        console.log('[Operator] 현재 데이터베이스 상태 즉시 정리 요청');
+        
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 모든 강제 로그아웃 관련 필드 제거
+        const cleanupResult = await collection.updateMany(
+            { isForceLogout: true },
+            { 
+                $unset: {
+                    forceLogoutAt: "",
+                    forceLogoutBy: "",
+                    isForceLogout: ""
+                }
+            }
+        );
+
+        console.log(`[Operator] 강제 로그아웃 필드 정리 완료: ${cleanupResult.modifiedCount}개`);
+
+        // 전체 상태 확인
+        const totalCount = await collection.countDocuments();
+        const loggedInCount = await collection.countDocuments({ isLoggedIn: true });
+        const forceLogoutCount = await collection.countDocuments({ isForceLogout: true });
+
+        const cleanedState = {
+            totalOperators: totalCount,
+            loggedInOperators: loggedInCount,
+            forceLogoutOperators: forceLogoutCount,
+            cleanedCount: cleanupResult.modifiedCount
+        };
+
+        console.log('[Operator] 정리된 데이터베이스 상태:', cleanedState);
+
+        res.json({
+            success: true,
+            message: '데이터베이스 상태가 즉시 정리되었습니다.',
+            data: cleanedState
+        });
+
+    } catch (error) {
+        console.error('[Operator] 데이터베이스 상태 즉시 정리 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '데이터베이스 상태 즉시 정리 중 오류가 발생했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 로그아웃 테스트 (디버깅용)
+router.post('/debug/test-logout', async (req, res) => {
+    try {
+        const { username } = req.body;
+        
+        console.log(`[Operator] 로그아웃 테스트 요청: ${username}`);
+        
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: '사용자명이 필요합니다.'
+            });
+        }
+
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        // 로그아웃 전 상태 확인
+        const beforeLogout = await collection.findOne({ username });
+        if (!beforeLogout) {
+            return res.status(404).json({
+                success: false,
+                message: '운영자를 찾을 수 없습니다.'
+            });
+        }
+
+        console.log(`[Operator] 로그아웃 전 상태:`, {
+            username: beforeLogout.username,
+            isLoggedIn: beforeLogout.isLoggedIn,
+            lastLoginAt: beforeLogout.lastLoginAt
+        });
+
+        // 간단한 로그아웃 업데이트
+        const result = await collection.updateOne(
+            { username },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    lastLogoutAt: new Date()
+                }
+            }
+        );
+
+        console.log(`[Operator] 테스트 로그아웃 결과:`, {
+            matchedCount: result.matchedCount,
+            modifiedCount: result.modifiedCount,
+            acknowledged: result.acknowledged
+        });
+
+        // 로그아웃 후 상태 확인
+        const afterLogout = await collection.findOne({ username });
+        console.log(`[Operator] 로그아웃 후 상태:`, {
+            username: afterLogout.username,
+            isLoggedIn: afterLogout.isLoggedIn,
+            lastLogoutAt: afterLogout.lastLogoutAt
+        });
+
+        res.json({
+            success: true,
+            message: '로그아웃 테스트 완료',
+            data: {
+                before: {
+                    isLoggedIn: beforeLogout.isLoggedIn,
+                    lastLoginAt: beforeLogout.lastLoginAt
+                },
+                after: {
+                    isLoggedIn: afterLogout.isLoggedIn,
+                    lastLogoutAt: afterLogout.lastLogoutAt
+                },
+                updateResult: {
+                    matchedCount: result.matchedCount,
+                    modifiedCount: result.modifiedCount
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('[Operator] 로그아웃 테스트 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '로그아웃 테스트 중 오류가 발생했습니다.',
             error: error.message
         });
     }
