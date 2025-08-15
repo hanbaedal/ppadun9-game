@@ -901,7 +901,7 @@ router.put('/:date/:gameNumber/assign', async (req, res) => {
     }
 });
 
-// 경기에서 운영자 할당 해제
+// 경기 할당 해제
 router.put('/:date/:gameNumber/unassign', async (req, res) => {
     try {
         const db = getDb();
@@ -909,33 +909,98 @@ router.put('/:date/:gameNumber/unassign', async (req, res) => {
         
         const { date, gameNumber } = req.params;
         
+        console.log(`[TeamGames] 경기 할당 해제 요청: ${date} ${gameNumber}경기`);
+        
+        // 경기에서 운영자 할당 해제
         const result = await collection.findOneAndUpdate(
             { date, gameNumber: parseInt(gameNumber) },
             { 
                 $unset: { assignedOperator: "" },
-                $set: { updatedAt: getKoreanTime() }
+                $set: { 
+                    updatedAt: getKoreanTime(),
+                    isSelected: false // 선택 상태도 해제
+                }
             },
             { returnDocument: 'after' }
         );
         
-        if (!result.value) {
-            return res.status(404).json({
+        if (result.value) {
+            console.log(`[TeamGames] 경기 할당 해제 완료: ${date} ${gameNumber}경기`);
+            res.json({
+                success: true,
+                message: '경기 할당이 해제되었습니다.',
+                data: result.value
+            });
+        } else {
+            res.status(404).json({
                 success: false,
-                message: '해당 경기를 찾을 수 없습니다.'
+                message: '경기를 찾을 수 없습니다.'
             });
         }
         
-        res.json({
-            success: true,
-            message: '경기 할당이 해제되었습니다.',
-            data: result.value
-        });
     } catch (error) {
-        console.error('[TeamGames] 운영자 할당 해제 오류:', error);
+        console.error('[TeamGames] 경기 할당 해제 오류:', error);
         res.status(500).json({
             success: false,
-            message: '운영자 할당 해제에 실패했습니다.',
-            error: error.message
+            message: '경기 할당 해제 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 경기 배팅 시작/중지
+router.put('/:date/:gameNumber/betting', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        const { date, gameNumber } = req.params;
+        const { action, bettingStart, bettingStop } = req.body;
+        
+        console.log(`[TeamGames] 배팅 ${action} 요청: ${date} ${gameNumber}경기`);
+        
+        // 경기 상태 업데이트
+        const updateData = {
+            bettingStart: bettingStart,
+            bettingStop: bettingStop,
+            updatedAt: getKoreanTime()
+        };
+        
+        // 배팅 시작 시
+        if (action === 'start') {
+            updateData.bettingStartTime = getKoreanTime();
+            updateData.progressStatus = '경기중';
+        }
+        // 배팅 중지 시
+        else if (action === 'stop') {
+            updateData.bettingStopTime = getKoreanTime();
+            updateData.progressStatus = '경기끝';
+        }
+        
+        const result = await collection.findOneAndUpdate(
+            { date, gameNumber: parseInt(gameNumber) },
+            { $set: updateData },
+            { returnDocument: 'after' }
+        );
+        
+        if (result.value) {
+            console.log(`[TeamGames] 배팅 ${action} 완료: ${date} ${gameNumber}경기`);
+            res.json({
+                success: true,
+                message: `배팅이 ${action === 'start' ? '시작' : '중지'}되었습니다.`,
+                data: result.value
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: '경기를 찾을 수 없습니다.'
+            });
+        }
+        
+    } catch (error) {
+        console.error('[TeamGames] 배팅 처리 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '배팅 처리 중 오류가 발생했습니다.'
         });
     }
 });
