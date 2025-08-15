@@ -762,4 +762,105 @@ router.get('/all', async (req, res) => {
     }
 });
 
+// 운영자 세션 강제 정리 (긴급 상황용)
+router.post('/session/clear/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        
+        console.log(`[Operator] 세션 강제 정리 요청: ${username}`);
+        
+        const db = getDb();
+        const collection = db.collection('operate-member');
+        
+        // 운영자 정보 조회
+        const operator = await collection.findOne({ username });
+        if (!operator) {
+            return res.status(404).json({
+                success: false,
+                message: '운영자를 찾을 수 없습니다.'
+            });
+        }
+        
+        // 세션 정보 완전 초기화
+        await collection.updateOne(
+            { username },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    currentSessionId: null,
+                    lastLoginAt: null,
+                    loginCount: 0,
+                    sessionStartTime: null,
+                    updatedAt: getKoreanTime()
+                },
+                $unset: {
+                    currentSessionId: "",
+                    lastLoginAt: "",
+                    sessionStartTime: ""
+                }
+            }
+        );
+        
+        console.log(`[Operator] 세션 강제 정리 완료: ${username}`);
+        
+        res.json({
+            success: true,
+            message: '세션이 성공적으로 정리되었습니다. 다시 로그인해주세요.',
+            data: { username }
+        });
+        
+    } catch (error) {
+        console.error('[Operator] 세션 강제 정리 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '세션 정리 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 모든 운영자 세션 초기화 (긴급 상황용)
+router.post('/session/clear-all', async (req, res) => {
+    try {
+        console.log('[Operator] 모든 운영자 세션 초기화 요청');
+        
+        const db = getDb();
+        const collection = db.collection('operate-member');
+        
+        // 모든 운영자의 세션 정보 초기화
+        const result = await collection.updateMany(
+            { isLoggedIn: true },
+            { 
+                $set: { 
+                    isLoggedIn: false,
+                    currentSessionId: null,
+                    lastLoginAt: null,
+                    loginCount: 0,
+                    sessionStartTime: null,
+                    updatedAt: getKoreanTime()
+                },
+                $unset: {
+                    currentSessionId: "",
+                    lastLoginAt: "",
+                    sessionStartTime: ""
+                }
+            }
+        );
+        
+        console.log(`[Operator] 모든 세션 초기화 완료: ${result.modifiedCount}명`);
+        
+        res.json({
+            success: true,
+            message: `${result.modifiedCount}명의 운영자 세션이 초기화되었습니다.`,
+            data: { clearedCount: result.modifiedCount }
+        });
+        
+    } catch (error) {
+        console.error('[Operator] 모든 세션 초기화 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '세션 초기화 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 module.exports = router;

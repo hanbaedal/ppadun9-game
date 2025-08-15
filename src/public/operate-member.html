@@ -73,6 +73,15 @@
                             <i class="fas fa-sign-in-alt me-1"></i>로그인
                         </button>
                     </div>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-warning me-2" onclick="clearSession()">
+                            <i class="fas fa-broom me-1"></i>세션 정리
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="clearAllSessions()">
+                            <i class="fas fa-trash me-1"></i>모든 세션 정리
+                        </button>
+                        <small class="text-light d-block mt-1">로그인 문제 시 사용</small>
+                    </div>
                 </div>
                 <button class="btn btn-light" onclick="location.href='index.html'">
                     <i class="fas fa-home me-1"></i>홈으로
@@ -1704,6 +1713,68 @@
             } catch (error) {
                 console.error('강제 로그아웃 오류:', error);
                 alert('강제 로그아웃에 실패했습니다.');
+            }
+        }
+
+        // 세션 정리 (현재 로그인된 운영자의 세션만 제거)
+        async function clearSession() {
+            try {
+                const username = document.getElementById('loginUsername').value;
+                if (!username) {
+                    alert('아이디를 입력해주세요.');
+                    return;
+                }
+                
+                if (!confirm(`운영자 "${username}"의 세션을 정리하시겠습니까?`)) {
+                    return;
+                }
+                
+                const response = await fetch(`/api/operate-member/session/clear/${username}`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('세션이 성공적으로 정리되었습니다. 다시 로그인해주세요.');
+                    // 로그인 폼 초기화
+                    document.getElementById('loginUsername').value = '';
+                    document.getElementById('loginPassword').value = '';
+                } else {
+                    alert(result.message || '세션 정리에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('세션 정리 오류:', error);
+                alert('세션 정리에 실패했습니다.');
+            }
+        }
+
+        // 모든 세션 정리 (모든 운영자의 세션 제거)
+        async function clearAllSessions() {
+            if (!confirm('모든 운영자의 세션을 정리하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/operate-member/session/clear-all', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('모든 운영자의 세션이 정리되었습니다.');
+                    // 로그인 폼 초기화
+                    document.getElementById('loginUsername').value = '';
+                    document.getElementById('loginPassword').value = '';
+                    // 활성 세션 목록 새로고침 (모달이 열려있다면)
+                    if (document.getElementById('activeSessionsModal').classList.contains('show')) {
+                        refreshActiveSessions();
+                    }
+                } else {
+                    alert(result.message || '모든 세션 정리에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('모든 세션 정리 오류:', error);
+                alert('모든 세션 정리에 실패했습니다.');
             }
         }
     </script>
