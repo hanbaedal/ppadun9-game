@@ -1067,7 +1067,7 @@
                     const operator = JSON.parse(loginInfo);
                     
                     // 서버에 로그아웃 요청
-                    const response = await fetch('/api/operate-member/logout', {
+                    const response = await fetch('/api/operator/logout', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: operator.username })
