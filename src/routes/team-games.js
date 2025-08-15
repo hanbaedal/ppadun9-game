@@ -813,4 +813,131 @@ router.put('/:date/:gameNumber', async (req, res) => {
     }
 });
 
+// 운영자에게 할당된 경기 조회
+router.get('/assigned/:operatorId', async (req, res) => {
+    try {
+        console.log('[TeamGames] 운영자 할당 경기 조회 요청:', req.params.operatorId);
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        const { operatorId } = req.params;
+        
+        // 해당 운영자에게 할당된 경기 조회
+        const assignedGames = await collection.find({ 
+            assignedOperator: operatorId 
+        }).toArray();
+        
+        console.log('[TeamGames] 할당된 경기 수:', assignedGames.length);
+        
+        res.json({
+            success: true,
+            data: assignedGames
+        });
+    } catch (error) {
+        console.error('[TeamGames] 할당된 경기 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '할당된 경기 조회에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 경기에 운영자 할당
+router.put('/:date/:gameNumber/assign', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        const { date, gameNumber } = req.params;
+        const { operatorId } = req.body;
+        
+        // 기존 할당 해제 (다른 운영자에게 할당된 경우)
+        if (operatorId) {
+            await collection.updateMany(
+                { 
+                    date, 
+                    gameNumber: parseInt(gameNumber),
+                    assignedOperator: { $exists: true }
+                },
+                { 
+                    $unset: { assignedOperator: "" },
+                    $set: { updatedAt: getKoreanTime() }
+                }
+            );
+        }
+        
+        // 새로운 할당 설정
+        const result = await collection.findOneAndUpdate(
+            { date, gameNumber: parseInt(gameNumber) },
+            { 
+                $set: { 
+                    assignedOperator: operatorId || null,
+                    updatedAt: getKoreanTime()
+                }
+            },
+            { returnDocument: 'after' }
+        );
+        
+        if (!result.value) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 경기를 찾을 수 없습니다.'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: operatorId ? '운영자가 할당되었습니다.' : '운영자 할당이 해제되었습니다.',
+            data: result.value
+        });
+    } catch (error) {
+        console.error('[TeamGames] 운영자 할당 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '운영자 할당에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
+// 경기에서 운영자 할당 해제
+router.put('/:date/:gameNumber/unassign', async (req, res) => {
+    try {
+        const db = getDb();
+        const collection = db.collection('team-games');
+        
+        const { date, gameNumber } = req.params;
+        
+        const result = await collection.findOneAndUpdate(
+            { date, gameNumber: parseInt(gameNumber) },
+            { 
+                $unset: { assignedOperator: "" },
+                $set: { updatedAt: getKoreanTime() }
+            },
+            { returnDocument: 'after' }
+        );
+        
+        if (!result.value) {
+            return res.status(404).json({
+                success: false,
+                message: '해당 경기를 찾을 수 없습니다.'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: '경기 할당이 해제되었습니다.',
+            data: result.value
+        });
+    } catch (error) {
+        console.error('[TeamGames] 운영자 할당 해제 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '운영자 할당 해제에 실패했습니다.',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router; 

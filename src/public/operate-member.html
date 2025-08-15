@@ -57,9 +57,42 @@
                 <p class="mb-0">게임 운영 시스템 운영자 정보를 관리합니다.</p>
             </div>
             <div class="col-auto">
+                <div id="loginStatus" style="display: none;">
+                    <div class="d-flex align-items-center">
+                        <span class="me-3" id="operatorInfo"></span>
+                        <button class="btn btn-light me-2" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i>로그아웃
+                        </button>
+                    </div>
+                </div>
+                <div id="loginForm">
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control me-2" id="loginUsername" placeholder="아이디" style="width: 120px;">
+                        <input type="password" class="form-control me-2" id="loginPassword" placeholder="비밀번호" style="width: 120px;">
+                        <button class="btn btn-light me-2" onclick="login()">
+                            <i class="fas fa-sign-in-alt me-1"></i>로그인
+                        </button>
+                    </div>
+                </div>
                 <button class="btn btn-light" onclick="location.href='index.html'">
                     <i class="fas fa-home me-1"></i>홈으로
                 </button>
+            </div>
+        </div>
+
+        <!-- 할당된 경기 정보 (로그인 후 표시) -->
+        <div class="row mt-3" id="assignedGamesRow" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-gamepad me-2"></i>할당된 경기</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="assignedGamesInfo">
+                            <!-- 할당된 경기 정보가 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -363,6 +396,41 @@
         </div>
     </div>
 
+    <!-- 경기 할당 모달 -->
+    <div class="modal fade" id="gameAssignmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">경기 할당</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6>운영자 정보</h6>
+                        <p class="mb-1"><strong>이름:</strong> <span id="assignOperatorName"></span></p>
+                        <p class="mb-1"><strong>아이디:</strong> <span id="assignOperatorUsername"></span></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>날짜 선택</h6>
+                        <input type="date" class="form-control" id="assignGameDate">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>경기 목록</h6>
+                        <div id="availableGamesList">
+                            <!-- 사용 가능한 경기 목록이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-success" onclick="saveGameAssignment()">할당 저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let currentPage = 1;
@@ -373,6 +441,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadStats();
             loadOperators();
+            checkLoginStatus(); // 로그인 상태 확인
         });
 
         // 통계 로드
@@ -472,6 +541,9 @@
                         </button>
                         <button class="btn btn-sm btn-outline-success btn-action" onclick="approveOperator('${operator._id}', ${!operator.isApproved})">
                             <i class="fas fa-${operator.isApproved ? 'times' : 'check'}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info btn-action" onclick="assignGames('${operator._id}', '${operator.username}', '${operator.name}')">
+                            <i class="fas fa-gamepad"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteOperator('${operator._id}')">
                             <i class="fas fa-trash"></i>
@@ -786,6 +858,403 @@
             if (!dateString) return '-';
             const date = new Date(dateString);
             return date.toLocaleDateString('ko-KR');
+        }
+
+        // 로그인 상태 확인 및 헤더 업데이트
+        async function checkLoginStatus() {
+            try {
+                // 로컬 스토리지에서 로그인 정보 확인
+                const loginInfo = localStorage.getItem('operatorLoginInfo');
+                
+                if (loginInfo) {
+                    const operator = JSON.parse(loginInfo);
+                    document.getElementById('operatorInfo').textContent = `${operator.username} (${operator.name})`;
+                    document.getElementById('loginStatus').style.display = 'block';
+                    document.getElementById('loginForm').style.display = 'none';
+
+                    // 할당된 경기 정보 로드
+                    await loadAssignedGames(operator._id);
+                    document.getElementById('assignedGamesRow').style.display = 'block';
+                } else {
+                    document.getElementById('loginStatus').style.display = 'none';
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('assignedGamesRow').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('로그인 상태 확인 오류:', error);
+                document.getElementById('loginStatus').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('assignedGamesRow').style.display = 'none';
+            }
+        }
+
+        // 로그인 처리
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                alert('아이디와 비밀번호를 모두 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/operate-member/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    // 로그인 정보를 로컬 스토리지에 저장
+                    localStorage.setItem('operatorLoginInfo', JSON.stringify(result.data));
+                    
+                    alert('로그인 성공!');
+                    await checkLoginStatus(); // 로그인 후 상태 확인
+                    
+                    // 로그인 폼 초기화
+                    document.getElementById('loginUsername').value = '';
+                    document.getElementById('loginPassword').value = '';
+                } else {
+                    alert(result.message || '로그인에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('로그인 오류:', error);
+                alert('로그인에 실패했습니다.');
+            }
+        }
+
+        // 로그아웃 처리
+        async function logout() {
+            try {
+                const loginInfo = localStorage.getItem('operatorLoginInfo');
+                if (loginInfo) {
+                    const operator = JSON.parse(loginInfo);
+                    
+                    const response = await fetch('/api/operate-member/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: operator.username })
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('로그아웃 되었습니다.');
+                    } else {
+                        console.warn('서버 로그아웃 실패:', result.message);
+                    }
+                }
+                
+                // 로컬 스토리지에서 로그인 정보 삭제
+                localStorage.removeItem('operatorLoginInfo');
+                
+                // UI 상태 업데이트
+                document.getElementById('operatorInfo').textContent = '';
+                document.getElementById('loginStatus').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('assignedGamesRow').style.display = 'none';
+                
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+                // 오류가 발생해도 로컬 상태는 정리
+                localStorage.removeItem('operatorLoginInfo');
+                document.getElementById('operatorInfo').textContent = '';
+                document.getElementById('loginStatus').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('assignedGamesRow').style.display = 'none';
+            }
+        }
+
+        // 할당된 경기 정보 로드
+        async function loadAssignedGames(operatorId) {
+            try {
+                const response = await fetch(`/api/operate-member/${operatorId}/assigned-games`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const gamesInfoDiv = document.getElementById('assignedGamesInfo');
+                    gamesInfoDiv.innerHTML = ''; // 기존 내용 지우기
+                    
+                    if (result.data && result.data.length > 0) {
+                        // 할당된 경기들을 날짜별로 그룹화
+                        const gamesByDate = {};
+                        result.data.forEach(game => {
+                            if (!gamesByDate[game.date]) {
+                                gamesByDate[game.date] = [];
+                            }
+                            gamesByDate[game.date].push(game);
+                        });
+                        
+                        // 각 날짜별로 경기 정보 표시
+                        Object.keys(gamesByDate).forEach(date => {
+                            const dateHeader = document.createElement('h6');
+                            dateHeader.className = 'text-primary mb-2';
+                            dateHeader.textContent = `날짜: ${formatDate(date)}`;
+                            gamesInfoDiv.appendChild(dateHeader);
+                            
+                            gamesByDate[date].forEach(game => {
+                                const gameInfo = document.createElement('div');
+                                gameInfo.className = 'card mb-2';
+                                gameInfo.innerHTML = `
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <strong>경기 번호:</strong> ${game.gameNumber}경기<br>
+                                                <strong>매치업:</strong> ${game.matchup}<br>
+                                                <strong>시작 시간:</strong> ${game.startTime || '-'}<br>
+                                                <strong>종료 시간:</strong> ${game.endTime || '-'}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>경기 상태:</strong> 
+                                                <span class="badge ${getGameStatusBadgeClass(game.gameStatus)}">${game.gameStatus}</span><br>
+                                                <strong>진행 상태:</strong> 
+                                                <span class="badge ${getProgressStatusBadgeClass(game.progressStatus)}">${game.progressStatus}</span><br>
+                                                <strong>배팅 상태:</strong> ${game.bettingStart}/${game.bettingStop}<br>
+                                                <strong>예측 결과:</strong> ${game.predictionResult || '-'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                gamesInfoDiv.appendChild(gameInfo);
+                            });
+                        });
+                    } else {
+                        gamesInfoDiv.innerHTML = '<p class="text-muted">할당된 경기가 없습니다.</p>';
+                    }
+                } else {
+                    alert('할당된 경기 정보를 불러오는데 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('할당된 경기 정보 로드 오류:', error);
+                alert('할당된 경기 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 경기 상태 배지 클래스 반환
+        function getGameStatusBadgeClass(status) {
+            switch(status) {
+                case '정상게임': return 'bg-success';
+                case '경기취소': return 'bg-danger';
+                case '경기끝': return 'bg-secondary';
+                default: return 'bg-primary';
+            }
+        }
+
+        // 진행 상태 배지 클래스 반환
+        function getProgressStatusBadgeClass(status) {
+            switch(status) {
+                case '경기전': return 'bg-warning';
+                case '경기중': return 'bg-info';
+                case '경기끝': return 'bg-success';
+                case '경기취소': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // 경기 선택
+        async function selectGame(date, gameNumber) {
+            try {
+                const response = await fetch(`/api/team-games/${date}/${gameNumber}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isSelected: true })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('경기가 선택되었습니다.');
+                    // 할당된 경기 정보 새로고침
+                    const loginInfo = localStorage.getItem('operatorLoginInfo');
+                    if (loginInfo) {
+                        const operator = JSON.parse(loginInfo);
+                        await loadAssignedGames(operator._id);
+                    }
+                } else {
+                    alert(result.message || '경기 선택에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('경기 선택 오류:', error);
+                alert('경기 선택에 실패했습니다.');
+            }
+        }
+
+        // 경기 상세보기
+        function viewGameDetails(date, gameNumber) {
+            // 경기 상세 정보를 모달로 표시하는 기능 (추후 구현)
+            alert(`경기 상세보기: ${date} ${gameNumber}경기`);
+        }
+
+        // 경기 할당 모달 표시
+        async function assignGames(operatorId, username, name) {
+            try {
+                // 운영자 정보 설정
+                document.getElementById('assignOperatorName').textContent = name;
+                document.getElementById('assignOperatorUsername').textContent = username;
+                
+                // 운영자 ID를 모달에 저장 (숨겨진 필드로)
+                const modal = document.getElementById('gameAssignmentModal');
+                modal.dataset.operatorId = operatorId;
+                
+                // 오늘 날짜를 기본값으로 설정
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('assignGameDate').value = today;
+                
+                // 경기 목록 로드
+                await loadAvailableGames(today);
+                
+                // 모달 표시
+                const modalInstance = new bootstrap.Modal(modal);
+                modalInstance.show();
+                
+                // 날짜 변경 이벤트 리스너 추가
+                document.getElementById('assignGameDate').addEventListener('change', async function() {
+                    await loadAvailableGames(this.value);
+                });
+                
+            } catch (error) {
+                console.error('경기 할당 모달 표시 오류:', error);
+                alert('경기 할당 모달을 표시하는데 실패했습니다.');
+            }
+        }
+
+        // 사용 가능한 경기 목록 로드
+        async function loadAvailableGames(date) {
+            try {
+                const response = await fetch(`/api/team-games/${date}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const gamesListDiv = document.getElementById('availableGamesList');
+                    gamesListDiv.innerHTML = '';
+
+                    if (result.data && result.data.length > 0) {
+                        result.data.forEach(game => {
+                            const gameItem = document.createElement('div');
+                            gameItem.className = 'card mb-2';
+                            gameItem.innerHTML = `
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-1">${game.gameNumber}경기</h6>
+                                            <p class="mb-1"><strong>매치업:</strong> ${game.matchup}</p>
+                                            <p class="mb-1"><strong>시간:</strong> ${game.startTime || '-'} ~ ${game.endTime || '-'}</p>
+                                            <p class="mb-1"><strong>상태:</strong> 
+                                                <span class="badge ${getGameStatusBadgeClass(game.gameStatus)}">${game.gameStatus}</span>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="game_${game.gameNumber}" 
+                                                       value="${game.gameNumber}"
+                                                       data-date="${game.date}"
+                                                       ${game.assignedOperator ? 'disabled' : ''}>
+                                                <label class="form-check-label" for="game_${game.gameNumber}">
+                                                    ${game.assignedOperator ? '이미 할당됨' : '할당'}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            gamesListDiv.appendChild(gameItem);
+                        });
+                    } else {
+                        gamesListDiv.innerHTML = '<p class="text-muted">해당 날짜에 경기가 없습니다.</p>';
+                    }
+                } else {
+                    alert('경기 목록을 불러오는데 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('경기 목록 로드 오류:', error);
+                alert('경기 목록을 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 경기 할당 저장
+        async function saveGameAssignment() {
+            try {
+                const modal = document.getElementById('gameAssignmentModal');
+                const operatorId = modal.dataset.operatorId;
+                const operatorName = document.getElementById('assignOperatorName').textContent;
+                const date = document.getElementById('assignGameDate').value;
+                
+                // 선택된 경기들 확인
+                const selectedGames = [];
+                const checkboxes = document.querySelectorAll('#availableGamesList input[type="checkbox"]:checked');
+                
+                checkboxes.forEach(checkbox => {
+                    selectedGames.push({
+                        gameNumber: checkbox.value,
+                        date: checkbox.dataset.date
+                    });
+                });
+
+                if (selectedGames.length === 0) {
+                    alert('할당할 경기를 선택해주세요.');
+                    return;
+                }
+
+                // 각 경기에 운영자 할당
+                const assignmentPromises = selectedGames.map(async (game) => {
+                    const response = await fetch(`/api/team-games/${game.date}/${game.gameNumber}/assign`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ operatorId: operatorId })
+                    });
+                    return response.json();
+                });
+
+                const results = await Promise.all(assignmentPromises);
+                const successCount = results.filter(result => result.success).length;
+
+                if (successCount > 0) {
+                    alert(`${successCount}개 경기가 ${operatorName}에게 할당되었습니다.`);
+                    
+                    // 모달 닫기
+                    bootstrap.Modal.getInstance(modal).hide();
+                    
+                    // 운영자 목록 새로고침
+                    loadOperators(currentPage);
+                } else {
+                    alert('경기 할당에 실패했습니다.');
+                }
+
+            } catch (error) {
+                console.error('경기 할당 저장 오류:', error);
+                alert('경기 할당 저장에 실패했습니다.');
+            }
+        }
+
+        // 경기 할당 해제
+        async function unassignGame(date, gameNumber) {
+            if (!confirm('정말로 이 경기의 할당을 해제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/team-games/${date}/${gameNumber}/unassign`, {
+                    method: 'PUT'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('경기 할당이 해제되었습니다.');
+                    // 할당된 경기 정보 새로고침
+                    const loginInfo = localStorage.getItem('operatorLoginInfo');
+                    if (loginInfo) {
+                        const operator = JSON.parse(loginInfo);
+                        await loadAssignedGames(operator._id);
+                    }
+                } else {
+                    alert(result.message || '경기 할당 해제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('경기 할당 해제 오류:', error);
+                alert('경기 할당 해제에 실패했습니다.');
+            }
         }
     </script>
 </body>

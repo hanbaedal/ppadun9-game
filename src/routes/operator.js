@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 // bcryptjs 제거 - 평문 비밀번호 저장으로 변경
 const { getDb } = require('../config/db');
+const { ObjectId } = require('mongodb'); // ObjectId 추가
 
 // 운영자 등록
 router.post('/register', async (req, res) => {
@@ -246,6 +247,76 @@ router.get('/profile/:username', async (req, res) => {
         res.status(500).json({
             success: false,
             message: '운영자 정보 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 현재 로그인한 운영자 정보 조회
+router.get('/me', async (req, res) => {
+    try {
+        // 세션에서 운영자 정보를 가져오는 로직 (실제로는 세션/토큰 기반으로 구현)
+        // 여기서는 간단한 예시로 구현
+        const { username } = req.query;
+        
+        if (!username) {
+            return res.status(401).json({
+                success: false,
+                message: '로그인이 필요합니다.'
+            });
+        }
+
+        const db = getDb();
+        const collection = db.collection('operate-member');
+
+        const operator = await collection.findOne(
+            { username, isLoggedIn: true },
+            { projection: { password: 0 } }
+        );
+
+        if (!operator) {
+            return res.status(401).json({
+                success: false,
+                message: '로그인된 운영자를 찾을 수 없습니다.'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: operator
+        });
+
+    } catch (error) {
+        console.error('현재 운영자 정보 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '운영자 정보 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 운영자에게 할당된 경기 조회
+router.get('/:operatorId/assigned-games', async (req, res) => {
+    try {
+        const { operatorId } = req.params;
+        
+        const db = getDb();
+        const teamGamesCollection = db.collection('team-games');
+        
+        // 해당 운영자에게 할당된 경기 조회
+        const assignedGames = await teamGamesCollection.find({ 
+            assignedOperator: operatorId 
+        }).toArray();
+        
+        res.json({
+            success: true,
+            data: assignedGames
+        });
+
+    } catch (error) {
+        console.error('할당된 경기 조회 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '할당된 경기 조회 중 오류가 발생했습니다.'
         });
     }
 });
