@@ -961,8 +961,6 @@
                 return;
             }
 
-            console.log(`[Frontend] 로그인 시도: ${username}`);
-
             try {
                 const response = await fetch('/api/operator/login', {
                     method: 'POST',
@@ -970,87 +968,24 @@
                     body: JSON.stringify({ username, password })
                 });
                 
-                console.log(`[Frontend] 서버 응답 상태: ${response.status}`);
-                
                 const result = await response.json();
-                console.log(`[Frontend] 서버 응답:`, result);
 
                 if (result.success) {
                     // 로그인 정보를 로컬 스토리지에 저장
                     localStorage.setItem('operatorLoginInfo', JSON.stringify(result.data));
                     
-                    console.log(`[Frontend] 로그인 성공: ${username}`);
                     alert('로그인 성공!');
                     await checkLoginStatus(); // 로그인 후 상태 확인
                     
                     // 로그인 폼 초기화
                     document.getElementById('loginUsername').value = '';
                     document.getElementById('loginPassword').value = '';
-                } else if (result.code === 'DUPLICATE_LOGIN') {
-                    // 중복 로그인 감지 - 강제 로그인 옵션 제공
-                    console.log(`[Frontend] 중복 로그인 감지: ${username}`);
-                    handleDuplicateLogin(username, password, result.data);
                 } else {
-                    console.log(`[Frontend] 로그인 실패: ${result.message}`);
                     alert(result.message || '로그인에 실패했습니다.');
                 }
             } catch (error) {
-                console.error('[Frontend] 로그인 오류:', error);
+                console.error('로그인 오류:', error);
                 alert('로그인에 실패했습니다.');
-            }
-        }
-
-        // 중복 로그인 처리
-        async function handleDuplicateLogin(username, password, duplicateData) {
-            console.log(`[Frontend] handleDuplicateLogin 시작: ${username}`, duplicateData);
-            
-            const lastLoginTime = new Date(duplicateData.lastLoginAt).toLocaleString('ko-KR');
-            
-            const shouldForceLogin = confirm(
-                `이미 다른 곳에서 로그인되어 있습니다.\n\n` +
-                `마지막 로그인: ${lastLoginTime}\n\n` +
-                `기존 세션을 종료하고 새로운 로그인을 진행하시겠습니까?\n\n` +
-                `(기존 세션은 자동으로 로그아웃됩니다)`
-            );
-
-            console.log(`[Frontend] 사용자 강제 로그인 선택: ${shouldForceLogin}`);
-
-            if (shouldForceLogin) {
-                try {
-                    console.log(`[Frontend] 강제 로그인 API 호출 시작`);
-                    
-                    const response = await fetch('/api/operator/force-login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
-                    
-                    console.log(`[Frontend] 강제 로그인 응답 상태: ${response.status}`);
-                    
-                    const result = await response.json();
-                    console.log(`[Frontend] 강제 로그인 응답:`, result);
-
-                    if (result.success) {
-                        // 로그인 정보를 로컬 스토리지에 저장
-                        localStorage.setItem('operatorLoginInfo', JSON.stringify(result.data));
-                        
-                        console.log(`[Frontend] 강제 로그인 성공: ${username}`);
-                        alert('기존 세션을 종료하고 새로운 로그인이 성공했습니다!');
-                        await checkLoginStatus(); // 로그인 후 상태 확인
-                        
-                        // 로그인 폼 초기화
-                        document.getElementById('loginUsername').value = '';
-                        document.getElementById('loginPassword').value = '';
-                    } else {
-                        console.log(`[Frontend] 강제 로그인 실패: ${result.message}`);
-                        alert(result.message || '강제 로그인에 실패했습니다.');
-                    }
-                } catch (error) {
-                    console.error('[Frontend] 강제 로그인 오류:', error);
-                    alert('강제 로그인에 실패했습니다.');
-                }
-            } else {
-                console.log(`[Frontend] 사용자가 강제 로그인을 취소함`);
             }
         }
 
