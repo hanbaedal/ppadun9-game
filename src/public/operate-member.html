@@ -964,7 +964,7 @@
             console.log(`[Frontend] 로그인 시도: ${username}`);
 
             try {
-                const response = await fetch('/api/operate-member/login', {
+                const response = await fetch('/api/operator/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -1019,7 +1019,7 @@
                 try {
                     console.log(`[Frontend] 강제 로그인 API 호출 시작`);
                     
-                    const response = await fetch('/api/operate-member/force-login', {
+                    const response = await fetch('/api/operator/force-login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, password })
