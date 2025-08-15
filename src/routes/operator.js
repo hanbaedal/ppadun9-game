@@ -563,15 +563,10 @@ router.post('/logout', async (req, res) => {
         const db = getDb();
         const collection = db.collection('operate-member');
 
-        // 간단하게 approvedBy와 isLoggedIn만 업데이트
+        // isLoggedIn만 false로 변경
         const result = await collection.updateOne(
             { username },
-            { 
-                $set: { 
-                    approvedBy: "system",
-                    isLoggedIn: false
-                }
-            }
+            { $set: { isLoggedIn: false } }
         );
 
         if (result.matchedCount > 0) {
