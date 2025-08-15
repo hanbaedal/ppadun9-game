@@ -553,8 +553,6 @@ router.post('/logout', async (req, res) => {
     try {
         const { username } = req.body;
         
-        console.log(`[Operator] 로그아웃 요청: ${username}`);
-        
         if (!username) {
             return res.status(400).json({
                 success: false,
@@ -565,33 +563,19 @@ router.post('/logout', async (req, res) => {
         const db = getDb();
         const collection = db.collection('operate-member');
 
-        // 로그아웃 상태 업데이트
+        // 간단하게 isLoggedIn만 false로 변경
         const result = await collection.updateOne(
             { username },
-            { 
-                $set: { 
-                    isLoggedIn: false,
-                    lastLogoutAt: new Date()
-                }
-            }
+            { $set: { isLoggedIn: false } }
         );
 
         if (result.matchedCount > 0) {
-            // 로그아웃 후 상태 확인
-            const afterLogout = await collection.findOne({ username });
-            console.log(`[Operator] 로그아웃 후 상태:`, {
-                username: afterLogout?.username,
-                isLoggedIn: afterLogout?.isLoggedIn,
-                lastLogoutAt: afterLogout?.lastLogoutAt
-            });
-
             console.log(`[Operator] 로그아웃 성공: ${username}`);
             res.json({
                 success: true,
                 message: '로그아웃되었습니다.'
             });
         } else {
-            console.log(`[Operator] 로그아웃 실패 - 운영자를 찾을 수 없음: ${username}`);
             res.status(404).json({
                 success: false,
                 message: '운영자를 찾을 수 없습니다.'
@@ -599,7 +583,7 @@ router.post('/logout', async (req, res) => {
         }
 
     } catch (error) {
-        console.error('[Operator] 운영자 로그아웃 오류:', error);
+        console.error('[Operator] 로그아웃 오류:', error);
         res.status(500).json({
             success: false,
             message: '로그아웃 처리 중 오류가 발생했습니다.'
@@ -1177,6 +1161,50 @@ router.post('/debug/test-logout', async (req, res) => {
             success: false,
             message: '로그아웃 테스트 중 오류가 발생했습니다.',
             error: error.message
+        });
+    }
+});
+
+// 디버깅: 로그아웃 직후 DB 상태 확인
+router.get('/debug/logout-status/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        console.log(`[Operator] 로그아웃 상태 확인 요청: ${username}`);
+        
+        const db = getDb();
+        const collection = db.collection('operate-member');
+        
+        const operator = await collection.findOne({ username });
+        if (!operator) {
+            return res.status(404).json({
+                success: false,
+                message: '운영자를 찾을 수 없습니다.'
+            });
+        }
+        
+        console.log(`[Operator] 현재 DB 상태:`, {
+            username: operator.username,
+            isLoggedIn: operator.isLoggedIn,
+            lastLogoutAt: operator.lastLogoutAt,
+            lastLoginAt: operator.lastLoginAt
+        });
+        
+        res.json({
+            success: true,
+            data: {
+                username: operator.username,
+                isLoggedIn: operator.isLoggedIn,
+                lastLogoutAt: operator.lastLogoutAt,
+                lastLoginAt: operator.lastLoginAt,
+                _id: operator._id
+            }
+        });
+        
+    } catch (error) {
+        console.error('[Operator] 로그아웃 상태 확인 오류:', error);
+        res.status(500).json({
+            success: false,
+            message: '상태 확인 중 오류가 발생했습니다.'
         });
     }
 });
