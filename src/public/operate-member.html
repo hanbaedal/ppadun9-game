@@ -991,59 +991,120 @@
 
         // 로그아웃 처리
         async function logout() {
+            console.log('=== 로그아웃 함수 시작 ===');
+            
             // 확인 모달 표시
-            if (!confirm('로그아웃 하시겠습니까?')) {
+            const shouldLogout = confirm('로그아웃 하시겠습니까?');
+            console.log('confirm 결과:', shouldLogout);
+            
+            if (!shouldLogout) {
+                console.log('사용자가 로그아웃을 취소함');
                 return; // 사용자가 취소한 경우
             }
             
+            console.log('로그아웃 진행...');
+            
             try {
                 const loginInfo = localStorage.getItem('operatorLoginInfo');
+                console.log('로컬 스토리지 로그인 정보:', loginInfo);
+                
                 if (loginInfo) {
                     const operator = JSON.parse(loginInfo);
+                    console.log('운영자 정보:', operator);
                     
                     // 서버에 로그아웃 요청
+                    console.log('서버 로그아웃 API 호출 시작');
                     const response = await fetch('/api/operator/logout', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: operator.username })
                     });
                     const result = await response.json();
+                    console.log('서버 로그아웃 응답:', result);
 
                     if (result.success) {
-                        console.log('로그아웃 성공');
+                        console.log('서버 로그아웃 성공');
                     } else {
-                        console.warn('로그아웃 실패:', result.message);
+                        console.warn('서버 로그아웃 실패:', result.message);
                     }
                 }
                 
                 // 로컬 스토리지에서 로그인 정보 삭제
+                console.log('로컬 스토리지 정리 시작');
                 localStorage.removeItem('operatorLoginInfo');
+                localStorage.removeItem('operatorLoginStatus');
+                localStorage.removeItem('operatorUserInfo');
+                console.log('로컬 스토리지 정리 완료');
                 
                 // UI 상태 업데이트 - 로그인 폼으로 돌아가기
-                document.getElementById('operatorInfo').textContent = '';
-                document.getElementById('loginStatus').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('assignedGamesRow').style.display = 'none';
+                console.log('UI 상태 업데이트 시작');
+                
+                // 로그인 상태 섹션 숨기기
+                const loginStatus = document.getElementById('loginStatus');
+                if (loginStatus) {
+                    loginStatus.style.display = 'none';
+                    console.log('로그인 상태 섹션 숨김');
+                }
+                
+                // 로그인 폼 표시
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.style.display = 'block';
+                    console.log('로그인 폼 표시');
+                }
+                
+                // 할당된 경기 섹션 숨기기
+                const assignedGamesRow = document.getElementById('assignedGamesRow');
+                if (assignedGamesRow) {
+                    assignedGamesRow.style.display = 'none';
+                    console.log('할당된 경기 섹션 숨김');
+                }
+                
+                // 운영자 정보 초기화
+                const operatorInfo = document.getElementById('operatorInfo');
+                if (operatorInfo) {
+                    operatorInfo.textContent = '';
+                    console.log('운영자 정보 초기화');
+                }
                 
                 // 로그인 폼 초기화
-                document.getElementById('loginUsername').value = '';
-                document.getElementById('loginPassword').value = '';
+                const loginUsername = document.getElementById('loginUsername');
+                const loginPassword = document.getElementById('loginPassword');
+                if (loginUsername) loginUsername.value = '';
+                if (loginPassword) loginPassword.value = '';
+                console.log('로그인 폼 초기화 완료');
+                
+                console.log('UI 상태 업데이트 완료');
                 
                 // 성공 메시지 표시
                 alert('로그아웃되었습니다.');
+                console.log('로그아웃 완료');
                 
             } catch (error) {
                 console.error('로그아웃 오류:', error);
+                
                 // 오류가 발생해도 로컬 상태는 정리
+                console.log('오류 발생으로 인한 강제 로그아웃 처리');
                 localStorage.removeItem('operatorLoginInfo');
-                document.getElementById('operatorInfo').textContent = '';
-                document.getElementById('loginStatus').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('assignedGamesRow').style.display = 'none';
+                localStorage.removeItem('operatorLoginStatus');
+                localStorage.removeItem('operatorUserInfo');
+                
+                // UI 상태 강제 변경
+                const loginStatus = document.getElementById('loginStatus');
+                const loginForm = document.getElementById('loginForm');
+                const assignedGamesRow = document.getElementById('assignedGamesRow');
+                const operatorInfo = document.getElementById('operatorInfo');
+                
+                if (loginStatus) loginStatus.style.display = 'none';
+                if (loginForm) loginForm.style.display = 'block';
+                if (assignedGamesRow) assignedGamesRow.style.display = 'none';
+                if (operatorInfo) operatorInfo.textContent = '';
                 
                 // 로그인 폼 초기화
-                document.getElementById('loginUsername').value = '';
-                document.getElementById('loginPassword').value = '';
+                const loginUsername = document.getElementById('loginUsername');
+                const loginPassword = document.getElementById('loginPassword');
+                if (loginUsername) loginUsername.value = '';
+                if (loginPassword) loginPassword.value = '';
                 
                 alert('로그아웃 처리 중 오류가 발생했습니다.');
             }
