@@ -553,8 +553,6 @@ router.post('/logout', async (req, res) => {
     try {
         const { username } = req.body;
         
-        console.log(`[Operator] 로그아웃 요청: ${username}`);
-        
         if (!username) {
             return res.status(400).json({
                 success: false,
@@ -565,70 +563,24 @@ router.post('/logout', async (req, res) => {
         const db = getDb();
         const collection = db.collection('operate-member');
 
-        // 로그아웃 전 상태 확인
-        const beforeLogout = await collection.findOne({ username });
-        console.log(`[Operator] 로그아웃 전: username=${username}, isLoggedIn=${beforeLogout?.isLoggedIn}`);
-
-        if (!beforeLogout) {
-            return res.status(404).json({
-                success: false,
-                message: '운영자를 찾을 수 없습니다.'
-            });
-        }
-
-        // 강제 로그아웃과 동일한 방식으로 업데이트
-        console.log(`[Operator] 강제 로그아웃 방식으로 업데이트 실행`);
+        // 간단하게 approvedBy와 isLoggedIn만 업데이트
         const result = await collection.updateOne(
             { username },
             { 
                 $set: { 
-                    isLoggedIn: false,
-                    lastLogoutAt: new Date(),
-                    updatedAt: getKoreanTime()
-                },
-                $unset: {
-                    currentSessionId: "",
-                    sessionStartTime: ""
+                    approvedBy: "system",
+                    isLoggedIn: false
                 }
             }
         );
 
-        console.log(`[Operator] 업데이트 결과:`, {
-            matchedCount: result.matchedCount,
-            modifiedCount: result.modifiedCount,
-            acknowledged: result.acknowledged
-        });
-
-        // 업데이트 후 상태 확인
-        const afterLogout = await collection.findOne({ username });
-        console.log(`[Operator] 로그아웃 후: username=${username}, isLoggedIn=${afterLogout?.isLoggedIn}`);
-
         if (result.matchedCount > 0) {
-            if (result.modifiedCount > 0) {
-                console.log(`[Operator] 로그아웃 성공: ${username} (${beforeLogout.isLoggedIn} → ${afterLogout.isLoggedIn})`);
-                res.json({
-                    success: true,
-                    message: '로그아웃되었습니다.',
-                    debug: {
-                        before: beforeLogout.isLoggedIn,
-                        after: afterLogout.isLoggedIn,
-                        updateResult: result
-                    }
-                });
-            } else {
-                console.log(`[Operator] 경고: 업데이트 실패 (modifiedCount=0)`);
-                res.json({
-                    success: false,
-                    message: '로그아웃 실패: 데이터베이스 업데이트가 되지 않았습니다.',
-                    debug: {
-                        before: beforeLogout.isLoggedIn,
-                        after: afterLogout.isLoggedIn,
-                        updateResult: result
-                    }
-                });
-            }
+            console.log(`[Operator] 로그아웃 성공: ${username}`);
+            res.json({
+                success: true,
+                message: '로그아웃되었습니다.'
+            });
         } else {
-            console.log(`[Operator] 로그아웃 실패: 운영자를 찾을 수 없음`);
             res.status(404).json({
                 success: false,
                 message: '운영자를 찾을 수 없습니다.'
