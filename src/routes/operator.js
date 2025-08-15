@@ -641,6 +641,7 @@ router.get('/me', async (req, res) => {
 router.get('/:operatorId/assigned-games', async (req, res) => {
     try {
         const { operatorId } = req.params;
+        console.log('[Operator] 할당된 경기 조회 요청, operatorId:', operatorId);
         
         const db = getDb();
         const teamGamesCollection = db.collection('team-games');
@@ -650,13 +651,19 @@ router.get('/:operatorId/assigned-games', async (req, res) => {
             assignedOperator: operatorId 
         }).toArray();
         
+        console.log('[Operator] 할당된 경기 조회 결과:', {
+            operatorId: operatorId,
+            foundGames: assignedGames.length,
+            games: assignedGames.map(g => ({ date: g.date, gameNumber: g.gameNumber, matchup: g.matchup }))
+        });
+        
         res.json({
             success: true,
             data: assignedGames
         });
 
     } catch (error) {
-        console.error('할당된 경기 조회 오류:', error);
+        console.error('[Operator] 할당된 경기 조회 오류:', error);
         res.status(500).json({
             success: false,
             message: '할당된 경기 조회 중 오류가 발생했습니다.'
