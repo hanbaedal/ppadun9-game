@@ -1788,15 +1788,34 @@
         function forceHideGameModal() {
             const gameSelectionModal = document.getElementById('gameSelectionModal');
             if (gameSelectionModal) {
+                // 여러 방법으로 모달 숨기기
                 gameSelectionModal.style.display = 'none';
-                console.log('forceHideGameModal: 경기 선택 모달 강제 숨김');
+                gameSelectionModal.style.visibility = 'hidden';
+                gameSelectionModal.style.opacity = '0';
+                gameSelectionModal.style.zIndex = '-9999';
+                gameSelectionModal.classList.add('hidden');
+                console.log('forceHideGameModal: 경기 선택 모달 완전 숨김 (여러 방법)');
             }
         }
         
-        // 🎯 주기적으로 모달 숨기기 (1초마다)
+        // 🎯 주기적으로 모달 숨기기 (0.5초마다 더 빠르게)
         setInterval(function() {
             forceHideGameModal();
-        }, 1000);
+        }, 500);
+        
+        // 🎯 CSS로 모달 완전 숨기기
+        const style = document.createElement('style');
+        style.textContent = `
+            #gameSelectionModal {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                z-index: -9999 !important;
+                pointer-events: none !important;
+            }
+        `;
+        document.head.appendChild(style);
+        console.log('CSS로 경기 선택 모달 완전 숨김 추가됨');
 
         // 페이지 완전 로드 시 추가 작업 (한 번만)
         window.addEventListener('load', function() {
