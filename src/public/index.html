@@ -1163,6 +1163,9 @@
                 // 🎯 자동 경기 선택 로직 추가
                 await autoSelectAssignedGame();
                 
+                // 🎯 "오늘의 경기" 모달 완전히 숨기기
+                hideGameSelectionModal();
+                
             } catch (error) {
                 console.error('게임 데이터 로드 오류:', error);
             }
@@ -1327,11 +1330,12 @@
                             const gameType = cells[4]?.textContent || '';
                             const progress = cells[5]?.textContent || '';
                             
+                            // 🎯 "선택됨" 텍스트 제거하고 깔끔하게 표시
                             const gameInfoText = `${gameNumber}경기 : ${teamMatchup}, ${time} ~ ${status}, ${gameType}, ${progress}`;
                             selectedGameInfo.textContent = gameInfoText;
                             console.log('경기 정보 설정됨:', gameInfoText);
                         } else {
-                            // 기본 정보로 설정
+                            // 기본 정보로 설정 (선택됨 텍스트 제거)
                             selectedGameInfo.textContent = `${gameNumber}경기 : 한화 vs NC, 18:00 ~ 진행중, 정상게임, 경기중`;
                             console.log('기본 경기 정보로 설정됨');
                         }
@@ -1340,7 +1344,7 @@
                         selectedGameInfo.onclick = null; // 클릭 이벤트 제거
                         selectedGameInfo.style.cursor = 'default';
                     } else {
-                        // 경기 행을 찾을 수 없으면 기본 정보로 설정
+                        // 경기 행을 찾을 수 없으면 기본 정보로 설정 (선택됨 텍스트 제거)
                         selectedGameInfo.textContent = `${gameNumber}경기 : 한화 vs NC, 18:00 ~ 진행중, 정상게임, 경기중`;
                         selectedGameInfo.className = 'betting-time';
                         selectedGameInfo.onclick = null;
@@ -1977,6 +1981,9 @@
                 
                 // 🎯 자동 경기 선택 로직 추가
                 await autoSelectAssignedGame();
+                
+                // 🎯 "오늘의 경기" 모달 완전히 숨기기
+                hideGameSelectionModal();
                 
             } catch (error) {
                 console.error('게임 데이터 로드 오류:', error);
