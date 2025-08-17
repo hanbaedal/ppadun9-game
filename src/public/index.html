@@ -1202,12 +1202,21 @@
                 
                 console.log(`할당된 경기: ${assignedGameNumber}경기, 날짜: ${assignedDate}`);
                 
-                // 오늘 날짜와 할당된 날짜 비교
-                const today = new Date().toISOString().split('T')[0];
+                // 오늘 날짜와 할당된 날짜 비교 (한국 시간 기준)
+                const now = new Date();
+                const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+                const today = koreanTime.toISOString().split('T')[0];
+                
+                console.log(`UTC 시간: ${now.toISOString()}`);
+                console.log(`한국 시간: ${koreanTime.toISOString()}`);
+                console.log(`오늘 날짜 (한국): ${today}, 할당된 날짜: ${assignedDate}`);
+                
                 if (assignedDate !== today) {
                     console.log('할당된 날짜가 오늘이 아닙니다.');
                     return;
                 }
+                
+                console.log('날짜 비교 통과 - 자동 선택 진행');
                 
                 // 해당 경기 자동 선택
                 const selectResult = await autoSelectGame(today, assignedGameNumber);
