@@ -1241,37 +1241,50 @@
             }
         }
 
-        // 🎯 선택된 경기 정보 표시
+        // 🎯 선택된 경기 정보 표시 (수동 선택과 동일한 형태)
         function showSelectedGameInfo(gameNumber) {
-            // 기존 선택된 경기 정보 제거
-            const existingInfo = document.querySelector('.selected-game-info');
-            if (existingInfo) {
-                existingInfo.remove();
-            }
-            
-            // 새로운 선택된 경기 정보 생성
-            const selectedGameInfo = document.createElement('div');
-            selectedGameInfo.className = 'alert alert-success selected-game-info mb-3';
-            
-            selectedGameInfo.innerHTML = `
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h5 class="mb-1"><i class="fas fa-star me-2"></i>자동 선택된 경기</h5>
-                        <strong>${gameNumber}경기</strong>가 자동으로 선택되었습니다.
-                        <p class="mb-0"><small>할당된 경기가 자동으로 선택되었습니다.</small></p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <button class="btn btn-success btn-lg" onclick="startBettingRoutine()">
-                            <i class="fas fa-play me-2"></i>배팅 시작
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            // 게임 테이블 위에 추가
-            const gameTable = document.getElementById('gameSelectionTable');
-            if (gameTable && gameTable.parentNode) {
-                gameTable.parentNode.insertBefore(selectedGameInfo, gameTable);
+            try {
+                console.log('자동 선택된 경기 정보 표시 시작:', gameNumber);
+                
+                // 선택된 경기 정보 업데이트
+                const selectedGameInfo = document.getElementById('selectedGameInfo');
+                if (selectedGameInfo) {
+                    // 경기 정보 텍스트 설정
+                    const gameRow = document.querySelector(`[data-game="${gameNumber}"]`);
+                    if (gameRow) {
+                        const cells = gameRow.querySelectorAll('td');
+                        const teamMatchup = cells[1]?.textContent || `${gameNumber}경기`;
+                        const time = cells[2]?.textContent || '';
+                        const status = cells[3]?.textContent || '';
+                        const gameType = cells[4]?.textContent || '';
+                        const progress = cells[5]?.textContent || '';
+                        
+                        selectedGameInfo.textContent = `${gameNumber}경기 : ${teamMatchup}, ${time} ~ ${status}, ${gameType}, ${progress}`;
+                        selectedGameInfo.className = 'betting-time';
+                        selectedGameInfo.onclick = null; // 클릭 이벤트 제거
+                        selectedGameInfo.style.cursor = 'default';
+                    }
+                }
+                
+                // 게임 형태 표시 (기본값: 타자)
+                const gameTypeValue = document.querySelector('.game-type-value');
+                if (gameTypeValue) {
+                    gameTypeValue.textContent = '타자';
+                }
+                
+                // 배팅 시작 버튼 활성화
+                const startBettingBtn = document.getElementById('startBetting');
+                if (startBettingBtn) {
+                    startBettingBtn.disabled = false;
+                }
+                
+                // 전역 변수 설정
+                selectedGame = gameNumber;
+                
+                console.log('자동 선택된 경기 정보 표시 완료:', gameNumber);
+                
+            } catch (error) {
+                console.error('자동 선택된 경기 정보 표시 오류:', error);
             }
         }
 
@@ -1861,6 +1874,9 @@
                 
                 console.log('게임 데이터 로드 완료 - 총 5개 경기');
                 console.log('테이블에 추가된 행 수:', tableBody.children.length);
+                
+                // 🎯 자동 경기 선택 로직 추가
+                await autoSelectAssignedGame();
                 
             } catch (error) {
                 console.error('게임 데이터 로드 오류:', error);
