@@ -1245,9 +1245,19 @@
                         updateGameSelectionUI(assignedGameNumber, true);
                         showSelectedGameInfo(assignedGameNumber);
                         
-                        // 🎯 "오늘의 경기" 모달 숨기고 "선택한 경기" 메뉴 표시
-                        hideGameSelectionModal();
-                        showBettingSection();
+                                            // 🎯 "오늘의 경기" 모달 숨기고 "선택한 경기" 메뉴 표시
+                    hideGameSelectionModal();
+                    showBettingSection();
+                    
+                    // 🎯 추가 모달 숨김 (강제로)
+                    const gameSelectionModal = document.getElementById('gameSelectionModal');
+                    if (gameSelectionModal) {
+                        gameSelectionModal.style.display = 'none';
+                        gameSelectionModal.style.visibility = 'hidden';
+                        gameSelectionModal.style.opacity = '0';
+                        gameSelectionModal.style.zIndex = '-9999';
+                        console.log('autoSelectAssignedGame에서 모달 강제 숨김');
+                    }
                         
                         console.log('UI 업데이트 완료');
                     }, 100);
