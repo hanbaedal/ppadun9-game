@@ -1119,26 +1119,186 @@
             document.getElementById('dateDisplay').textContent = dateStr;
         }
 
-        // 게임 데이터 불러오기
+        // 게임 데이터 로드
         async function loadGames() {
             try {
-                const now = new Date();
-                const today = now.toISOString().split('T')[0];
-                
-                const response = await fetch(`/api/team-games/${today}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.data && data.data.length > 0) {
-                        displayGames(data.data);
-                        return;
-                    }
+                const response = await fetch('/api/team-games');
+                if (!response.ok) {
+                    throw new Error('게임 데이터를 가져올 수 없습니다.');
                 }
                 
-                // 기본 데이터 표시
-                displayGames([]);
+                const games = await response.json();
+                const tableBody = document.getElementById('gameTableBody');
+                tableBody.innerHTML = '';
+                
+                games.forEach(game => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-game', game.gameNumber);
+                    row.setAttribute('data-date', game.date);
+                    
+                    const isSelected = game.isSelected || false;
+                    const selectBtnClass = isSelected ? 'select-game-btn selected' : 'select-game-btn';
+                    const selectBtnText = isSelected ? '선택됨' : '선택';
+                    const selectBtnDisabled = isSelected ? 'disabled' : '';
+                    
+                    row.innerHTML = `
+                        <td>${game.gameNumber}경기</td>
+                        <td>${game.team1} vs ${game.team2}</td>
+                        <td>${game.time}</td>
+                        <td>${game.status}</td>
+                        <td>${game.gameType}</td>
+                        <td>${game.progress}</td>
+                        <td>
+                            <button class="${selectBtnClass}" ${selectBtnDisabled} onclick="selectGame('${game.date}', ${game.gameNumber})">
+                                ${selectBtnText}
+                            </button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                console.log('테이블에 추가된 행 수:', tableBody.children.length);
+                
+                // 🎯 자동 경기 선택 로직 추가
+                await autoSelectAssignedGame();
+                
             } catch (error) {
-                console.error('게임 데이터 불러오기 오류:', error);
-                displayGames([]);
+                console.error('게임 데이터 로드 오류:', error);
+            }
+        }
+
+        // 🎯 할당된 경기 자동 선택 함수
+        async function autoSelectAssignedGame() {
+            try {
+                // 로그인된 사용자 정보 확인
+                const userInfo = localStorage.getItem('operatorUserInfo');
+                if (!userInfo) {
+                    console.log('사용자 정보가 없습니다. 자동 선택 건너뛰기');
+                    return;
+                }
+                
+                const user = JSON.parse(userInfo);
+                console.log('자동 경기 선택 시작 - 사용자:', user.username);
+                
+                // operate-member 컬렉션에서 할당된 경기 정보 조회
+                const response = await fetch(`/api/operator/${user.username}/assigned-game`);
+                if (!response.ok) {
+                    console.log('할당된 경기 정보 조회 실패');
+                    return;
+                }
+                
+                const assignedData = await response.json();
+                console.log('할당된 경기 정보:', assignedData);
+                
+                if (!assignedData.assignedGame || !assignedData.assignedGameDate) {
+                    console.log('할당된 경기 정보가 없습니다.');
+                    return;
+                }
+                
+                // 할당된 경기 번호
+                const assignedGameNumber = assignedData.assignedGame;
+                const assignedDate = assignedData.assignedGameDate;
+                
+                console.log(`할당된 경기: ${assignedGameNumber}경기, 날짜: ${assignedDate}`);
+                
+                // 오늘 날짜와 할당된 날짜 비교
+                const today = new Date().toISOString().split('T')[0];
+                if (assignedDate !== today) {
+                    console.log('할당된 날짜가 오늘이 아닙니다.');
+                    return;
+                }
+                
+                // 해당 경기 자동 선택
+                const selectResult = await autoSelectGame(today, assignedGameNumber);
+                if (selectResult) {
+                    console.log(`${assignedGameNumber}경기 자동 선택 완료`);
+                    updateGameSelectionUI(assignedGameNumber, true);
+                    showSelectedGameInfo(assignedGameNumber);
+                }
+                
+            } catch (error) {
+                console.error('자동 경기 선택 오류:', error);
+            }
+        }
+
+        // 🎯 게임 선택 UI 업데이트
+        function updateGameSelectionUI(gameNumber, isSelected) {
+            const gameRow = document.querySelector(`[data-game="${gameNumber}"]`);
+            if (gameRow) {
+                const selectBtn = gameRow.querySelector('.select-game-btn');
+                if (selectBtn) {
+                    if (isSelected) {
+                        selectBtn.textContent = '선택됨';
+                        selectBtn.className = 'select-game-btn selected';
+                        selectBtn.disabled = true;
+                    } else {
+                        selectBtn.textContent = '선택';
+                        selectBtn.className = 'select-game-btn';
+                        selectBtn.disabled = false;
+                    }
+                }
+            }
+        }
+
+        // 🎯 선택된 경기 정보 표시
+        function showSelectedGameInfo(gameNumber) {
+            // 기존 선택된 경기 정보 제거
+            const existingInfo = document.querySelector('.selected-game-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            
+            // 새로운 선택된 경기 정보 생성
+            const selectedGameInfo = document.createElement('div');
+            selectedGameInfo.className = 'alert alert-success selected-game-info mb-3';
+            
+            selectedGameInfo.innerHTML = `
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1"><i class="fas fa-star me-2"></i>자동 선택된 경기</h5>
+                        <strong>${gameNumber}경기</strong>가 자동으로 선택되었습니다.
+                        <p class="mb-0"><small>할당된 경기가 자동으로 선택되었습니다.</small></p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-success btn-lg" onclick="startBettingRoutine()">
+                            <i class="fas fa-play me-2"></i>배팅 시작
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // 게임 테이블 위에 추가
+            const gameTable = document.getElementById('gameSelectionTable');
+            if (gameTable && gameTable.parentNode) {
+                gameTable.parentNode.insertBefore(selectedGameInfo, gameTable);
+            }
+        }
+
+        // 🎯 경기 자동 선택 API 호출
+        async function autoSelectGame(date, gameNumber) {
+            try {
+                console.log(`경기 자동 선택 시작: ${date} ${gameNumber}경기`);
+                
+                const response = await fetch(`/api/team-games/${date}/${gameNumber}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isSelected: true })
+                });
+                
+                const result = await response.json();
+                console.log('경기 자동 선택 API 응답:', result);
+                
+                if (result.success) {
+                    console.log(`경기 자동 선택 완료: ${date} ${gameNumber}경기`);
+                    return true;
+                } else {
+                    console.error('경기 자동 선택 실패:', result.message);
+                    return false;
+                }
+            } catch (error) {
+                console.error('경기 자동 선택 오류:', error);
+                return false;
             }
         }
 

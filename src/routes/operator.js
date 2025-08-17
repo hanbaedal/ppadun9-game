@@ -680,6 +680,32 @@ router.get('/:operatorId/assigned-games', async (req, res) => {
     }
 });
 
+// 🎯 할당된 경기 정보 조회
+router.get('/:username/assigned-game', async (req, res) => {
+    try {
+        const { username } = req.params;
+        
+        const operator = await db.collection('operate-member').findOne(
+            { username: username },
+            { projection: { assignedGame: 1, assignedGameDate: 1 } }
+        );
+        
+        if (!operator) {
+            return res.status(404).json({ success: false, message: '운영자를 찾을 수 없습니다.' });
+        }
+        
+        res.json({
+            success: true,
+            assignedGame: operator.assignedGame,
+            assignedGameDate: operator.assignedGameDate
+        });
+        
+    } catch (error) {
+        console.error('할당된 경기 정보 조회 오류:', error);
+        res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+    }
+});
+
 // ===== 관리자용 승인 관리 API =====
 
 // 승인 대기 중인 운영자 목록 조회
