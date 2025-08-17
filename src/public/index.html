@@ -1783,10 +1783,28 @@
                 loginStatusChecked = true;
             }
         });
+        
+        // 🎯 모달을 완전히 숨기는 함수 (여러 곳에서 호출)
+        function forceHideGameModal() {
+            const gameSelectionModal = document.getElementById('gameSelectionModal');
+            if (gameSelectionModal) {
+                gameSelectionModal.style.display = 'none';
+                console.log('forceHideGameModal: 경기 선택 모달 강제 숨김');
+            }
+        }
+        
+        // 🎯 주기적으로 모달 숨기기 (1초마다)
+        setInterval(function() {
+            forceHideGameModal();
+        }, 1000);
 
         // 페이지 완전 로드 시 추가 작업 (한 번만)
         window.addEventListener('load', function() {
             console.log('load 이벤트 발생');
+            
+            // 🎯 load 이벤트에서도 모달 강제 숨기기
+            forceHideGameModal();
+            
             // load 이벤트에서는 추가 작업만 수행 (로그인 상태 확인은 하지 않음)
         });
 
