@@ -1774,7 +1774,12 @@
             const gameSelectionModal = document.getElementById('gameSelectionModal');
             if (gameSelectionModal) {
                 gameSelectionModal.style.display = 'none';
-                console.log('DOMContentLoaded에서 경기 선택 모달 숨김');
+                gameSelectionModal.style.visibility = 'hidden';
+                gameSelectionModal.style.opacity = '0';
+                gameSelectionModal.style.zIndex = '-9999';
+                gameSelectionModal.style.position = 'absolute';
+                gameSelectionModal.style.left = '-9999px';
+                console.log('DOMContentLoaded에서 경기 선택 모달 완전 숨김');
             }
             
             if (!loginStatusChecked) {
@@ -1829,7 +1834,16 @@
             console.log('load 이벤트 발생');
             
             // 🎯 load 이벤트에서도 모달 강제 숨기기
-            forceHideGameModal();
+            const gameSelectionModal = document.getElementById('gameSelectionModal');
+            if (gameSelectionModal) {
+                gameSelectionModal.style.display = 'none';
+                gameSelectionModal.style.visibility = 'hidden';
+                gameSelectionModal.style.opacity = '0';
+                gameSelectionModal.style.zIndex = '-9999';
+                gameSelectionModal.style.position = 'absolute';
+                gameSelectionModal.style.left = '-9999px';
+                console.log('load 이벤트에서 경기 선택 모달 완전 숨김');
+            }
             
             // load 이벤트에서는 추가 작업만 수행 (로그인 상태 확인은 하지 않음)
         });
