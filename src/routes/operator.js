@@ -685,6 +685,7 @@ router.get('/:username/assigned-game', async (req, res) => {
     try {
         const { username } = req.params;
         
+        const db = getDb();
         const operator = await db.collection('operate-member').findOne(
             { username: username },
             { projection: { assignedGame: 1, assignedGameDate: 1 } }
