@@ -954,7 +954,7 @@
             <!-- 선택된 게임 정보와 게임 형태 (클릭 가능) -->
                 <div class="betting-item">
                 <div class="betting-title">선택된 경기</div>
-                <div class="betting-time clickable-game-info" id="selectedGameInfo" onclick="showGameSelection()" style="cursor: pointer;">
+                <div class="betting-time clickable-game-info" id="selectedGameInfo" onclick="handleGameSelectionClick()" style="cursor: pointer;">
                     게임을 선택해주세요
                 </div>
                 <div class="game-type-display">
@@ -1331,9 +1331,16 @@
                             const progress = cells[5]?.textContent || '';
                             
                             // 🎯 "선택됨" 텍스트 제거하고 깔끔하게 표시
-                            const gameInfoText = `${gameNumber}경기 : ${teamMatchup}, ${time} ~ ${status}, ${gameType}, ${progress}`;
+                            // 각 셀의 텍스트에서 불필요한 공백과 "선택됨" 텍스트 제거
+                            const cleanTeamMatchup = teamMatchup.trim();
+                            const cleanTime = time.trim();
+                            const cleanStatus = status.trim();
+                            const cleanGameType = gameType.trim();
+                            const cleanProgress = progress.replace(/선택됨/g, '').trim();
+                            
+                            const gameInfoText = `${gameNumber}경기 : ${cleanTeamMatchup}, ${cleanTime} ~ ${cleanStatus}, ${cleanGameType}, ${cleanProgress}`;
                             selectedGameInfo.textContent = gameInfoText;
-                            console.log('경기 정보 설정됨:', gameInfoText);
+                            console.log('경기 정보 설정됨 (정리됨):', gameInfoText);
                         } else {
                             // 기본 정보로 설정 (선택됨 텍스트 제거)
                             selectedGameInfo.textContent = `${gameNumber}경기 : 한화 vs NC, 18:00 ~ 진행중, 정상게임, 경기중`;
@@ -1762,6 +1769,14 @@
         // 페이지 로드 시 로그인 상태 확인 (한 번만)
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOMContentLoaded 이벤트 발생');
+            
+            // 🎯 "오늘의 경기" 모달 즉시 숨기기
+            const gameSelectionModal = document.getElementById('gameSelectionModal');
+            if (gameSelectionModal) {
+                gameSelectionModal.style.display = 'none';
+                console.log('DOMContentLoaded에서 경기 선택 모달 숨김');
+            }
+            
             if (!loginStatusChecked) {
                 console.log('DOMContentLoaded - 로그인 상태 확인');
                 checkLoginStatus();
@@ -2490,6 +2505,46 @@
         }
 
         // 🎯 경기 자동 선택 API 호출
+        async function autoSelectGame(date, gameNumber) {
+            try {
+                console.log(`경기 자동 선택 시작: ${date} ${gameNumber}경기`);
+                
+                const response = await fetch(`/api/team-games/${date}/${gameNumber}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isSelected: true })
+                });
+                
+                const result = await response.json();
+                console.log('경기 자동 선택 API 응답:', result);
+                
+                if (result.success) {
+                    console.log(`경기 자동 선택 완료: ${date} ${gameNumber}경기`);
+                    return true;
+                } else {
+                    console.error('경기 자동 선택 실패:', result.message);
+                    return false;
+                }
+            } catch (error) {
+                console.error('경기 자동 선택 오류:', error);
+                return false;
+            }
+        }
+
+        // 🎯 경기 선택 클릭 처리 (운영자 로그인 상태에 따라)
+        function handleGameSelectionClick() {
+            // 운영자 로그인 상태 확인
+            const userInfo = localStorage.getItem('operatorUserInfo');
+            if (userInfo) {
+                // 운영자가 로그인된 경우: 모달 표시하지 않음
+                console.log('운영자가 로그인되어 있어 모달을 표시하지 않습니다.');
+                return;
+            } else {
+                // 운영자가 로그인되지 않은 경우: 기존 모달 표시
+                console.log('운영자가 로그인되지 않아 모달을 표시합니다.');
+                showGameSelection();
+            }
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
