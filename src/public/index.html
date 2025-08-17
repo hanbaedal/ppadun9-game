@@ -1202,6 +1202,20 @@
                 
                 console.log(`할당된 경기: ${assignedGameNumber}경기, 날짜: ${assignedDate}`);
                 
+                // 🎯 assignedGame 유효성 검사 (1~5 사이만 허용)
+                if (!assignedGameNumber || assignedGameNumber < 1 || assignedGameNumber > 5) {
+                    console.error(`유효하지 않은 할당된 경기 번호: ${assignedGameNumber}`);
+                    alert('유효하지 않은 경기 할당입니다. 관리자에게 문의하세요.');
+                    
+                    // 로그인 정보 제거
+                    localStorage.removeItem('operatorUserInfo');
+                    localStorage.removeItem('loginStatus');
+                    
+                    // 로그인 페이지로 리다이렉트
+                    window.location.href = '/operator-register.html';
+                    return;
+                }
+                
                 // 오늘 날짜와 할당된 날짜 비교 (한국 시간 기준)
                 const now = new Date();
                 const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
@@ -1227,6 +1241,11 @@
                     setTimeout(() => {
                         updateGameSelectionUI(assignedGameNumber, true);
                         showSelectedGameInfo(assignedGameNumber);
+                        
+                        // 🎯 "오늘의 경기" 모달 숨기고 "선택한 경기" 메뉴 표시
+                        hideGameSelectionModal();
+                        showBettingSection();
+                        
                         console.log('UI 업데이트 완료');
                     }, 100);
                 }
@@ -1238,20 +1257,36 @@
 
         // 🎯 게임 선택 UI 업데이트
         function updateGameSelectionUI(gameNumber, isSelected) {
-            const gameRow = document.querySelector(`[data-game="${gameNumber}"]`);
-            if (gameRow) {
-                const selectBtn = gameRow.querySelector('.select-game-btn');
-                if (selectBtn) {
-                    if (isSelected) {
-                        selectBtn.textContent = '선택됨';
-                        selectBtn.className = 'select-game-btn selected';
-                        selectBtn.disabled = true;
-                    } else {
-                        selectBtn.textContent = '선택';
-                        selectBtn.className = 'select-game-btn';
-                        selectBtn.disabled = false;
+            try {
+                console.log(`게임 선택 UI 업데이트 시작: ${gameNumber}경기, 선택됨: ${isSelected}`);
+                
+                // 모든 경기 선택 버튼을 비활성화 (할당되지 않은 경기들)
+                const allGameRows = document.querySelectorAll('#gameSelectionTableBody tr');
+                allGameRows.forEach((row, index) => {
+                    const selectBtn = row.querySelector('.select-game-btn');
+                    if (selectBtn) {
+                        const currentGameNumber = index + 1; // 1부터 시작
+                        
+                        if (currentGameNumber === gameNumber) {
+                            // 할당된 경기: 선택됨 상태로 활성화
+                            selectBtn.textContent = '선택됨';
+                            selectBtn.className = 'select-game-btn selected';
+                            selectBtn.disabled = false; // 클릭 가능 (선택 해제용)
+                            console.log(`${currentGameNumber}경기: 선택됨 상태로 설정`);
+                        } else {
+                            // 할당되지 않은 경기: 비활성화
+                            selectBtn.textContent = '비활성화';
+                            selectBtn.className = 'select-game-btn disabled';
+                            selectBtn.disabled = true;
+                            console.log(`${currentGameNumber}경기: 비활성화 상태로 설정`);
+                        }
                     }
-                }
+                });
+                
+                console.log(`게임 선택 UI 업데이트 완료: ${gameNumber}경기`);
+                
+            } catch (error) {
+                console.error('게임 선택 UI 업데이트 오류:', error);
             }
         }
 
@@ -1271,7 +1306,15 @@
                         const tableBody = document.getElementById('gameSelectionTableBody');
                         if (tableBody) {
                             const rows = tableBody.querySelectorAll('tr');
-                            gameRow = rows[gameNumber - 1]; // gameNumber는 1부터 시작
+                            // 선택된 경기 번호와 일치하는 행 찾기
+                            for (let i = 0; i < rows.length; i++) {
+                                const firstCell = rows[i].querySelector('td:first-child');
+                                if (firstCell && firstCell.textContent.includes(`${gameNumber}경기`)) {
+                                    gameRow = rows[i];
+                                    console.log(`경기 ${gameNumber}행 찾음:`, gameRow);
+                                    break;
+                                }
+                            }
                         }
                     }
                     
@@ -1323,6 +1366,20 @@
                 // 전역 변수 설정
                 selectedGame = gameNumber;
                 console.log('전역 변수 selectedGame 설정됨:', selectedGame);
+                
+                        // 🎯 경기 선택 모달 자동으로 닫기
+        const gameSelectionModal = document.getElementById('gameSelectionModal');
+        if (gameSelectionModal && gameSelectionModal.style.display === 'block') {
+            gameSelectionModal.style.display = 'none';
+            console.log('경기 선택 모달 자동으로 닫힘');
+        }
+        
+        // 🎯 "선택한 경기" 메뉴 제목을 "할당된 경기"로 변경
+        const bettingTitle = document.querySelector('.betting-title');
+        if (bettingTitle && bettingTitle.textContent === '선택된 경기') {
+            bettingTitle.textContent = '할당된 경기';
+            console.log('메뉴 제목을 "할당된 경기"로 변경');
+        }
                 
                 console.log('자동 선택된 경기 정보 표시 완료:', gameNumber);
                 
@@ -2406,6 +2463,26 @@
             // 로그인 페이지로 이동
             window.location.href = '/operator-management.html';
         }
+
+        // 🎯 경기 선택 모달 숨기기
+        function hideGameSelectionModal() {
+            const gameSelectionModal = document.getElementById('gameSelectionModal');
+            if (gameSelectionModal) {
+                gameSelectionModal.style.display = 'none';
+                console.log('경기 선택 모달 숨김');
+            }
+        }
+
+        // 🎯 배팅 섹션 표시
+        function showBettingSection() {
+            const bettingSection = document.getElementById('bettingSection');
+            if (bettingSection) {
+                bettingSection.style.display = 'block';
+                console.log('배팅 섹션 표시');
+            }
+        }
+
+        // 🎯 경기 자동 선택 API 호출
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
