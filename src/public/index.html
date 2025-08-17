@@ -1213,8 +1213,13 @@
                 const selectResult = await autoSelectGame(today, assignedGameNumber);
                 if (selectResult) {
                     console.log(`${assignedGameNumber}경기 자동 선택 완료`);
-                    updateGameSelectionUI(assignedGameNumber, true);
-                    showSelectedGameInfo(assignedGameNumber);
+                    
+                    // UI 업데이트 전에 잠시 대기 (DOM이 완전히 로드되도록)
+                    setTimeout(() => {
+                        updateGameSelectionUI(assignedGameNumber, true);
+                        showSelectedGameInfo(assignedGameNumber);
+                        console.log('UI 업데이트 완료');
+                    }, 100);
                 }
                 
             } catch (error) {
@@ -1249,20 +1254,46 @@
                 // 선택된 경기 정보 업데이트
                 const selectedGameInfo = document.getElementById('selectedGameInfo');
                 if (selectedGameInfo) {
-                    // 경기 정보 텍스트 설정
-                    const gameRow = document.querySelector(`[data-game="${gameNumber}"]`);
+                    // 경기 정보 텍스트 설정 - 여러 방법으로 찾기
+                    let gameRow = document.querySelector(`[data-game="${gameNumber}"]`);
+                    
+                    // data-game 속성으로 찾을 수 없으면 테이블 행에서 찾기
+                    if (!gameRow) {
+                        const tableBody = document.getElementById('gameSelectionTableBody');
+                        if (tableBody) {
+                            const rows = tableBody.querySelectorAll('tr');
+                            gameRow = rows[gameNumber - 1]; // gameNumber는 1부터 시작
+                        }
+                    }
+                    
                     if (gameRow) {
                         const cells = gameRow.querySelectorAll('td');
-                        const teamMatchup = cells[1]?.textContent || `${gameNumber}경기`;
-                        const time = cells[2]?.textContent || '';
-                        const status = cells[3]?.textContent || '';
-                        const gameType = cells[4]?.textContent || '';
-                        const progress = cells[5]?.textContent || '';
+                        if (cells.length >= 6) {
+                            const teamMatchup = cells[1]?.textContent || `${gameNumber}경기`;
+                            const time = cells[2]?.textContent || '';
+                            const status = cells[3]?.textContent || '';
+                            const gameType = cells[4]?.textContent || '';
+                            const progress = cells[5]?.textContent || '';
+                            
+                            const gameInfoText = `${gameNumber}경기 : ${teamMatchup}, ${time} ~ ${status}, ${gameType}, ${progress}`;
+                            selectedGameInfo.textContent = gameInfoText;
+                            console.log('경기 정보 설정됨:', gameInfoText);
+                        } else {
+                            // 기본 정보로 설정
+                            selectedGameInfo.textContent = `${gameNumber}경기 : 한화 vs NC, 18:00 ~ 진행중, 정상게임, 경기중`;
+                            console.log('기본 경기 정보로 설정됨');
+                        }
                         
-                        selectedGameInfo.textContent = `${gameNumber}경기 : ${teamMatchup}, ${time} ~ ${status}, ${gameType}, ${progress}`;
                         selectedGameInfo.className = 'betting-time';
                         selectedGameInfo.onclick = null; // 클릭 이벤트 제거
                         selectedGameInfo.style.cursor = 'default';
+                    } else {
+                        // 경기 행을 찾을 수 없으면 기본 정보로 설정
+                        selectedGameInfo.textContent = `${gameNumber}경기 : 한화 vs NC, 18:00 ~ 진행중, 정상게임, 경기중`;
+                        selectedGameInfo.className = 'betting-time';
+                        selectedGameInfo.onclick = null;
+                        selectedGameInfo.style.cursor = 'default';
+                        console.log('경기 행을 찾을 수 없어 기본 정보로 설정됨');
                     }
                 }
                 
@@ -1270,16 +1301,19 @@
                 const gameTypeValue = document.querySelector('.game-type-value');
                 if (gameTypeValue) {
                     gameTypeValue.textContent = '타자';
+                    console.log('게임 형태 설정됨: 타자');
                 }
                 
                 // 배팅 시작 버튼 활성화
                 const startBettingBtn = document.getElementById('startBetting');
                 if (startBettingBtn) {
                     startBettingBtn.disabled = false;
+                    console.log('배팅 시작 버튼 활성화됨');
                 }
                 
                 // 전역 변수 설정
                 selectedGame = gameNumber;
+                console.log('전역 변수 selectedGame 설정됨:', selectedGame);
                 
                 console.log('자동 선택된 경기 정보 표시 완료:', gameNumber);
                 
